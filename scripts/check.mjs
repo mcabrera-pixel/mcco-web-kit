@@ -169,7 +169,8 @@ const placeholders = ['lorem ipsum', 'TODO:', 'EDITAR:', 'TBD', 'XXXX', 'PLACEHO
 for (const p of pages) {
   const low = p.html.toLowerCase();
   for (const f of forbidden) if (low.includes(f.t.toLowerCase())) err(`R6-${f.k}`, p.file, `término prohibido (${f.k}): "${f.t}"`);
-  for (const ph of placeholders) if (p.html.includes(ph)) err('R6-placeholder', p.file, `placeholder en producción: "${ph}"`);
+  const visible = p.html.replace(/\splaceholder="[^"]*"/g, ''); // el atributo placeholder= de un input es texto de ejemplo legítimo
+  for (const ph of placeholders) if (visible.includes(ph)) err('R6-placeholder', p.file, `placeholder en producción: "${ph}"`);
 }
 for (const f of ['llms.txt', 'llms-full.txt', 'sitemap.xml', 'robots.txt']) {
   if (!exists(f)) continue;
