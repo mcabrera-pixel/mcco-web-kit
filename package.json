@@ -1,6 +1,6 @@
 {
   "name": "@mcco/web-kit",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Kit compartido de las webs MCCO Group (Estándar Web v2): layouts y componentes Astro, entidad del grupo, endpoints SEO/GEO, verificador mcco-check, generador de _headers y workflows reutilizables.",
   "type": "module",
   "license": "UNLICENSED",

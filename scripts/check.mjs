@@ -211,6 +211,17 @@ if (exists('_headers')) {
       if (!originOk(m[1])) err('R8-csp', p.file, `script externo ${m[1]} no permitido por script-src de _headers`);
     }
   }
+  // frames externos (visores, mapas, videos) deben estar en frame-src
+  const frameSrc = ((csp.match(/frame-src([^;]*)/) ?? [])[1] ?? '').split(/\s+/).filter(Boolean);
+  const frameOk = (o) => frameSrc.includes('https:') || frameSrc.some((a) => a === o || (a.startsWith('https://*.') && o.endsWith(a.slice('https://*'.length))));
+  for (const p of pages) {
+    for (const f of p.root.querySelectorAll('iframe[src], iframe[data-src]')) {
+      const m = (f.getAttribute('src') ?? f.getAttribute('data-src') ?? '').match(/^(https?:\/\/[^/]+)/);
+      if (!m || seen.has('frame:' + m[1])) continue;
+      seen.add('frame:' + m[1]);
+      if (!frameOk(m[1])) err('R8-csp', p.file, `iframe ${m[1]} no permitido por frame-src de _headers`);
+    }
+  }
   if (/unsafe-eval/.test(csp) && !site.csp.unsafe_eval) warn('R8-csp', '_headers', "CSP con 'unsafe-eval' sin justificar (site.yaml csp.unsafe_eval)");
 }
 
