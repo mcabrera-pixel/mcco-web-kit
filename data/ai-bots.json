@@ -1,0 +1,14 @@
+[
+  { "ua": "Googlebot", "owner": "Google Search" },
+  { "ua": "Google-Extended", "owner": "Google (Gemini / AI Overviews)" },
+  { "ua": "Bingbot", "owner": "Microsoft Bing (índice que usa ChatGPT)" },
+  { "ua": "GPTBot", "owner": "OpenAI (entrenamiento)" },
+  { "ua": "OAI-SearchBot", "owner": "OpenAI (ChatGPT search)" },
+  { "ua": "ChatGPT-User", "owner": "OpenAI (navegación por usuario)" },
+  { "ua": "ClaudeBot", "owner": "Anthropic (entrenamiento)" },
+  { "ua": "Claude-SearchBot", "owner": "Anthropic (búsqueda)" },
+  { "ua": "Claude-User", "owner": "Anthropic (navegación por usuario)" },
+  { "ua": "PerplexityBot", "owner": "Perplexity (índice)" },
+  { "ua": "Perplexity-User", "owner": "Perplexity (navegación por usuario)" },
+  { "ua": "CCBot", "owner": "Common Crawl" }
+]

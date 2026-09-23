@@ -1,0 +1,26 @@
+---
+// FAQ visible + JSON-LD FAQPage (respuestas de 40-80 palabras, citables sueltas).
+interface Props { items: { q: string; a: string }[]; title?: string }
+const { items, title = 'Preguntas frecuentes' } = Astro.props;
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+<section class="mcco-faq" data-mcco="faq">
+  <h2>{title}</h2>
+  {items.map((f) => (
+    <details class="mcco-faq__item">
+      <summary><h3>{f.q}</h3></summary>
+      <p>{f.a}</p>
+    </details>
+  ))}
+</section>
+<script is:inline type="application/ld+json" set:html={JSON.stringify(jsonld)} />
+<style>
+  .mcco-faq__item { border-bottom: 1px solid var(--mcco-color-border); padding: 0.5rem 0; }
+  .mcco-faq__item summary { cursor: pointer; list-style: none; }
+  .mcco-faq__item summary h3 { display: inline; font-size: 1.0625rem; margin: 0; }
+  .mcco-faq__item p { margin: 0.5rem 0 0; color: var(--mcco-color-muted); line-height: 1.55; }
+</style>

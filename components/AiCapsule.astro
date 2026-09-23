@@ -1,0 +1,14 @@
+---
+// Cápsula de respuesta (GEO): 3-4 frases que responden la pregunta del título de forma autocontenida y citable.
+interface Props { text: string; label?: string }
+const { text, label = 'En síntesis' } = Astro.props;
+---
+<aside class="mcco-capsule" data-mcco="capsule">
+  <p class="mcco-capsule__label">{label}</p>
+  <p class="mcco-capsule__text">{text}</p>
+</aside>
+<style>
+  .mcco-capsule { border-left: 3px solid var(--mcco-color-accent); background: var(--mcco-color-bg-alt); padding: var(--mcco-space); margin: var(--mcco-space) 0; border-radius: 0 var(--mcco-radius) var(--mcco-radius) 0; }
+  .mcco-capsule__label { margin: 0 0 0.25rem; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mcco-color-muted); }
+  .mcco-capsule__text { margin: 0; font-size: 1.0625rem; line-height: 1.55; }
+</style>

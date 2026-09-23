@@ -1,0 +1,11 @@
+{
+  "_nota": "Términos que NUNCA pueden aparecer en una web MCCO (NDA y confidencialidad). Misma lista que blacklist.yaml del motor de contenido: si cambia una, cambia la otra. mcco-check falla si aparecen en dist/.",
+  "terms": [
+    "caserones",
+    "sirve nave sx",
+    "nave sx",
+    "lumina copper",
+    "jx advanced metals",
+    "jx nippon"
+  ]
+}

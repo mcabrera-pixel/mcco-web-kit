@@ -1,0 +1,23 @@
+{
+  "legalName": "MCCO Group SpA",
+  "taxID": "77.715.147-9",
+  "foundingDate": "2022",
+  "addressText": "Suecia 283, of. 402, Providencia, Santiago",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Suecia 283, of. 402",
+    "addressLocality": "Providencia",
+    "addressRegion": "Región Metropolitana",
+    "addressCountry": "CL"
+  },
+  "founder": {
+    "name": "Mario Cabrera",
+    "jobTitle": "Gerente General, MCCO Group SpA"
+  },
+  "sameAs": [],
+  "_notas": [
+    "Fuente: sesión webs-mcco 2026-09-05 (Bloque 0): RUT, constitución 2022 y cargo único verificados por Mario.",
+    "Dirección fijada por Mario el 2026-08-17 para toda cotización y documento.",
+    "sameAs vacío hasta tener perfiles oficiales del grupo confirmados (LinkedIn MCCO Group). No inventar."
+  ]
+}

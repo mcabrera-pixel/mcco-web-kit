@@ -1,0 +1,22 @@
+---
+// Layout base: <Head> estándar + analítica + slot + bloque Grupo MCCO.
+import Head from '../components/Head.astro';
+import Analytics from '../components/Analytics.astro';
+import FooterGrupo from '../components/FooterGrupo.astro';
+import { loadSite } from '../lib/site.mjs';
+import '../styles/tokens.css';
+const site = loadSite();
+const { footer = true, bodyClass = '', ...head } = Astro.props as any;
+---
+<!DOCTYPE html>
+<html lang={site.lang}>
+  <head>
+    <Head {...head}><slot name="head" /></Head>
+    <Analytics />
+  </head>
+  <body class={bodyClass}>
+    <slot />
+    {footer && <FooterGrupo />}
+    <slot name="body-end" />
+  </body>
+</html>

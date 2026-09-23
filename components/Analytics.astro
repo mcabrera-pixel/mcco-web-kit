@@ -1,0 +1,11 @@
+---
+// Medición declarada en site.yaml: GA4 / Google Ads (gtag) y Cloudflare Web Analytics. Sin ids → no emite nada.
+import { loadSite } from '../lib/site.mjs';
+const site = loadSite();
+const ids = [site.analytics.ga4, site.analytics.ads].filter(Boolean) as string[];
+const beacon = site.analytics.cf_beacon_token;
+const gtagInit = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());${ids.map((id) => `gtag('config','${id}');`).join('')}`;
+---
+{ids.length > 0 && <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${ids[0]}`}></script>}
+{ids.length > 0 && <script is:inline set:html={gtagInit} />}
+{beacon && <script is:inline defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token: beacon })}></script>}

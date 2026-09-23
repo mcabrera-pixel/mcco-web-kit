@@ -1,0 +1,46 @@
+---
+// JSON-LD Organization del sitio, enlazado al grupo (entity graph MCCO).
+// Satélites: parentOrganization = MCCO Group. Corporativa: subOrganization = las satélites.
+import { loadSite, loadEntity, loadSites } from '../lib/site.mjs';
+
+interface Props { extra?: Record<string, unknown>; types?: string[] }
+const site = loadSite();
+const entity = loadEntity();
+const sites = loadSites();
+const { extra = {}, types = ['Organization', 'ProfessionalService'] } = Astro.props;
+const corporate = sites.find((s: any) => s.role === 'corporativa');
+const isCorporate = site.role === 'corporativa';
+
+const org: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@type': types,
+  '@id': `${site.domain}/#organization`,
+  name: site.name,
+  legalName: entity.legalName,
+  taxID: entity.taxID,
+  foundingDate: entity.foundingDate,
+  url: `${site.domain}/`,
+  description: site.description.trim(),
+  logo: new URL(site.seo.logo ?? '/logo.png', site.domain).href,
+  address: entity.address,
+  areaServed: { '@type': 'Country', name: 'Chile' },
+  founder: { '@type': 'Person', name: entity.founder.name, jobTitle: entity.founder.jobTitle },
+};
+if (site.contact.phone) org.telephone = site.contact.phone;
+if (site.contact.email) org.email = site.contact.email;
+if (site.seo.sameAs?.length) org.sameAs = site.seo.sameAs;
+if (isCorporate) {
+  org.subOrganization = sites
+    .filter((s: any) => s.role !== 'corporativa')
+    .map((s: any) => ({ '@type': 'Organization', name: s.name, url: `${s.domain}/` }));
+} else if (corporate) {
+  org.parentOrganization = {
+    '@type': 'Organization',
+    name: entity.legalName,
+    url: `${corporate.domain}/`,
+    ...(entity.sameAs?.length ? { sameAs: entity.sameAs } : {}),
+  };
+}
+Object.assign(org, extra);
+---
+<script is:inline type="application/ld+json" set:html={JSON.stringify(org)} />

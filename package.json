@@ -1,0 +1,43 @@
+{
+  "name": "@mcco/web-kit",
+  "version": "1.0.0",
+  "description": "Kit compartido de las webs MCCO Group (Estándar Web v2): layouts y componentes Astro, entidad del grupo, endpoints SEO/GEO, verificador mcco-check, generador de _headers y workflows reutilizables.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcabrera-pixel/mcco-web-kit.git"
+  },
+  "keywords": ["astro-component", "mcco", "withastro"],
+  "exports": {
+    "./config": "./config/astro.mjs",
+    "./schemas": "./content/schemas.ts",
+    "./layouts/*": "./layouts/*",
+    "./components/*": "./components/*",
+    "./pages/*": "./pages/*",
+    "./data/*": "./data/*",
+    "./endpoints/*": "./endpoints/*",
+    "./lib/*": "./lib/*",
+    "./styles/*": "./styles/*",
+    "./functions/*": "./functions/*"
+  },
+  "bin": {
+    "mcco-check": "scripts/check.mjs",
+    "mcco-parity": "scripts/parity.mjs",
+    "mcco-headers": "scripts/headers.mjs"
+  },
+  "files": [
+    "config", "content", "layouts", "components", "pages", "data", "endpoints",
+    "lib", "styles", "scripts", "functions", "README.md"
+  ],
+  "peerDependencies": {
+    "astro": ">=7.0.0"
+  },
+  "dependencies": {
+    "node-html-parser": "^9.0.4",
+    "yaml": "^2.9.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

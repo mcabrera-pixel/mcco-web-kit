@@ -1,0 +1,24 @@
+---
+// 404 estándar. El sitio la usa desde src/pages/404.astro:
+//   import NotFound from '@mcco/web-kit/pages/NotFound.astro';  ---  <NotFound />
+import Base from '../layouts/Base.astro';
+import { loadSite } from '../lib/site.mjs';
+const site = loadSite();
+const wa = site.contact.whatsapp?.replace(/\D/g, '');
+---
+<Base title={`Página no encontrada | ${site.name}`} description={`La página que buscas no existe en ${site.name}. Vuelve al inicio o escríbenos.`} noindex={true} path="/404">
+  <main class="mcco-404">
+    <p class="mcco-404__code">404</p>
+    <h1>Esta página no existe</h1>
+    <p>Puede que el enlace esté desactualizado. Estas rutas sí funcionan:</p>
+    <ul>
+      <li><a href="/">Inicio</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      {wa && <li><a href={`https://wa.me/${wa}`} rel="noopener">Escríbenos por WhatsApp</a></li>}
+    </ul>
+  </main>
+</Base>
+<style>
+  .mcco-404 { max-width: 640px; margin: 0 auto; padding: 4rem 1rem; font-family: var(--mcco-font-body); }
+  .mcco-404__code { font-size: 4rem; font-weight: 700; margin: 0; color: var(--mcco-color-accent); }
+</style>

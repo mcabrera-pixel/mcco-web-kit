@@ -1,0 +1,55 @@
+---
+// <Head> — cabecera estándar: título, descripción, canonical limpia, OG/Twitter, hreflang, JSON-LD.
+import { loadSite } from '../lib/site.mjs';
+import { canonicalFor } from '../lib/routes.mjs';
+import SchemaOrg from './SchemaOrg.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Ruta canónica explícita; por defecto Astro.url.pathname normalizada (sin .html, carpetas con /). */
+  path?: string;
+  ogImage?: string;
+  type?: 'website' | 'article';
+  noindex?: boolean;
+  alternates?: { lang: string; href: string }[];
+  jsonld?: Record<string, unknown>[];
+  /** Emite Organization (+parentOrganization). Home y páginas institucionales. */
+  organization?: boolean;
+  published?: string;
+  modified?: string;
+}
+const site = loadSite();
+const {
+  title, description, path, ogImage, type = 'website', noindex = false,
+  alternates = [], jsonld = [], organization = false, published, modified,
+} = Astro.props;
+const canonical = canonicalFor(path ?? Astro.url.pathname, site.domain);
+const og = new URL(ogImage ?? site.seo.og_image ?? '/og.webp', site.domain).href;
+const locale = site.lang.replace('-', '_');
+---
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1'} />
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:locale" content={locale} />
+<meta property="og:url" content={canonical} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={og} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={og} />
+{site.seo.twitter && <meta name="twitter:site" content={site.seo.twitter} />}
+{alternates.map((a) => <link rel="alternate" hreflang={a.lang} href={new URL(a.href, site.domain).href} />)}
+{alternates.length > 0 && <link rel="alternate" hreflang="x-default" href={canonical} />}
+{published && <meta property="article:published_time" content={published} />}
+{modified && <meta property="article:modified_time" content={modified} />}
+{organization && <SchemaOrg />}
+{jsonld.map((o) => <script is:inline type="application/ld+json" set:html={JSON.stringify(o)} />)}
+<slot />

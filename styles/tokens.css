@@ -1,0 +1,17 @@
+/* Tokens del Estándar Web MCCO v2 — NOMBRES compartidos, VALORES por sitio (src/styles/theme.css).
+   El kit solo define fallbacks neutros para que sus componentes rendericen en cualquier sitio.
+   Cada sitio declara en su theme.css: --color-bg, --color-bg-alt, --color-text, --color-muted,
+   --color-accent, --color-border, --font-body, --font-display, --space, --radius, --maxw. */
+:root {
+  --mcco-color-bg: var(--color-bg, #ffffff);
+  --mcco-color-bg-alt: var(--color-bg-alt, #f4f4f2);
+  --mcco-color-text: var(--color-text, #1a1a1a);
+  --mcco-color-muted: var(--color-muted, #5c5c5c);
+  --mcco-color-accent: var(--color-accent, #b8542a);
+  --mcco-color-border: var(--color-border, #e2e2df);
+  --mcco-font-body: var(--font-body, system-ui, -apple-system, "Segoe UI", sans-serif);
+  --mcco-font-display: var(--font-display, var(--font-body, system-ui, sans-serif));
+  --mcco-space: var(--space, 1rem);
+  --mcco-radius: var(--radius, 6px);
+  --mcco-maxw: var(--maxw, 1120px);
+}

@@ -1,0 +1,32 @@
+---
+// Bloque "Grupo MCCO": pertenencia al grupo + enlaces a las webs hermanas + entidad legal.
+// Va en TODAS las páginas (interlinking del grupo, Estándar v2 §6). El sitio conserva su propio footer.
+import { loadSite, loadEntity, loadSites } from '../lib/site.mjs';
+const site = loadSite();
+const entity = loadEntity();
+const sites = loadSites();
+const corporate = sites.find((s: any) => s.role === 'corporativa');
+const others = sites.filter((s: any) => s.domain !== site.domain && s.role !== 'corporativa');
+---
+<section class="mcco-grupo" aria-label="Grupo MCCO" data-mcco="grupo">
+  <div class="mcco-grupo__inner">
+    <p class="mcco-grupo__lead">
+      <strong>{site.name}</strong> es parte de <a href={`${corporate?.domain ?? 'https://www.mcco.cl'}/`}>MCCO Group</a>
+      · {entity.legalName} · RUT {entity.taxID} · {entity.addressText}
+    </p>
+    <ul class="mcco-grupo__list">
+      {others.map((s: any) => (
+        <li><a href={`${s.domain}/`}>{s.name}</a><span class="mcco-grupo__tag"> — {s.tagline}</span></li>
+      ))}
+    </ul>
+  </div>
+</section>
+<style>
+  .mcco-grupo { background: var(--mcco-color-bg-alt); color: var(--mcco-color-muted); font-family: var(--mcco-font-body); font-size: 0.8125rem; line-height: 1.5; border-top: 1px solid var(--mcco-color-border); }
+  .mcco-grupo__inner { max-width: var(--mcco-maxw); margin: 0 auto; padding: calc(var(--mcco-space) * 1.25) var(--mcco-space); display: grid; gap: 0.5rem; }
+  .mcco-grupo a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+  .mcco-grupo a:hover { color: var(--mcco-color-accent); }
+  .mcco-grupo__lead { margin: 0; }
+  .mcco-grupo__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+  @media (max-width: 640px) { .mcco-grupo__tag { display: none; } }
+</style>

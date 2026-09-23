@@ -1,0 +1,26 @@
+---
+// Llamado a la acción estándar: WhatsApp + correo del sitio (site.yaml), con compromiso de respuesta.
+import { loadSite } from '../lib/site.mjs';
+interface Props { title?: string; text?: string; ref?: string }
+const site = loadSite();
+const { title = '¿Necesitas cotizar este servicio?', text, ref } = Astro.props;
+const wa = site.contact.whatsapp?.replace(/\D/g, '');
+const host = site.domain.replace('https://', '');
+const msg = encodeURIComponent(`Hola, vengo de ${host}${ref ? ` (${ref})` : ''} y quiero cotizar.`);
+---
+<section class="mcco-cta" data-mcco="cta">
+  <h2>{title}</h2>
+  {text && <p>{text}</p>}
+  <div class="mcco-cta__actions">
+    {wa && <a class="mcco-cta__btn" href={`https://wa.me/${wa}?text=${msg}`} rel="noopener" data-conv="whatsapp">WhatsApp</a>}
+    {site.contact.email && <a class="mcco-cta__btn mcco-cta__btn--alt" href={`mailto:${site.contact.email}`} data-conv="email">Escríbenos</a>}
+  </div>
+  <p class="mcco-cta__sla">{site.contact.response_sla ?? 'Respondemos en menos de 24 horas hábiles.'}</p>
+</section>
+<style>
+  .mcco-cta { background: var(--mcco-color-bg-alt); border-radius: var(--mcco-radius); padding: calc(var(--mcco-space) * 1.5); margin: calc(var(--mcco-space) * 2) 0; text-align: center; }
+  .mcco-cta__actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin: var(--mcco-space) 0; }
+  .mcco-cta__btn { background: var(--mcco-color-accent); color: #fff; padding: 0.75rem 1.25rem; border-radius: var(--mcco-radius); text-decoration: none; font-weight: 600; }
+  .mcco-cta__btn--alt { background: transparent; color: var(--mcco-color-accent); border: 1px solid var(--mcco-color-accent); }
+  .mcco-cta__sla { margin: 0; font-size: 0.875rem; color: var(--mcco-color-muted); }
+</style>

@@ -1,0 +1,78 @@
+# Workflow reutilizable (Estándar Web MCCO v2 §7): push a main = build + mcco-check + deploy producción + smoke.
+# Uso en el sitio (.github/workflows/deploy.yml):
+#   on: { push: { branches: [main] }, workflow_dispatch: {} }
+#   jobs: { deploy: { uses: mcabrera-pixel/mcco-web-kit/.github/workflows/site-deploy.yml@v1, with: { project: 3d-ultra }, secrets: inherit } }
+name: site-deploy
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        required: true
+        type: string
+      node:
+        required: false
+        type: string
+        default: '24'
+    secrets:
+      CLOUDFLARE_API_TOKEN:
+        required: true
+      CLOUDFLARE_ACCOUNT_ID:
+        required: true
+
+concurrency:
+  group: deploy-${{ inputs.project }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: mcco-check (Estándar Web MCCO v2)
+        run: npx mcco-check --dist dist
+
+      - name: Deploy producción (Cloudflare Pages)
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ inputs.project }} --branch=main --commit-hash=${{ github.sha }}
+
+      - name: Smoke en producción
+        run: |
+          DOMAIN=$(node -e "import('yaml').then(y=>{const s=y.default.parse(require('fs').readFileSync('site.yaml','utf8'));console.log(s.domain)})")
+          echo "Dominio: $DOMAIN"
+          for p in / /sitemap.xml /robots.txt /llms.txt; do
+            for i in 1 2 3 4 5 6; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' -L "$DOMAIN$p")
+              [ "$code" = "200" ] && break
+              sleep 10
+            done
+            echo "$p → $code"
+            [ "$code" = "200" ] || exit 1
+          done
+          curl -s -L "$DOMAIN/" | grep -q "rel=\"canonical\" href=\"$DOMAIN/\"" || { echo "canonical de la home no apunta a $DOMAIN/"; exit 1; }
+          {
+            echo "## Deploy producción — ${{ inputs.project }}"
+            echo "- URL: $DOMAIN"
+            echo "- Deployment: ${{ steps.deploy.outputs.deployment-url }}"
+            echo "- Smoke: home, sitemap, robots, llms = 200 · canonical OK"
+          } >> "$GITHUB_STEP_SUMMARY"

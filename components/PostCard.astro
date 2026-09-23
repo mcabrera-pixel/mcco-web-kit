@@ -1,0 +1,27 @@
+---
+interface Props {
+  href: string; title: string; description: string; date: Date;
+  category?: string; hero?: { src: string; alt: string };
+}
+const { href, title, description, date, category, hero } = Astro.props;
+const fecha = date.toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+<article class="mcco-card">
+  {hero && <a href={href}><img src={hero.src} alt={hero.alt} loading="lazy" width="640" height="360" /></a>}
+  <div class="mcco-card__body">
+    {category && <span class="mcco-card__cat">{category}</span>}
+    <h3><a href={href}>{title}</a></h3>
+    <p>{description}</p>
+    <time datetime={date.toISOString().slice(0, 10)}>{fecha}</time>
+  </div>
+</article>
+<style>
+  .mcco-card { border: 1px solid var(--mcco-color-border); border-radius: var(--mcco-radius); overflow: hidden; background: var(--mcco-color-bg); display: flex; flex-direction: column; }
+  .mcco-card img { width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; display: block; }
+  .mcco-card__body { padding: var(--mcco-space); display: grid; gap: 0.4rem; }
+  .mcco-card__cat { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mcco-color-accent); }
+  .mcco-card h3 { margin: 0; font-size: 1.125rem; line-height: 1.3; }
+  .mcco-card h3 a { color: inherit; text-decoration: none; }
+  .mcco-card p { margin: 0; color: var(--mcco-color-muted); font-size: 0.9375rem; }
+  .mcco-card time { font-size: 0.8125rem; color: var(--mcco-color-muted); }
+</style>

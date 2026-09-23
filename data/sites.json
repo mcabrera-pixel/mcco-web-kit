@@ -1,0 +1,6 @@
+[
+  { "key": "mcco", "name": "MCCO Group", "domain": "https://www.mcco.cl", "role": "corporativa", "tagline": "Sitio corporativo del grupo" },
+  { "key": "asbuilt", "name": "As-Built 3D", "domain": "https://as-built.cl", "role": "escaneo", "tagline": "Escaneo láser 3D y as-built" },
+  { "key": "condron", "name": "ConDron", "domain": "https://condron.cl", "role": "drones", "tagline": "Drones industriales" },
+  { "key": "3dultra", "name": "3D Ultra", "domain": "https://3d-ultra.cl", "role": "gemelos", "tagline": "Gemelos digitales" }
+]
