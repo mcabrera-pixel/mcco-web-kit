@@ -9,17 +9,22 @@ import { staticRouteFiles } from '../lib/routes.mjs';
 import { gitLastMod } from '../lib/git.mjs';
 
 type Opts = { collections?: { name: string; base: string }[]; exclude?: string[] };
-const DEFAULT_COLLECTIONS = [
-  { name: 'blog', base: '/blog/' },
-  { name: 'casos', base: '/casos/' },
-  { name: 'guias', base: '/guias/' },
-];
+const ALL_COLLECTIONS: Record<string, { name: string; base: string }> = {
+  blog: { name: 'blog', base: '/blog/' },
+  casos: { name: 'casos', base: '/casos/' },
+  guias: { name: 'guias', base: '/guias/' },
+};
+// Páginas que existen pero no se indexan (llevan noindex): nunca van al sitemap.
+const DEFAULT_EXCLUDE = ['/gracias', '/contacto-error', '/404'];
 
 export function makeSitemap(globbed: Record<string, unknown>, opts: Opts = {}): APIRoute {
   return async () => {
     const site = loadSite();
     const base = site.domain;
-    const exclude = new Set(opts.exclude ?? []);
+    const exclude = new Set([...DEFAULT_EXCLUDE, ...((site as any).sitemap?.exclude ?? []), ...(opts.exclude ?? [])]);
+    // Solo las colecciones que el sitio declara (site.yaml → content.collections; por defecto blog).
+    const declared: string[] = (site as any).content?.collections ?? ['blog'];
+    const collections = opts.collections ?? declared.filter((n) => ALL_COLLECTIONS[n]).map((n) => ALL_COLLECTIONS[n]);
     const urls: { loc: string; lastmod: string | null }[] = [];
     const seen = new Set<string>();
     const push = (route: string, lastmod: string | null) => {
@@ -29,7 +34,7 @@ export function makeSitemap(globbed: Record<string, unknown>, opts: Opts = {}): 
       urls.push({ loc, lastmod });
     };
 
-    for (const c of opts.collections ?? DEFAULT_COLLECTIONS) {
+    for (const c of collections) {
       let entries: any[] = [];
       try {
         entries = await getCollection(c.name as any, ({ data }: any) => !data.draft);
