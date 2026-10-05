@@ -2,7 +2,8 @@
 // Banda de video real (sistema visual v1.1): a ancho completo ('banda') o partida video + texto ('partido').
 // muted playsinline loop, preload="none": el video se descarga recién cuando entra en pantalla y se reproduce.
 // Sin autoplay con prefers-reduced-motion ni con Save-Data (queda el poster y un botón para reproducir).
-// Sin JS quedan los controles nativos. El rótulo de origen es visible ("Video de faena" por defecto).
+// Sin JS queda el poster (sin controles nativos: su árbol interno encarece el primer render). El rótulo de origen
+// es visible ("Video de faena" por defecto).
 import '../../styles/tokens.css';
 import '../../styles/visual.css';
 
@@ -40,7 +41,7 @@ const conTexto = Astro.slots.has('default');
 <section class:list={['mcco-video', `mcco-video--${formato}`, lado === 'derecha' && 'mcco-video--derecha', clase]} id={id}
   data-mcco-video data-mcco-visual="video" style={`--mcco-video-alto: ${alto}; --mcco-video-proporcion: ${proporcion};`}>
   <div class="mcco-video__cuadro">
-    <video muted playsinline loop preload="none" controls poster={poster} aria-label={etiqueta} data-origen="real">
+    <video muted playsinline loop preload="none" poster={poster} aria-label={etiqueta} data-origen="real">
       {lista.map((f) => <source src={f.src} type={tipo(f)} />)}
     </video>
     <span class="mcco-rotulo" data-rotulo data-en="sup-izq">{rotulo}</span>

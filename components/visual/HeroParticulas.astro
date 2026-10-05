@@ -34,6 +34,9 @@ interface Props {
   /** Origen del material de los activos: decide el rótulo visible. */
   origen?: Origen;
   rotulo?: string;
+  /** 'visible' (por defecto): arranca tras la carga, en tiempo ocioso y con el lienzo a la vista.
+   *  'interaccion': además espera el primer gesto; antes muestra la imagen fija. Palanca para Lighthouse móvil. */
+  arranque?: 'visible' | 'interaccion';
   /** Nivel del titular: 1 en la portada; 2 si el hero va más abajo en la página. */
   nivel?: 1 | 2;
   id?: string;
@@ -42,17 +45,17 @@ interface Props {
 const ROTULOS: Record<Origen, string> = { ilustracion: 'Ilustración', render: 'Render 3D', esquema: 'Esquema', real: 'Foto de faena' };
 const {
   activos, titulo, antetitulo, bajada, intervalo = 8, densidad = {}, colores = 'tema',
-  origen = 'ilustracion', rotulo, nivel = 1, id = 'hero', class: clase,
+  origen = 'ilustracion', rotulo, arranque = 'visible', nivel = 1, id = 'hero', class: clase,
 } = Astro.props;
 if (!activos?.length) throw new Error('HeroParticulas: `activos` necesita al menos un { src, etiqueta }.');
 const Titulo = `h${nivel}`;
 const primero = activos[0];
 const datos = JSON.stringify(activos.map(({ src, etiqueta, invertir }) => ({ src, etiqueta, invertir: !!invertir })));
-const dens = `${densidad.escritorio ?? 90000},${densidad.movil ?? 30000}`;
+const dens = `${densidad.escritorio ?? 90000},${densidad.movil ?? 24000}`;
 const textoRotulo = rotulo ?? ROTULOS[origen];
 ---
 <section class:list={['mcco-hero', clase]} id={id} aria-labelledby={`${id}-titulo`}
-  data-mcco-hero data-mcco-visual="hero" data-activos={datos} data-intervalo={intervalo} data-densidad={dens} data-colores={colores}>
+  data-mcco-hero data-mcco-visual="hero" data-activos={datos} data-intervalo={intervalo} data-densidad={dens} data-colores={colores} data-arranque={arranque}>
   <div class="mcco-hero__texto">
     {antetitulo && <p class="mcco-hero__ante">{antetitulo}</p>}
     <Titulo id={`${id}-titulo`} class="mcco-hero__titulo"><slot name="titulo">{titulo}</slot></Titulo>
