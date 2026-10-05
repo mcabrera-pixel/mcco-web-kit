@@ -20,6 +20,11 @@ export interface SiteConfig {
   redirects?: { www_to_apex?: boolean; extra_hosts?: string[] };
   llms?: { pages?: { title: string; url: string }[] };
   forbidden: string[];
+  /** Clientes que se pueden nombrar (FranjaClientes). Reemplaza a clients_allowed, que se sigue leyendo. */
+  clientes_autorizados?: string[];
+  clients_allowed?: string[];
   legacy_pages?: boolean;
+  /** visual: 'error' sube R11-R13 de aviso a error en mcco-check. */
+  check?: { visual?: 'aviso' | 'error' };
   indexnow_key?: string;
 }

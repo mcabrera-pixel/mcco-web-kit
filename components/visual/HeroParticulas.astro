@@ -1,0 +1,132 @@
+---
+// Hero de partículas (sistema visual v1.1). Texto a la izquierda, activo grande a la derecha; en móvil el activo
+// va bajo el texto. La nube se arma desde imágenes del sitio (WebP de silueta o nube sobre negro, o SVG), el cursor
+// la dispersa, un barrido de luz la recorre y cada `intervalo` segundos pasa al activo siguiente.
+// El H1 se pinta primero (LCP): WebGL arranca después de la carga, en tiempo ocioso y solo si el lienzo está a la vista.
+// Pausa con botón, con prefers-reduced-motion y con la pestaña oculta. Sin WebGL2 se muestra la imagen fija.
+import '../../styles/tokens.css';
+import '../../styles/visual.css';
+
+type Origen = 'ilustracion' | 'render' | 'esquema' | 'real';
+interface Activo {
+  /** WebP (o SVG) del activo. Fondo negro: los puntos salen de lo claro. Con `invertir`, de lo oscuro sobre blanco. */
+  src: string;
+  /** Nombre corto en el selector y en el aria-label ("Molino SAG"). */
+  etiqueta: string;
+  /** Texto alternativo de la imagen fija; por defecto la etiqueta. */
+  alt?: string;
+  invertir?: boolean;
+  width?: number;
+  height?: number;
+}
+interface Props {
+  activos: Activo[];
+  /** Texto del H1. Para cortes de línea o énfasis usa el slot "titulo". */
+  titulo?: string;
+  antetitulo?: string;
+  bajada?: string;
+  /** Segundos entre activos (mínimo 4). */
+  intervalo?: number;
+  /** Puntos por activo. Más puntos = más GPU y más tiempo de muestreo. */
+  densidad?: { escritorio?: number; movil?: number };
+  /** 'tema': tinta y acento del sitio. 'imagen': colores del archivo (pensado para fondos oscuros). */
+  colores?: 'tema' | 'imagen';
+  /** Origen del material de los activos: decide el rótulo visible. */
+  origen?: Origen;
+  rotulo?: string;
+  /** Nivel del titular: 1 en la portada; 2 si el hero va más abajo en la página. */
+  nivel?: 1 | 2;
+  id?: string;
+  class?: string;
+}
+const ROTULOS: Record<Origen, string> = { ilustracion: 'Ilustración', render: 'Render 3D', esquema: 'Esquema', real: 'Foto de faena' };
+const {
+  activos, titulo, antetitulo, bajada, intervalo = 8, densidad = {}, colores = 'tema',
+  origen = 'ilustracion', rotulo, nivel = 1, id = 'hero', class: clase,
+} = Astro.props;
+if (!activos?.length) throw new Error('HeroParticulas: `activos` necesita al menos un { src, etiqueta }.');
+const Titulo = `h${nivel}`;
+const primero = activos[0];
+const datos = JSON.stringify(activos.map(({ src, etiqueta, invertir }) => ({ src, etiqueta, invertir: !!invertir })));
+const dens = `${densidad.escritorio ?? 90000},${densidad.movil ?? 30000}`;
+const textoRotulo = rotulo ?? ROTULOS[origen];
+---
+<section class:list={['mcco-hero', clase]} id={id} aria-labelledby={`${id}-titulo`}
+  data-mcco-hero data-mcco-visual="hero" data-activos={datos} data-intervalo={intervalo} data-densidad={dens} data-colores={colores}>
+  <div class="mcco-hero__texto">
+    {antetitulo && <p class="mcco-hero__ante">{antetitulo}</p>}
+    <Titulo id={`${id}-titulo`} class="mcco-hero__titulo"><slot name="titulo">{titulo}</slot></Titulo>
+    {bajada && <p class="mcco-hero__bajada">{bajada}</p>}
+    <slot />
+  </div>
+  <div class="mcco-hero__marco" data-hero-marco data-origen={origen}>
+    <canvas role="img" aria-label={`${primero.etiqueta}: imagen animada formada por puntos`} data-origen={origen}></canvas>
+    <figure class="mcco-hero__fijo" data-hero-fijo hidden>
+      <img src={primero.src} alt={primero.alt ?? primero.etiqueta} width={primero.width ?? 960} height={primero.height ?? 540}
+        loading="lazy" decoding="async" data-origen={origen} />
+    </figure>
+    <noscript><img class="mcco-hero__noscript" src={primero.src} alt={primero.alt ?? primero.etiqueta} width={primero.width ?? 960} height={primero.height ?? 540} data-origen={origen} /></noscript>
+    <span class="mcco-rotulo" data-rotulo data-en="sup-der">{textoRotulo}</span>
+    {activos.length > 1 && (
+      <div class="mcco-hero__selector" role="group" aria-label="Activo mostrado" data-hero-selector hidden>
+        {activos.map((a, i) => (
+          <button type="button" data-hero-activo={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+            <span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span> {a.etiqueta}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+  <div class="mcco-hero__pie">
+    <span class="mcco-hero__pista" data-hero-pista aria-live="polite"></span>
+    <button type="button" class="mcco-control" data-hero-pausa aria-pressed="false" hidden>Pausar movimiento <span aria-hidden="true">Ⅱ</span></button>
+  </div>
+</section>
+
+<script>import '../../lib/visual/hero.js';</script>
+
+<style>
+  .mcco-hero {
+    display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: center;
+    gap: clamp(1rem, 3vw, 3rem); max-width: var(--mcco-maxw); margin: 0 auto;
+    padding: clamp(2rem, 6vw, 5rem) var(--mcco-space) clamp(1rem, 2vw, 1.5rem);
+    color: var(--mcco-color-text);
+  }
+  .mcco-hero__ante {
+    font: 500 0.8125rem/1.3 var(--mcco-font-mono); text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--mcco-color-muted); margin: 0 0 1rem;
+  }
+  .mcco-hero__titulo {
+    font-family: var(--mcco-font-display); font-size: clamp(2.25rem, 4.6vw, 4rem); line-height: 1.04;
+    letter-spacing: -0.025em; margin: 0 0 1.25rem; text-wrap: balance;
+  }
+  .mcco-hero__bajada { font-size: clamp(1.05rem, 1.4vw, 1.2rem); line-height: 1.5; color: var(--mcco-color-muted); margin: 0 0 1.5rem; max-width: 34em; }
+  .mcco-hero__marco { position: relative; aspect-ratio: 16 / 11; min-width: 0; }
+  .mcco-hero__marco canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; }
+  .mcco-hero__fijo { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; }
+  .mcco-hero__fijo[hidden] { display: none; }
+  .mcco-hero__fijo img, .mcco-hero__noscript { width: 100%; height: 100%; object-fit: contain; border-radius: var(--mcco-radius); }
+  .mcco-hero__noscript { position: absolute; inset: 0; }
+  .mcco-hero__selector {
+    position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center;
+  }
+  .mcco-hero__selector[hidden] { display: none; }
+  .mcco-hero__selector button {
+    font: 500 0.75rem/1 var(--mcco-font-mono); letter-spacing: 0.03em; cursor: pointer;
+    min-height: 2.25rem; padding: 0.5rem 0.7rem; border-radius: 999px;
+    border: 1px solid var(--mcco-color-border); background: var(--mcco-color-bg); color: var(--mcco-color-text);
+  }
+  .mcco-hero__selector button span { color: var(--mcco-color-muted); }
+  .mcco-hero__selector button[aria-pressed='true'] { border-color: var(--mcco-color-accent); background: var(--mcco-color-accent); color: var(--mcco-color-on-accent); }
+  .mcco-hero__selector button[aria-pressed='true'] span { color: inherit; }
+  .mcco-hero__selector button:focus-visible { outline: 2px solid var(--mcco-color-accent); outline-offset: 2px; }
+  .mcco-hero__pie {
+    grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 1rem; min-height: 2.25rem;
+    font: 0.75rem/1.3 var(--mcco-font-mono); color: var(--mcco-color-muted);
+  }
+  @media (max-width: 760px) {
+    .mcco-hero { grid-template-columns: 1fr; padding-top: 2rem; }
+    .mcco-hero__marco { aspect-ratio: 4 / 3.4; margin: 0 calc(var(--mcco-space) * -0.5); }
+    .mcco-hero__pie { justify-content: space-between; }
+  }
+</style>
