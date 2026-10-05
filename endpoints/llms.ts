@@ -45,7 +45,7 @@ export const GET: APIRoute = async () => {
 export const GETFull: APIRoute = async () => {
   const site = loadSite();
   const list = await posts();
-  const out = [`# ${site.name} — contenido completo`, '', `> ${site.description.trim()}`, ''];
+  const out = [`# ${site.name}: contenido completo`, '', `> ${site.description.trim()}`, ''];
   for (const p of list) {
     out.push(`## ${p.data.title}`, `URL: ${site.domain}/blog/${p.id}`, `Fecha: ${p.data.date.toISOString().slice(0, 10)}`, '', p.data.capsule, '', p.body ?? '', '');
     if (p.data.faq?.length) out.push('### Preguntas frecuentes', ...p.data.faq.map((f: any) => `- **${f.q}** ${f.a}`), '');
