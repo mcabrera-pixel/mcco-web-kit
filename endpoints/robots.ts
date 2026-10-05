@@ -8,7 +8,7 @@ export const GET: APIRoute = () => {
   const site = loadSite();
   const bots: { ua: string; owner: string }[] = loadBots();
   const lines = [
-    `# ${site.name} — ${site.domain}`,
+    `# ${site.name}: ${site.domain}`,
     'User-agent: *',
     'Allow: /',
     '',

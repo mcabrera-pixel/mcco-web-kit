@@ -7,12 +7,16 @@ const entity = loadEntity();
 const sites = loadActiveSites();
 const corporate = sites.find((s: any) => s.role === 'corporativa');
 const others = sites.filter((s: any) => s.domain !== site.domain && s.role !== 'corporativa');
+// En la casa matriz el pie no dice «MCCO Group es parte de MCCO Group».
+const esCasaMatriz = corporate?.domain === site.domain;
 ---
 <section class="mcco-grupo" aria-label="Grupo MCCO" data-mcco="grupo">
   <div class="mcco-grupo__inner">
     <p class="mcco-grupo__lead">
-      <strong>{site.name}</strong> es parte de <a href={`${corporate?.domain ?? 'https://www.mcco.cl'}/`}>{entity.brandName ?? 'MCCO Group'}</a>
-      · {entity.legalName} · RUT {entity.taxID} · {entity.addressText}
+      {esCasaMatriz
+        ? <strong>{entity.brandName ?? 'MCCO Group'}</strong>
+        : <Fragment><strong>{site.name}</strong> es parte de <a href={`${corporate?.domain ?? 'https://www.mcco.cl'}/`}>{entity.brandName ?? 'MCCO Group'}</a></Fragment>}
+      {' '}· {entity.legalName} · RUT {entity.taxID} · {entity.addressText}
     </p>
     <ul class="mcco-grupo__list">
       {others.map((s: any) => (
