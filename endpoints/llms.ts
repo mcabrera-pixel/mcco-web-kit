@@ -4,7 +4,7 @@
 //      src/pages/llms-full.txt.ts  →  export { GETFull as GET } from '@mcco/web-kit/endpoints/llms';
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { loadSite, loadSites, loadEntity } from '../lib/site.mjs';
+import { loadSite, loadActiveSites, loadEntity } from '../lib/site.mjs';
 
 async function posts(): Promise<any[]> {
   try {
@@ -17,7 +17,7 @@ async function posts(): Promise<any[]> {
 
 export const GET: APIRoute = async () => {
   const site = loadSite();
-  const sites = loadSites();
+  const sites = loadActiveSites();
   const entity = loadEntity();
   const list = await posts();
   const pages: { title: string; url: string }[] = site.llms?.pages ?? [];

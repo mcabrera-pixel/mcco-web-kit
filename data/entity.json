@@ -1,5 +1,6 @@
 {
-  "legalName": "MCCO Group SpA",
+  "legalName": "Inversiones MCCO SpA",
+  "brandName": "MCCO Group",
   "taxID": "77.715.147-9",
   "foundingDate": "2022",
   "addressText": "Suecia 283, of. 402, Providencia, Santiago",
@@ -12,12 +13,13 @@
   },
   "founder": {
     "name": "Mario Cabrera",
-    "jobTitle": "Gerente General, MCCO Group SpA"
+    "jobTitle": "CEO de MCCO Group"
   },
   "sameAs": [],
   "_notas": [
     "Fuente: sesión webs-mcco 2026-09-05 (Bloque 0): RUT, constitución 2022 y cargo único verificados por Mario.",
     "Dirección fijada por Mario el 2026-08-17 para toda cotización y documento.",
-    "sameAs vacío hasta tener perfiles oficiales del grupo confirmados (LinkedIn MCCO Group). No inventar."
+    "sameAs vacío hasta tener perfiles oficiales del grupo confirmados (LinkedIn MCCO Group). No inventar.",
+    "2026-10-05: razón social corregida a Inversiones MCCO SpA según manual/comercial.md del repo Standards (26-sep-2026), que manda: «Nombre comercial: MCCO Group. Nunca se escribe «MCCO Group SpA»». Cargo según el mismo manual (CEO)."
   ]
 }
