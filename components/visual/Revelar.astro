@@ -1,0 +1,11 @@
+---
+// Revelado al entrar en pantalla y contadores animados (sistema visual v1.1). Va una vez por página, por ejemplo
+// al final del layout; después se marca el HTML con atributos:
+//   <div data-revelar>…</div>                  aparece al entrar en pantalla
+//   <ul data-revelar-grupo><li>…</li></ul>      cada hijo con un pequeño desfase
+//   <span data-contar="45">45</span>            la cifra cuenta desde 0 (data-decimales="1" si corresponde)
+// El HTML trae siempre el estado final: sin JS o con movimiento reducido se ve completo y con la cifra real.
+import '../../styles/tokens.css';
+import '../../styles/visual.css';
+---
+<script>import '../../lib/visual/revelar.js';</script>

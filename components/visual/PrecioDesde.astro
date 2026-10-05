@@ -1,0 +1,34 @@
+---
+// Chip de precio de referencia (sistema visual v1.1): «desde UF 45». La cifra la fija el sitio, nunca el kit.
+import '../../styles/tokens.css';
+import '../../styles/visual.css';
+
+interface Props {
+  /** Monto en UF (número o texto ya formateado). */
+  uf: number | string;
+  /** Detalle tras la cifra: "por levantamiento", "+ IVA". */
+  detalle?: string;
+  /** Cuenta la cifra al entrar en pantalla (requiere <Revelar /> en la página). */
+  contar?: boolean;
+  class?: string;
+}
+const { uf, detalle, contar = false, class: clase } = Astro.props;
+const n = typeof uf === 'number' ? uf : Number(String(uf).replace(/\./g, '').replace(',', '.'));
+const decimales = Number.isFinite(n) && !Number.isInteger(n) ? 1 : 0;
+const texto = typeof uf === 'number' ? uf.toLocaleString('es-CL', { minimumFractionDigits: decimales, maximumFractionDigits: decimales }) : uf;
+---
+<span class:list={['mcco-precio', clase]} data-mcco-visual="precio">
+  <span class="mcco-precio__desde">desde</span>
+  <strong>UF {contar && Number.isFinite(n) ? <span data-contar={n} data-decimales={decimales || undefined}>{texto}</span> : texto}</strong>
+  {detalle && <span class="mcco-precio__detalle">{detalle}</span>}
+</span>
+
+<style>
+  .mcco-precio {
+    display: inline-flex; align-items: baseline; gap: 0.4rem; padding: 0.45rem 0.85rem;
+    border: 1px solid var(--mcco-color-accent); border-radius: 999px; color: var(--mcco-color-text); background: var(--mcco-color-bg);
+    font-size: 0.9375rem; line-height: 1.2; white-space: nowrap;
+  }
+  .mcco-precio__desde, .mcco-precio__detalle { font: 500 0.75rem/1.2 var(--mcco-font-mono); letter-spacing: 0.04em; color: var(--mcco-color-muted); }
+  .mcco-precio strong { font-family: var(--mcco-font-display); font-weight: 650; font-variant-numeric: tabular-nums; }
+</style>

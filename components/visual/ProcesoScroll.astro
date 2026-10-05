@@ -1,0 +1,120 @@
+---
+// Diagrama de proceso desde datos (sistema visual v1.1): horizontal en escritorio, vertical en móvil.
+// Al bajar, la línea se dibuja y cada paso aparece cuando la línea lo alcanza. Sin JS o con movimiento
+// reducido se ve completo y estático. Para "cómo trabajamos" o el recorrido mina → chancado → concentradora → fundición.
+import '../../styles/tokens.css';
+import '../../styles/visual.css';
+import { iconos } from '../../lib/visual/iconos.mjs';
+
+interface Paso {
+  titulo: string;
+  texto?: string;
+  /** Nombre de un ícono del kit (mina, chancado, concentradora, fundicion, escaner, nube, modelo, documento,
+   *  reunion, terreno, entrega, camion) o ruta a una imagen propia ('/…'). Sin ícono se muestra el número. */
+  icono?: string;
+}
+interface Props {
+  pasos: Paso[];
+  titulo?: string;
+  antetitulo?: string;
+  /** Nota al pie del diagrama (p. ej. "Esquema simplificado"). */
+  nota?: string;
+  /** Rótulo de origen del diagrama. */
+  rotulo?: string;
+  /** Nivel del título de la sección; los pasos van un nivel más abajo. */
+  nivel?: 2 | 3;
+  id?: string;
+  class?: string;
+}
+const { pasos, titulo, antetitulo, nota, rotulo = 'Esquema', nivel = 2, id, class: clase } = Astro.props;
+if (!pasos?.length) throw new Error('ProcesoScroll: `pasos` necesita al menos un { titulo }.');
+const Titulo = `h${nivel}`;
+const TituloPaso = `h${nivel + 1}`;
+---
+<section class:list={['mcco-proceso', clase]} id={id} data-mcco-proceso data-mcco-visual="proceso" data-origen="esquema" style={`--n: ${pasos.length};`}>
+  {(titulo || antetitulo) && (
+    <header class="mcco-proceso__cabeza">
+      {antetitulo && <p class="mcco-proceso__ante">{antetitulo}</p>}
+      {titulo && <Titulo class="mcco-proceso__titulo">{titulo}</Titulo>}
+    </header>
+  )}
+  <ol class="mcco-proceso__lista">
+    {pasos.map((p, i) => (
+      <li class="mcco-proceso__paso" data-paso style={`--i: ${i};`}>
+        <span class="mcco-proceso__nodo" aria-hidden="true">
+          {p.icono && iconos[p.icono as keyof typeof iconos] ? (
+            <svg viewBox="0 0 32 32" width="32" height="32"><path d={iconos[p.icono as keyof typeof iconos]} pathLength="1" /></svg>
+          ) : p.icono?.startsWith('/') ? (
+            <img src={p.icono} alt="" width="32" height="32" loading="lazy" decoding="async" />
+          ) : (
+            <b>{i + 1}</b>
+          )}
+        </span>
+        <div class="mcco-proceso__cuerpo">
+          <span class="mcco-proceso__n">{String(i + 1).padStart(2, '0')}</span>
+          <TituloPaso class="mcco-proceso__paso-titulo">{p.titulo}</TituloPaso>
+          {p.texto && <p>{p.texto}</p>}
+        </div>
+      </li>
+    ))}
+  </ol>
+  <p class="mcco-proceso__pie">
+    <span class="mcco-proceso__rotulo" data-rotulo>{rotulo}</span>
+    {nota && <span>{nota}</span>}
+  </p>
+</section>
+
+<script>import '../../lib/visual/proceso.js';</script>
+
+<style>
+  .mcco-proceso { --nodo: 3.5rem; max-width: var(--mcco-maxw); margin: 0 auto; padding: clamp(2.5rem, 6vw, 5rem) var(--mcco-space); color: var(--mcco-color-text); }
+  .mcco-proceso__ante { font: 500 0.8125rem/1.3 var(--mcco-font-mono); text-transform: uppercase; letter-spacing: 0.12em; color: var(--mcco-color-muted); margin: 0 0 0.75rem; }
+  .mcco-proceso__titulo { font-family: var(--mcco-font-display); font-size: clamp(1.75rem, 3.4vw, 2.75rem); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 clamp(1.75rem, 4vw, 3rem); max-width: 20em; }
+  .mcco-proceso__lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+  .mcco-proceso__paso {
+    /* Tramo de línea propio de cada paso: avanza de 0 a 1 según --mcco-avance (1 sin JS). */
+    --tramo: clamp(0, calc(var(--mcco-avance, 1) * (var(--n) - 1) - var(--i)), 1);
+    position: relative; text-align: center; padding: 0 0.6rem;
+  }
+  .mcco-proceso__paso:not(:last-child)::before,
+  .mcco-proceso__paso:not(:last-child)::after {
+    content: ''; position: absolute; top: calc(var(--nodo) / 2 - 1px); left: 50%; width: 100%; height: 2px; transform-origin: 0 50%;
+  }
+  .mcco-proceso__paso:not(:last-child)::before { background: var(--mcco-color-border); }
+  .mcco-proceso__paso:not(:last-child)::after { background: var(--mcco-color-accent); transform: scaleX(var(--tramo)); }
+  .mcco-proceso__nodo {
+    position: relative; z-index: 1; display: grid; place-items: center; width: var(--nodo); height: var(--nodo); margin: 0 auto 1rem;
+    border-radius: 50%; border: 2px solid var(--mcco-color-accent); background: var(--mcco-color-bg); color: var(--mcco-color-accent);
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.4s ease;
+  }
+  .mcco-proceso__nodo svg { width: 1.75rem; height: 1.75rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .mcco-proceso__nodo svg path { stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 0.9s ease 0.15s; }
+  .mcco-proceso__nodo img { width: 1.75rem; height: 1.75rem; object-fit: contain; }
+  .mcco-proceso__nodo b { font: 600 1rem/1 var(--mcco-font-mono); }
+  .mcco-proceso__cuerpo { transition: opacity 0.5s ease 0.1s, transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s; }
+  .mcco-proceso__n { display: block; font: 500 0.75rem/1 var(--mcco-font-mono); color: var(--mcco-color-muted); letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  .mcco-proceso__paso-titulo { font-family: var(--mcco-font-display); font-size: 1.125rem; line-height: 1.2; margin: 0 0 0.35rem; }
+  .mcco-proceso__cuerpo p { margin: 0; font-size: 0.9375rem; line-height: 1.45; color: var(--mcco-color-muted); }
+  .mcco-proceso__pie { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin: clamp(1.5rem, 3vw, 2.5rem) 0 0; font-size: 0.8125rem; color: var(--mcco-color-muted); }
+  .mcco-proceso__rotulo { font: 500 0.6875rem/1 var(--mcco-font-mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 0.35rem 0.5rem; border: 1px solid var(--mcco-color-border); border-radius: calc(var(--mcco-radius) * 0.6); }
+
+  /* Estado previo al paso de la línea: solo con JS activo (data-activo) y sin movimiento reducido. */
+  [data-activo] .mcco-proceso__paso:not(.is-on) .mcco-proceso__nodo { transform: scale(0.6); opacity: 0.25; }
+  [data-activo] .mcco-proceso__paso:not(.is-on) .mcco-proceso__nodo svg path { stroke-dashoffset: 1; }
+  [data-activo] .mcco-proceso__paso:not(.is-on) .mcco-proceso__cuerpo { opacity: 0; transform: translateY(12px); }
+
+  /* Móvil: vertical, nodo a la izquierda y la línea baja entre nodos. */
+  @media (max-width: 760px) {
+    .mcco-proceso { --nodo: 3rem; }
+    .mcco-proceso__lista { grid-template-columns: 1fr; gap: 0; }
+    .mcco-proceso__paso { display: grid; grid-template-columns: var(--nodo) 1fr; gap: 1rem; text-align: left; padding: 0 0 1.75rem; }
+    .mcco-proceso__paso:not(:last-child)::before,
+    .mcco-proceso__paso:not(:last-child)::after { top: var(--nodo); left: calc(var(--nodo) / 2 - 1px); width: 2px; height: calc(100% - var(--nodo)); transform-origin: 50% 0; }
+    .mcco-proceso__paso:not(:last-child)::after { transform: scaleY(var(--tramo)); }
+    .mcco-proceso__nodo { margin: 0; }
+    .mcco-proceso__cuerpo { padding-top: 0.35rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mcco-proceso__nodo, .mcco-proceso__cuerpo, .mcco-proceso__nodo svg path { transition: none; }
+  }
+</style>

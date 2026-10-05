@@ -1,0 +1,55 @@
+---
+// Imagen con origen declarado (sistema visual v1.1). El rótulo es visible, discreto y se puede mover de esquina
+// para no tapar lo importante. alt, width, height y origen son obligatorios: el build falla si faltan.
+// Regla del grupo: primero material real; después render propio; Codex solo para atmósfera y rotulado "Ilustración".
+import '../../styles/tokens.css';
+import '../../styles/visual.css';
+
+type Origen = 'real' | 'render' | 'ilustracion' | 'esquema';
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  origen: Origen;
+  /** Reemplaza el texto del rótulo ("Foto de faena", "Render 3D", "Ilustración", "Esquema"). */
+  rotulo?: string;
+  /** Esquina del rótulo. */
+  rotuloEn?: 'sup-izq' | 'sup-der' | 'inf-izq' | 'inf-der';
+  /** Pie de foto opcional bajo la imagen. */
+  pie?: string;
+  srcset?: string;
+  sizes?: string;
+  /** Imagen principal de la página: carga inmediata y fetchpriority alto. Por defecto, diferida. */
+  prioridad?: boolean;
+  /** Relación de aspecto fija del cuadro ('4 / 3'): ayuda a alinear grillas de imágenes distintas. */
+  proporcion?: string;
+  /** Con `proporcion`: 'cubrir' recorta (fotos), 'contener' muestra todo (esquemas, renders con fondo). */
+  ajuste?: 'cubrir' | 'contener';
+  /** object-position de la imagen cuando el contenedor la recorta. */
+  encuadre?: string;
+  class?: string;
+}
+const ROTULOS: Record<Origen, string> = { real: 'Foto de faena', render: 'Render 3D', ilustracion: 'Ilustración', esquema: 'Esquema' };
+const { src, alt, width, height, origen, rotulo, rotuloEn = 'inf-izq', pie, srcset, sizes, prioridad = false, proporcion, ajuste = 'cubrir', encuadre, class: clase } = Astro.props;
+const estiloImg = [proporcion && `object-fit: ${ajuste === 'contener' ? 'contain' : 'cover'}`, encuadre && `object-position: ${encuadre}`].filter(Boolean).join('; ') || undefined;
+const faltan = [!src && 'src', typeof alt !== 'string' && 'alt', !width && 'width', !height && 'height', !ROTULOS[origen] && 'origen (real | render | ilustracion | esquema)'].filter(Boolean);
+if (faltan.length) throw new Error(`Figura ${src ?? ''}: falta ${faltan.join(', ')}.`);
+---
+<figure class:list={['mcco-figura', clase]} data-mcco-visual="figura" data-origen={origen}>
+  <div class:list={['mcco-figura__marco', proporcion && 'mcco-figura__marco--fijo']} style={proporcion ? `aspect-ratio: ${proporcion};` : undefined}>
+    <img src={src} srcset={srcset} sizes={sizes} alt={alt} width={width} height={height} data-origen={origen}
+      loading={prioridad ? 'eager' : 'lazy'} fetchpriority={prioridad ? 'high' : undefined} decoding="async"
+      style={estiloImg} />
+    <span class="mcco-rotulo" data-rotulo data-en={rotuloEn}>{rotulo ?? ROTULOS[origen]}</span>
+  </div>
+  {pie && <figcaption>{pie}</figcaption>}
+</figure>
+
+<style>
+  .mcco-figura { margin: 0; }
+  .mcco-figura__marco { position: relative; overflow: hidden; border-radius: var(--mcco-radius); background: var(--mcco-color-bg-alt); }
+  .mcco-figura__marco img { display: block; width: 100%; height: auto; }
+  .mcco-figura__marco--fijo img { height: 100%; }
+  .mcco-figura figcaption { margin-top: 0.5rem; font-size: 0.875rem; line-height: 1.4; color: var(--mcco-color-muted); }
+</style>

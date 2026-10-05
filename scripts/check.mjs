@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // mcco-check — verificador ejecutable del Estándar Web MCCO v2 sobre dist/ (salida de `astro build`).
-// Uso: mcco-check [--dist dist] [--strict] [--verbose] [--json]
+// Uso: mcco-check [--dist dist] [--strict] [--visual-error] [--verbose] [--json]
 // Sale con código 1 si hay errores. Las reglas están numeradas igual que en el estándar (R1…R10).
+// R11-R13 (sistema visual v1.1) nacen como AVISO; --visual-error las sube a ERROR (ver docs/SISTEMA-VISUAL.md).
 import fs from 'node:fs';
 import path from 'node:path';
 import { parse } from 'node-html-parser';
@@ -21,6 +22,8 @@ const VERBOSE = !!opt('verbose', false);
 const AS_JSON = !!opt('json', false);
 
 const site = loadSite();
+// R11-R13 como error: por bandera o declarándolo en site.yaml (check: { visual: error }).
+const VISUAL_ERROR = !!opt('visual-error', false) || site.check?.visual === 'error';
 const entity = loadEntity();
 const blacklist = loadBlacklist();
 const findings = [];
@@ -248,6 +251,87 @@ for (const p of pages.filter((x) => x.route === '/en' || x.route.startsWith('/en
   if (!p.root.querySelector('link[rel="alternate"][hreflang]')) warn('R10-hreflang', p.file, 'página EN sin hreflang recíproco');
 }
 
+// ── R11-R13 sistema visual (v1.1): avisos; con --visual-error pasan a error ─────────────
+const visual = (rule, file, msg) => (VISUAL_ERROR ? err : warn)(rule, file, msg);
+
+// R11 toda ilustración lleva rótulo visible (data-origen="ilustracion" o archivo bajo /media/ilustracion/).
+const esIlustracion = (n) => n.getAttribute('data-origen') === 'ilustracion'
+  || /\/media\/ilustracion\//.test(`${n.getAttribute('src') ?? ''} ${n.getAttribute('srcset') ?? ''}`);
+const oculto = (n) => { for (let a = n; a && a.tagName; a = a.parentNode) if (a.hasAttribute('hidden')) return a; return null; };
+function tieneRotulo(n) {
+  // Se busca un rótulo en el elemento y hasta 3 contenedores arriba (figure, marco del componente), sin pasar
+  // de una sección o lista: así no cuenta el rótulo de otra imagen. Un rótulo cuenta si no está dentro de algo
+  // hidden que no contenga también a la imagen.
+  const tope = oculto(n);
+  const LIMITE = /^(main|body|html|section|article|header|footer|nav|aside|ul|ol)$/i;
+  for (let a = n, k = 0; a && a.tagName && !LIMITE.test(a.tagName) && k < 4; a = a.parentNode, k++) {
+    for (const r of a.querySelectorAll('[data-rotulo], figcaption')) {
+      const h = oculto(r);
+      if (h && h !== tope) continue;
+      if (r.hasAttribute('data-rotulo') ? r.text.trim() : /ilustraci/i.test(r.text)) return true;
+    }
+  }
+  return false;
+}
+for (const p of pages) {
+  for (const n of p.root.querySelectorAll('img, canvas, picture source')) {
+    if (!esIlustracion(n)) continue;
+    if (!tieneRotulo(n)) visual('R11-ilustracion', p.file, `ilustración sin rótulo visible: ${(n.getAttribute('src') ?? n.getAttribute('srcset') ?? n.tagName).slice(0, 80)}`);
+  }
+}
+
+// R12 peso de medios y atributos de video.
+for (const f of files) {
+  const r = rel(f);
+  const s = fs.statSync(f).size;
+  if (IMG.test(r) && s > 400_000) visual('R12-medios', r, `imagen de ${(s / 1e3).toFixed(0)} KB (>400 KB)`);
+  if (VID.test(r) && s > 8_000_000) visual('R12-medios', r, `video de ${(s / 1e6).toFixed(1)} MB (>8 MB)`);
+}
+for (const p of pages) {
+  for (const v of p.root.querySelectorAll('video')) {
+    const src = v.getAttribute('src') ?? v.querySelector('source')?.getAttribute('src') ?? 'video';
+    const falta = ['poster', 'muted', 'playsinline'].filter((a) => !v.hasAttribute(a));
+    if (falta.length) visual('R12-medios', p.file, `video sin ${falta.join(', ')}: ${src.slice(0, 80)}`);
+  }
+}
+
+// R13 animación con JS que no consulta prefers-reduced-motion. Se leen los scripts de la página (en línea y
+// locales, siguiendo sus imports relativos) y se busca la consulta. Los componentes del kit la hacen en
+// lib/visual/comun.js. Lo que no se puede ver estáticamente (CSS, scripts externos) es chequeo manual.
+const jsCache = new Map();
+function jsLocal(url, seen) {
+  const clean = url.split('?')[0].split('#')[0];
+  if (!clean.startsWith('/') || seen.has(clean)) return '';
+  seen.add(clean);
+  const file = path.join(DIST, clean.replace(/^\//, ''));
+  if (!fs.existsSync(file)) return '';
+  if (!jsCache.has(file)) jsCache.set(file, fs.readFileSync(file, 'utf8'));
+  return seguirImports(jsCache.get(file), clean, seen);
+}
+function seguirImports(code, base, seen) {
+  let out = code;
+  for (const m of code.matchAll(/(?:import|from)\s*\(?\s*["']([^"']+\.m?js)["']/g)) {
+    out += '\n' + jsLocal(m[1].startsWith('/') ? m[1] : path.posix.join(path.posix.dirname(base), m[1]), seen);
+  }
+  return out;
+}
+const MARCAS_VISUALES = '[data-mcco-hero], [data-mcco-video], [data-mcco-proceso], [data-revelar], [data-revelar-grupo], [data-contar]';
+for (const p of pages) {
+  const seen = new Set();
+  let code = '';
+  for (const s of p.root.querySelectorAll('script')) {
+    const type = s.getAttribute('type') ?? '';
+    if (type && !/module|javascript/.test(type)) continue;
+    const src = s.getAttribute('src');
+    code += '\n' + (src ? jsLocal(src, seen) : seguirImports(s.rawText, '/' + p.file, seen));
+  }
+  const usaKit = !!p.root.querySelector(MARCAS_VISUALES);
+  const anima = /requestAnimationFrame|\.animate\(/.test(code);
+  if ((usaKit || anima) && !/prefers-reduced-motion/.test(code)) {
+    visual('R13-movimiento', p.file, usaKit ? 'componentes visuales sin script que consulte prefers-reduced-motion' : 'script que anima sin consultar prefers-reduced-motion');
+  }
+}
+
 // ── salida ───────────────────────────────────────────────────────────────────────────────
 const byRule = {};
 for (const f of findings) {
@@ -270,6 +354,6 @@ if (AS_JSON) {
     for (const it of show) console.log(`      ${it.level === 'ERROR' ? 'E' : 'W'} ${it.file}: ${it.msg}`);
     if (!VERBOSE && g.items.length > 8) console.log(`      … ${g.items.length - 8} más (--verbose)`);
   }
-  console.log(`\n  Resultado: ${errors} error(es), ${warns} aviso(s) → ${errors ? 'NO CUMPLE' : 'CUMPLE'} el Estándar Web MCCO v2${STRICT ? ' (strict)' : ''}.\n`);
+  console.log(`\n  Resultado: ${errors} error(es), ${warns} aviso(s) → ${errors ? 'NO CUMPLE' : 'CUMPLE'} el Estándar Web MCCO v2${STRICT ? ' (strict)' : ''}${VISUAL_ERROR ? ' (R11-R13 como error)' : ''}.\n`);
 }
 process.exit(errors ? 1 : 0);

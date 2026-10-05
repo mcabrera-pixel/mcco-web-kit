@@ -1,0 +1,39 @@
+---
+// Franja de clientes en texto, sin logos (sistema visual v1.1). Los nombres salen de site.yaml →
+// clientes_autorizados (o clients_allowed, el nombre anterior): la lista viva la fija Mario, no la página.
+import '../../styles/tokens.css';
+import '../../styles/visual.css';
+import { loadSite } from '../../lib/site.mjs';
+
+interface Props {
+  /** Frase que encabeza la franja. */
+  frase?: string;
+  /** Subconjunto a mostrar; solo se muestran los que también están autorizados en site.yaml. */
+  solo?: string[];
+  class?: string;
+}
+const site = loadSite();
+const { frase = 'Han confiado en nuestro equipo', solo, class: clase } = Astro.props;
+const autorizados: string[] = site.clientes_autorizados ?? site.clients_allowed ?? [];
+const norm = (s: string) => s.trim().toLowerCase();
+const nombres = solo ? autorizados.filter((c) => solo.some((s) => norm(s) === norm(c))) : autorizados;
+---
+{nombres.length > 0 && (
+  <section class:list={['mcco-clientes', clase]} data-mcco-visual="clientes" aria-label={frase}>
+    <p class="mcco-clientes__frase">{frase}</p>
+    <ul class="mcco-clientes__lista" data-revelar-grupo>
+      {nombres.map((n) => <li>{n}</li>)}
+    </ul>
+  </section>
+)}
+
+<style>
+  .mcco-clientes {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem clamp(1.5rem, 4vw, 3rem);
+    max-width: var(--mcco-maxw); margin: 0 auto; padding: 1.5rem var(--mcco-space);
+    border-top: 1px solid var(--mcco-color-border); border-bottom: 1px solid var(--mcco-color-border); color: var(--mcco-color-text);
+  }
+  .mcco-clientes__frase { margin: 0; font: 500 0.75rem/1.3 var(--mcco-font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--mcco-color-muted); }
+  .mcco-clientes__lista { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem clamp(1.25rem, 3.5vw, 2.75rem); }
+  .mcco-clientes__lista li { font-family: var(--mcco-font-display); font-weight: 600; font-size: clamp(1rem, 1.6vw, 1.25rem); letter-spacing: 0.04em; text-transform: uppercase; }
+</style>
