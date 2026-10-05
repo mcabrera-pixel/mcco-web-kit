@@ -59,7 +59,7 @@ const fecha = d.date.toLocaleDateString('es-CL', { year: 'numeric', month: 'long
         </nav>
         <h1>{d.title}</h1>
         <p class="mcco-post__meta">
-          Por <strong>{author.name}</strong>{author.role && <span> — {author.role}</span>}
+          Por <strong>{author.name}</strong>{author.role && <span>, {author.role}</span>}
           · <time datetime={published}>{fecha}</time>{minutes && <span> · {minutes} min de lectura</span>}
         </p>
         {d.hero && <img class="mcco-post__hero" src={d.hero.src} alt={d.hero.alt} width="1200" height="675" fetchpriority="high" />}

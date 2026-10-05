@@ -1,22 +1,22 @@
 ---
-// Bloque "Grupo MCCO": pertenencia al grupo + enlaces a las webs hermanas + entidad legal.
+// Bloque "Grupo MCCO": pertenencia al grupo + enlaces a las marcas hermanas en línea + entidad legal.
 // Va en TODAS las páginas (interlinking del grupo, Estándar v2 §6). El sitio conserva su propio footer.
-import { loadSite, loadEntity, loadSites } from '../lib/site.mjs';
+import { loadSite, loadEntity, loadActiveSites } from '../lib/site.mjs';
 const site = loadSite();
 const entity = loadEntity();
-const sites = loadSites();
+const sites = loadActiveSites();
 const corporate = sites.find((s: any) => s.role === 'corporativa');
 const others = sites.filter((s: any) => s.domain !== site.domain && s.role !== 'corporativa');
 ---
 <section class="mcco-grupo" aria-label="Grupo MCCO" data-mcco="grupo">
   <div class="mcco-grupo__inner">
     <p class="mcco-grupo__lead">
-      <strong>{site.name}</strong> es parte de <a href={`${corporate?.domain ?? 'https://www.mcco.cl'}/`}>MCCO Group</a>
+      <strong>{site.name}</strong> es parte de <a href={`${corporate?.domain ?? 'https://www.mcco.cl'}/`}>{entity.brandName ?? 'MCCO Group'}</a>
       · {entity.legalName} · RUT {entity.taxID} · {entity.addressText}
     </p>
     <ul class="mcco-grupo__list">
       {others.map((s: any) => (
-        <li><a href={`${s.domain}/`}>{s.name}</a><span class="mcco-grupo__tag"> — {s.tagline}</span></li>
+        <li><a href={`${s.domain}/`}>{s.name}</a><span class="mcco-grupo__tag">: {s.tagline}</span></li>
       ))}
     </ul>
   </div>

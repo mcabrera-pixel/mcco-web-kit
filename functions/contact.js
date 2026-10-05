@@ -22,7 +22,7 @@ async function enviarAcuse(env, origin, email, nombre) {
           `Hola${nombre ? " " + String(nombre).slice(0, 80) : ""}:\n\n` +
           `Tu solicitud llegó al equipo de ${siteName} (MCCO Group). Un ingeniero la está revisando y te responderá dentro de 24 horas hábiles.\n\n` +
           (env.WHATSAPP ? `Si tu proyecto es urgente, escríbenos directo por WhatsApp: https://wa.me/${String(env.WHATSAPP).replace(/\D/g, "")}\n\n` : "") +
-          `${siteName} · MCCO Group SpA\nSuecia 283, of. 402, Providencia, Santiago · ${origin}`,
+          `${siteName} · MCCO Group\nSuecia 283, of. 402, Providencia, Santiago · ${origin}`,
       }),
       signal: ctrl.signal,
     });
