@@ -20,6 +20,8 @@ Kit compartido de las webs de MCCO Group. Implementa en código el **Estándar W
 | `scripts/check.mjs` | **`mcco-check`**: verificador R1-R13 sobre `dist/` (R11-R13 del sistema visual, como aviso). Sale 1 si hay errores. Es el gate de CI. |
 | `scripts/parity.mjs` | **`mcco-parity`**: gate de migración (producción vs build, ruta por ruta). |
 | `scripts/headers.mjs` | **`mcco-headers`**: genera `public/_headers` (CSP) y `public/_redirects` desde `site.yaml`. |
+| `scripts/sitio-ci.mjs` | **`mcco-sitio`**: proyecto Cloudflare y dominio desde `site.yaml` para los workflows. |
+| `scripts/smoke.sh` | Smoke del deploy sobre `<proyecto>.pages.dev` y, si está conectado, el dominio. |
 | `.github/workflows/site-ci.yml` | Reutilizable: PR → build + check + preview. |
 | `.github/workflows/site-deploy.yml` | Reutilizable: main → build + check + deploy + smoke. |
 
@@ -57,6 +59,8 @@ Uso de cada componente, presupuesto de rendimiento, regla de imágenes del grupo
 ## Versionado
 
 Tags `vMAJOR.MINOR.PATCH`. Los sitios fijan el tag en `package.json`. Cambios que rompen (renombrar props, cambiar reglas de `mcco-check` de aviso a error) suben MAJOR y se anuncian en `CHANGELOG.md`.
+
+Historial en `CHANGELOG.md`. Los lockfiles de los sitios se generan en Linux: `docs/LOCKFILE.md`.
 
 ## Qué NO es el kit
 

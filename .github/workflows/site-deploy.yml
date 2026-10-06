@@ -1,34 +1,36 @@
 # Workflow reutilizable (Estándar Web MCCO v2 §7): push a main = build + mcco-check + deploy producción + smoke.
-# Uso en el sitio (.github/workflows/deploy.yml):
+# El proyecto sale de site.yaml. El smoke (scripts/smoke.sh) prueba <proyecto>.pages.dev y, si el dominio ya está
+# conectado al proyecto, también el dominio. Uso en el sitio (.github/workflows/deploy.yml):
 #   on: { push: { branches: [main] }, workflow_dispatch: {} }
-#   jobs: { deploy: { uses: mcabrera-pixel/mcco-web-kit/.github/workflows/site-deploy.yml@v1, with: { project: 3d-ultra }, secrets: inherit } }
+#   jobs: { deploy: { uses: mcabrera-pixel/mcco-web-kit/.github/workflows/site-deploy.yml@v1.1.3, secrets: inherit } }
 name: site-deploy
 
 on:
   workflow_call:
     inputs:
       project:
-        required: true
+        description: Obsoleto desde v1.1.3 (el proyecto sale de site.yaml). Si se pasa, debe coincidir.
+        required: false
         type: string
+        default: ''
       node:
         required: false
         type: string
-        default: '24'
+        default: '24.21.0'
     secrets:
       CLOUDFLARE_API_TOKEN:
         required: true
       CLOUDFLARE_ACCOUNT_ID:
         required: true
 
-concurrency:
-  group: deploy-${{ inputs.project }}
-  cancel-in-progress: false
-
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
+    concurrency:
+      group: deploy-${{ github.repository }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,6 +42,12 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Proyecto y dominio desde site.yaml
+        id: sitio
+        env:
+          PROYECTO_INPUT: ${{ inputs.project }}
+        run: npx mcco-sitio
 
       - name: Build
         run: npm run build
@@ -53,25 +61,12 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ inputs.project }} --branch=main --commit-hash=${{ github.sha }}
+          command: pages deploy dist --project-name=${{ steps.sitio.outputs.project }} --branch=main --commit-hash=${{ github.sha }}
 
       - name: Smoke en producción
-        run: |
-          DOMAIN=$(node -e "import('yaml').then(y=>{const s=y.default.parse(require('fs').readFileSync('site.yaml','utf8'));console.log(s.domain)})")
-          echo "Dominio: $DOMAIN"
-          for p in / /sitemap.xml /robots.txt /llms.txt; do
-            for i in 1 2 3 4 5 6; do
-              code=$(curl -s -o /dev/null -w '%{http_code}' -L "$DOMAIN$p")
-              [ "$code" = "200" ] && break
-              sleep 10
-            done
-            echo "$p → $code"
-            [ "$code" = "200" ] || exit 1
-          done
-          curl -s -L "$DOMAIN/" | grep -q "rel=\"canonical\" href=\"$DOMAIN/\"" || { echo "canonical de la home no apunta a $DOMAIN/"; exit 1; }
-          {
-            echo "## Deploy producción — ${{ inputs.project }}"
-            echo "- URL: $DOMAIN"
-            echo "- Deployment: ${{ steps.deploy.outputs.deployment-url }}"
-            echo "- Smoke: home, sitemap, robots, llms = 200 · canonical OK"
-          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          PROYECTO: ${{ steps.sitio.outputs.project }}
+          DOMINIO: ${{ steps.sitio.outputs.domain }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bash node_modules/@mcco/web-kit/scripts/smoke.sh
