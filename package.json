@@ -1,6 +1,6 @@
 {
   "name": "@mcco/web-kit",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Kit compartido de las webs MCCO Group (Estándar Web v2): layouts y componentes Astro, entidad del grupo, endpoints SEO/GEO, verificador mcco-check, generador de _headers y workflows reutilizables.",
   "type": "module",
   "license": "UNLICENSED",
@@ -24,7 +24,11 @@
   "bin": {
     "mcco-check": "scripts/check.mjs",
     "mcco-parity": "scripts/parity.mjs",
-    "mcco-headers": "scripts/headers.mjs"
+    "mcco-headers": "scripts/headers.mjs",
+    "mcco-sitio": "scripts/sitio-ci.mjs"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
   },
   "files": [
     "config", "content", "layouts", "components", "pages", "data", "endpoints",
