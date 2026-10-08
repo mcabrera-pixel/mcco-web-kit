@@ -2,6 +2,8 @@
 # El proyecto Cloudflare sale de site.yaml (cloudflare.project). Uso en el sitio (.github/workflows/ci.yml):
 #   on: { pull_request: { branches: [main] } }
 #   jobs: { ci: { uses: mcabrera-pixel/mcco-web-kit/.github/workflows/site-ci.yml@v1.1.3, secrets: inherit } }
+# Los scripts del kit corren con node desde node_modules del sitio, nunca con npx (si el paquete instalado no los trae,
+# npx los busca en el registro público de npm). Por eso la ref del workflow (@vX.Y.Z) y la versión del paquete van juntas.
 name: site-ci
 
 on:
@@ -45,13 +47,13 @@ jobs:
         id: sitio
         env:
           PROYECTO_INPUT: ${{ inputs.project }}
-        run: npx mcco-sitio
+        run: node node_modules/@mcco/web-kit/scripts/sitio-ci.mjs
 
       - name: Build
         run: npm run build
 
       - name: mcco-check (Estándar Web MCCO v2)
-        run: npx mcco-check --dist dist
+        run: node node_modules/@mcco/web-kit/scripts/check.mjs --dist dist
 
       - name: Preview deploy en Cloudflare Pages
         if: env.HAS_CF == 'true'

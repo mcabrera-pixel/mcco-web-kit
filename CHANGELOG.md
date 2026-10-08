@@ -9,6 +9,7 @@ Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los
 - Smoke del deploy en `scripts/smoke.sh`: prueba `<proyecto>.pages.dev` y el dominio solo si ya está conectado al proyecto. Las webs sin dominio propio pueden desplegar.
 - `docs/LOCKFILE.md`: el lockfile se genera en Linux con el npm de la CI.
 - Los sitios llaman a los workflows con la misma tag del paquete (`@v1.1.3`) en vez de `@v1`.
+- Los workflows corren `mcco-sitio` y `mcco-check` con `node node_modules/@mcco/web-kit/scripts/…`, sin `npx`. La ref del workflow (`@vX.Y.Z`) y la versión del paquete van juntas, y la tag `v1` no se mueve.
 
 ## v1.1.2 · 2026-10-05
 - MCCO Group pasa a «Ingeniería para minería: estructuras, infraestructura crítica y activos», con 5 productos en `sites.json`.

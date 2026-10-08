@@ -60,6 +60,8 @@ Uso de cada componente, presupuesto de rendimiento, regla de imágenes del grupo
 
 Tags `vMAJOR.MINOR.PATCH`. Los sitios fijan el tag en `package.json`. Cambios que rompen (renombrar props, cambiar reglas de `mcco-check` de aviso a error) suben MAJOR y se anuncian en `CHANGELOG.md`.
 
+La ref de los workflows reutilizables (`@vX.Y.Z`) y la versión del paquete en `package.json` van juntas: los workflows corren los scripts del kit desde `node_modules`, sin `npx`. La tag `v1` no se mueve.
+
 Historial en `CHANGELOG.md`. Los lockfiles de los sitios se generan en Linux: `docs/LOCKFILE.md`.
 
 ## Qué NO es el kit

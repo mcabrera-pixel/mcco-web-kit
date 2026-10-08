@@ -3,6 +3,8 @@
 # conectado al proyecto, también el dominio. Uso en el sitio (.github/workflows/deploy.yml):
 #   on: { push: { branches: [main] }, workflow_dispatch: {} }
 #   jobs: { deploy: { uses: mcabrera-pixel/mcco-web-kit/.github/workflows/site-deploy.yml@v1.1.3, secrets: inherit } }
+# Los scripts del kit corren con node desde node_modules del sitio, nunca con npx (si el paquete instalado no los trae,
+# npx los busca en el registro público de npm). Por eso la ref del workflow (@vX.Y.Z) y la versión del paquete van juntas.
 name: site-deploy
 
 on:
@@ -47,13 +49,13 @@ jobs:
         id: sitio
         env:
           PROYECTO_INPUT: ${{ inputs.project }}
-        run: npx mcco-sitio
+        run: node node_modules/@mcco/web-kit/scripts/sitio-ci.mjs
 
       - name: Build
         run: npm run build
 
       - name: mcco-check (Estándar Web MCCO v2)
-        run: npx mcco-check --dist dist
+        run: node node_modules/@mcco/web-kit/scripts/check.mjs --dist dist
 
       - name: Deploy producción (Cloudflare Pages)
         id: deploy
