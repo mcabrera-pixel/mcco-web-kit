@@ -10,6 +10,7 @@ Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los
 - `docs/LOCKFILE.md`: el lockfile se genera en Linux con el npm de la CI.
 - Los sitios llaman a los workflows con la misma tag del paquete (`@v1.1.3`) en vez de `@v1`.
 - Los workflows corren `mcco-sitio` y `mcco-check` con `node node_modules/@mcco/web-kit/scripts/…`, sin `npx`. La ref del workflow (`@vX.Y.Z`) y la versión del paquete van juntas, y la tag `v1` no se mueve.
+- Formulario de contacto (`functions/contact.js`): los leads van al Worker `formularios-mcco`, porque Web3Forms rechaza con 403 los envíos desde servidor. Variables nuevas `FORMULARIOS_URL`, `FORMULARIOS_CLAVE` y `MARCA`; `WEB3FORMS_KEY` deja de usarse. Si el Worker falla, el error es `reason=correo` (antes `reason=web3forms`).
 
 ## v1.1.2 · 2026-10-05
 - MCCO Group pasa a «Ingeniería para minería: estructuras, infraestructura crítica y activos», con 5 productos en `sites.json`.
