@@ -1,0 +1,30 @@
+---
+// Fila de acciones del estándar: píldora llena (por defecto), píldora fantasma o enlace con «›» decorativo, centradas
+// y con 16 px entre ellas. tamano 'chica' achica las píldoras (12 px a la vista, 44 px de área táctil); el enlace con
+// «›» no cambia. Dentro de un bloque negro la hoja usa la variante clara de la fantasma y del enlace.
+import '../../styles/estandar.css';
+
+type Variante = 'llena' | 'fantasma' | 'mas';
+interface Accion { href: string; texto: string; variante?: Variante }
+interface Props {
+  acciones: Accion[];
+  tamano?: 'normal' | 'chica';
+}
+const CLASES: Record<Variante, string[]> = {
+  llena: ['std-pildora'],
+  fantasma: ['std-pildora', 'std-pildora--fantasma'],
+  mas: ['std-mas'],
+};
+const { acciones = [], tamano = 'normal' } = Astro.props;
+if (tamano !== 'normal' && tamano !== 'chica') throw new Error(`Acciones: tamano "${tamano}" no existe (normal, chica).`);
+for (const a of acciones) {
+  if (!a?.href || !a?.texto) throw new Error('Acciones: cada acción necesita { href, texto }.');
+  if (a.variante && !CLASES[a.variante]) throw new Error(`Acciones: variante "${a.variante}" no existe (llena, fantasma, mas).`);
+}
+const clases = ({ variante = 'llena' }: Accion) => [...CLASES[variante], tamano === 'chica' && variante !== 'mas' && 'std-pildora--chica'];
+---
+{acciones.length > 0 && (
+  <div class="std-acciones">
+    {acciones.map((a) => <a class:list={clases(a)} href={a.href}>{a.texto}</a>)}
+  </div>
+)}

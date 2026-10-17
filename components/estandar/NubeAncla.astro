@@ -1,0 +1,32 @@
+---
+// Ancla de la nube antigravity en el hero: el lugar bajo el título donde la nube arma el primer activo. Por ahora solo
+// lleva la imagen fija de respaldo, que es lo que queda sin WebGL o con movimiento reducido: una ilustración en nube
+// de puntos sobre negro, que sobre blanco se muestra invertida por CSS. El rótulo de origen lo pone quien la usa
+// (HeroEstandar). El alto cabe en la primera pantalla: se ajusta a lo que queda bajo el texto.
+import '../../styles/estandar.css';
+
+interface Props {
+  respaldo: { src: string; width: number; height: number; alt: string };
+}
+const { respaldo } = Astro.props;
+const faltan = [!respaldo?.src && 'src', !respaldo?.width && 'width', !respaldo?.height && 'height', typeof respaldo?.alt !== 'string' && 'alt'].filter(Boolean);
+if (faltan.length) throw new Error(`NubeAncla: falta respaldo.${faltan.join(', respaldo.')}.`);
+---
+<div class="std-nube" data-std-nube="hero">
+  <img class="std-nube__respaldo" src={respaldo.src} alt={respaldo.alt} width={respaldo.width} height={respaldo.height}
+    loading="lazy" decoding="async" data-origen="ilustracion" />
+</div>
+
+<style>
+  .std-nube {
+    position: relative; contain: layout paint; max-width: 1060px; margin: 14px auto 0;
+    height: clamp(240px, calc(100svh - 450px), 540px);
+  }
+  .std-nube__respaldo {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none;
+    filter: invert(1) grayscale(1) contrast(1.15); mix-blend-mode: multiply;
+  }
+  @media (max-width: 640px) {
+    .std-nube { height: 250px; margin-top: 8px; }
+  }
+</style>

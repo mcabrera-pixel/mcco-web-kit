@@ -1,0 +1,44 @@
+---
+// Hero del estándar: blanco, H1 de 56 px (el LCP), bajada, acciones y, con `nube`, el lugar donde la nube antigravity
+// arma el primer activo (NubeAncla) con su rótulo de origen debajo. Para cortes de línea o énfasis en el título se usa
+// el slot "titulo". La píldora fantasma lleva fondo blanco: el campo antigravity pasa por detrás del texto.
+import '../../styles/estandar.css';
+import Acciones from './Acciones.astro';
+import NubeAncla from './NubeAncla.astro';
+import type { ComponentProps } from 'astro/types';
+
+interface Props {
+  /** Texto del H1. Para cortes de línea o énfasis usa el slot "titulo". */
+  titulo?: string;
+  bajada?: string;
+  acciones: ComponentProps<typeof Acciones>['acciones'];
+  /** Imagen fija de la nube: la que se ve sin WebGL o con movimiento reducido. */
+  nube?: ComponentProps<typeof NubeAncla>;
+  /** Rótulo de origen bajo la nube. */
+  rotulo?: string;
+}
+const { titulo, bajada, acciones, nube, rotulo = 'Ilustración en nube de puntos.' } = Astro.props;
+if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta `titulo` o el slot "titulo".');
+---
+<section class="std-hero" aria-labelledby="std-hero-titulo">
+  <h1 class="std-h1" id="std-hero-titulo"><slot name="titulo">{titulo}</slot></h1>
+  {bajada && <p class="std-lead std-hero__bajada">{bajada}</p>}
+  <Acciones acciones={acciones} />
+  {nube && (
+    <figure class="std-hero__nube">
+      <NubeAncla respaldo={nube.respaldo} />
+      <figcaption class="std-fina std-hero__rotulo" data-rotulo>{rotulo}</figcaption>
+    </figure>
+  )}
+</section>
+
+<style>
+  .std-hero { position: relative; padding: 56px 22px 0; background: var(--std-blanco); text-align: center; }
+  .std-hero__bajada { color: #333336; }
+  .std-hero :global(.std-pildora--fantasma) { background: var(--std-blanco); }
+  .std-hero__nube { margin: 0; }
+  .std-hero__rotulo { margin: 0 auto; padding-bottom: 8px; }
+  @media (max-width: 640px) {
+    .std-hero { padding: 44px 16px 0; }
+  }
+</style>
