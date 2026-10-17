@@ -51,7 +51,7 @@ if (!titulo || !accion?.href || !accion?.texto) throw new Error('SubNav: falta t
   /* 12 px a la vista y 44 × 44 de área táctil; color y subrayado propios (la base los deja en color de acción). */
   .std-subnav__enlace {
     display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 6px;
-    color: #333336; font-size: 12px; letter-spacing: -.01em; text-decoration: none;
+    color: var(--std-tinta-80); font-size: 12px; letter-spacing: -.01em; text-decoration: none;
   }
   .std-subnav.is-oscura .std-subnav__enlace { color: var(--std-linea); }
   .std-subnav__accion { margin-left: 6px; }

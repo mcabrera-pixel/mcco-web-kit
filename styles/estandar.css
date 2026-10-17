@@ -46,6 +46,7 @@
   --std-negro-2: #2a2a2c;
   --std-negro-3: #161617;
   --std-tinta: #1d1d1f;
+  --std-tinta-80: #333336;                       /* «Ink Muted 80» del DESIGN.md de Apple: bajadas y enlaces de 12 px */
   --std-gris: #6e6e73;
   --std-linea: #d2d2d7;
   --std-sombra: rgba(0,0,0,.22) 3px 5px 30px 0;  /* la única sombra, solo en imágenes de producto */
