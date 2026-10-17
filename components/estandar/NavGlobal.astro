@@ -2,6 +2,7 @@
 // Barra global del estándar (Apple + antigravity): negra, 44 px, logo del sitio y enlaces de 12 px. Bajo los 834 px
 // quedan el logo y el botón de menú, y la misma lista de enlaces se abre como bandeja (lib/estandar/menu.js). Sin JS,
 // los enlaces se muestran en la barra y el botón no aparece. El logo va en claro: la barra siempre es negra.
+import { cleanPath } from '../../lib/routes.mjs';
 import '../../styles/estandar.css';
 
 interface Enlace { href: string; texto: string }
@@ -13,6 +14,12 @@ interface Props {
 const { logo, enlaces } = Astro.props;
 const faltan = [!logo?.src && 'logo.src', typeof logo?.alt !== 'string' && 'logo.alt', !logo?.width && 'logo.width', !logo?.height && 'logo.height'].filter(Boolean);
 if (faltan.length) throw new Error(`NavGlobal: falta ${faltan.join(', ')}.`);
+// aria-current="page" en el enlace a la página actual. Se comparan rutas limpias con / final: con build.format
+// "preserve", Astro.url.pathname de una página suelta termina en .html (/demo-estandar.html). Un enlace con # apunta
+// a una sección y no se marca (#claro, /#contacto), ni uno que no empiece con /.
+const conBarra = (ruta: string) => { const r = cleanPath(ruta); return r.endsWith('/') ? r : `${r}/`; };
+const paginaActual = conBarra(Astro.url.pathname);
+const esActual = (href: string) => href.startsWith('/') && !href.startsWith('//') && !href.includes('#') && conBarra(href.split('?')[0]) === paginaActual;
 ---
 <header class="std-gnav" data-std-gnav>
   <nav class="std-gnav__in" aria-label="Principal">
@@ -25,7 +32,7 @@ if (faltan.length) throw new Error(`NavGlobal: falta ${faltan.join(', ')}.`);
       </svg>
     </button>
     <ul class="std-gnav__enlaces" id="std-gnav-enlaces">
-      {enlaces.map((e) => <li><a href={e.href}>{e.texto}</a></li>)}
+      {enlaces.map((e) => <li><a href={e.href} aria-current={esActual(e.href) ? 'page' : undefined}>{e.texto}</a></li>)}
     </ul>
   </nav>
 </header>
