@@ -110,7 +110,7 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
 
 /* La píldora chica y el enlace se ven más bajos, pero su área táctil es de 44 px. */
 .std-pildora--chica::before,
-.std-mas::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; margin-top: -22px; }
+.std-mas::before { content: ""; position: absolute; left: -1px; right: -1px; top: 50%; height: 44px; margin-top: -22px; }
 
 .std-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; margin: 26px 0 0; }
 

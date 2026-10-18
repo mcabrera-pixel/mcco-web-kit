@@ -1,7 +1,5 @@
-// Pruebas de scripts/estandar-copiar.mjs (mcco-estandar-copiar): la salida sin Astro del estándar para webs sin
-// framework. Corre el script hacia una carpeta temporal (con espacios en la ruta, como las de MCCO) y revisa que la copia
-// se sostenga sola: cada import, import() y new URL(…, import.meta.url) relativo de los JS copiados, y cada url() de la
-// hoja, apunta a un archivo de la copia.
+// Pruebas de la capa base sin Astro: hoja, fuentes y runtimes sin minificar. Cada referencia debe apuntar a un archivo
+// dentro del destino, sin certificar el montaje de los componentes ni el presupuesto del build de Astro.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -12,7 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(KIT, 'scripts', 'estandar-copiar.mjs');
-const correr = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
+const correr = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', timeout: 10000 });
 
 const carpetas = [];
 after(() => { for (const c of carpetas) fs.rmSync(c, { recursive: true, force: true }); });
@@ -30,6 +28,83 @@ function copia() {
 /** Archivos de una carpeta, relativos a ella y con «/». */
 const listar = (dir, base = dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
   (e.isDirectory() ? listar(path.join(dir, e.name), base) : [path.relative(base, path.join(dir, e.name)).split(path.sep).join('/')]));
+
+// Cada caso negativo usa una copia propia para no alterar las demás pruebas.
+function conImport(fuente) {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'kit referencias '));
+  carpetas.push(raiz);
+  const d = path.join(raiz, 'destino');
+  fs.cpSync(copia(), d, { recursive: true });
+  fs.writeFileSync(path.join(d, 'lib/estandar/caso.js'), fuente);
+  return { raiz, d };
+}
+
+test('rechaza un import estático multilínea a un archivo ausente', () => {
+  const { d } = conImport("import {\n  ausente,\n} from './modulo-inexistente.js';\n");
+  assert.throws(() => verificarReferencias(d), /modulo-inexistente\.js.*no está en la copia/);
+});
+
+test('rechaza una referencia que escapa del destino aunque el archivo exista', () => {
+  const { raiz, d } = conImport("import '../../../externo.js';\n");
+  fs.writeFileSync(path.join(raiz, 'externo.js'), 'export const dato = 1;\n');
+  assert.throws(() => verificarReferencias(d), /externo\.js.*sale del destino/);
+});
+
+test('rechaza una referencia a una carpeta que existe', () => {
+  const { d } = conImport("import './carpeta';\n");
+  fs.mkdirSync(path.join(d, 'lib/estandar/carpeta'));
+  assert.throws(() => verificarReferencias(d), /carpeta.*no es un archivo/);
+});
+
+test('analiza imports y reexports multilínea sin confundir comentarios ni cadenas con imports', () => {
+  const { d } = conImport(`
+    import principal,
+      { dato as alias } from './a.js';
+    import
+      * as espacio from './b.js';
+    import /* comentario con 'comillas' */ './c.js';
+    export {
+      dato,
+    } from './d.js';
+    export *
+      from './e.js';
+    export * as grupo from './f.js';
+    // import './no-existe.js';
+    const texto = "import './tampoco.js'";
+  `);
+  for (const nombre of ['a', 'b', 'c', 'd', 'e', 'f']) {
+    fs.writeFileSync(path.join(d, `lib/estandar/${nombre}.js`), 'export const dato = 1; export default dato;');
+  }
+  assert.deepEqual(verificarReferencias(d).filter((r) => r.startsWith('lib/estandar/caso.js ')),
+    ['a', 'b', 'c', 'd', 'e', 'f'].map((n) => `lib/estandar/caso.js importa ./${n}.js`));
+});
+
+function archivoDeCopia(d, rel, especificador) {
+  const etiqueta = `${rel} importa "${especificador}"`;
+  assert.ok(especificador.startsWith('./') || especificador.startsWith('../'), `${etiqueta}, que no es relativo y no viaja con la copia`);
+  const archivo = fileURLToPath(new URL(especificador, pathToFileURL(path.join(d, rel))));
+  const dentro = (raiz, f) => {
+    const r = path.relative(raiz, f);
+    return r !== '..' && !r.startsWith(`..${path.sep}`) && !path.isAbsolute(r);
+  };
+  assert.ok(dentro(d, archivo), `${etiqueta} y sale del destino`);
+  assert.ok(fs.existsSync(archivo), `${etiqueta} y no está en la copia`);
+  assert.ok(fs.statSync(archivo).isFile(), `${etiqueta} y no es un archivo`);
+  assert.ok(dentro(fs.realpathSync(d), fs.realpathSync(archivo)), `${etiqueta} y sale del destino mediante un enlace`);
+}
+
+// El parser de Node reconoce toda la gramática de imports estáticos, sin ejecutar ni enlazar el código.
+// SourceTextModule requiere esta opción experimental solo en el subproceso de prueba, sin dependencias del kit.
+function importsEstaticos(fuentes) {
+  const r = spawnSync(process.execPath, ['--experimental-vm-modules', '--no-warnings', '--input-type=module', '-e', `
+    import { SourceTextModule } from 'node:vm';
+    import { readFileSync } from 'node:fs';
+    const fuentes = JSON.parse(readFileSync(0, 'utf8'));
+    console.log(JSON.stringify(fuentes.map((f) => new SourceTextModule(f).dependencySpecifiers)));
+  `], { input: JSON.stringify(fuentes), encoding: 'utf8', timeout: 10000 });
+  assert.equal(r.status, 0, r.stderr || r.error?.message);
+  return JSON.parse(r.stdout);
+}
 
 // Rompe si falta una pieza que la web necesita: la hoja, las fuentes con su licencia, el runtime o comun.js.
 test('copia la hoja, las fuentes, el runtime y comun.js con las mismas rutas relativas', () => {
@@ -53,28 +128,32 @@ test('la copia trae exactamente esos archivos, iguales a los del kit', () => {
 
 // Rompe si un JS copiado importa un archivo que no viaja con la copia: import estático, import() dinámico o el Worker
 // de la nube (new Worker(new URL('./nube-worker.js', import.meta.url))).
-test('cada referencia relativa de los JS copiados resuelve a un archivo de la copia', () => {
-  const d = copia();
+function verificarReferencias(d) {
   const refs = [];
-  for (const rel of listar(d).filter((f) => f.endsWith('.js'))) {
-    const fuente = fs.readFileSync(path.join(d, rel), 'utf8');
+  const archivos = listar(d).filter((f) => f.endsWith('.js'));
+  const fuentes = archivos.map((rel) => fs.readFileSync(path.join(d, rel), 'utf8'));
+  const estaticos = importsEstaticos(fuentes);
+  for (const [i, rel] of archivos.entries()) {
+    const fuente = fuentes[i];
     const especificadores = [
-      // import … from '…', export … from '…' e import '…' (sin confundirlos con un export const que lleva un texto).
-      ...[...fuente.matchAll(/^\s*(?:import|export)\s[^'"\n;]*?\bfrom\s*['"]([^'"]+)['"]/gm)].map((m) => m[1]),
-      ...[...fuente.matchAll(/^\s*import\s*['"]([^'"]+)['"]/gm)].map((m) => m[1]),
+      ...estaticos[i],
       ...[...fuente.matchAll(/\bimport\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => m[1]),
       ...[...fuente.matchAll(/new\s+URL\(\s*['"]([^'"]+)['"]\s*,\s*import\.meta\.url\s*\)/g)].map((m) => m[1]),
     ];
     for (const e of especificadores) {
-      assert.ok(e.startsWith('./') || e.startsWith('../'), `${rel} importa "${e}", que no es relativo y no viaja con la copia`);
+      archivoDeCopia(d, rel, e);
       refs.push(`${rel} importa ${e}`);
-      assert.ok(fs.existsSync(path.resolve(path.dirname(path.join(d, rel)), e)), `${rel} importa "${e}" y no está en la copia`);
     }
   }
+  return refs;
+}
+
+test('cada referencia relativa de los JS copiados resuelve a un archivo de la copia', () => {
+  const refs = verificarReferencias(copia());
   // La prueba no pasa en vacío: estas referencias existen hoy.
   for (const r of ['lib/estandar/nube.js importa ../visual/comun.js', 'lib/estandar/campo.js importa ./campo-anillos.js',
     'lib/estandar/nube-worker.js importa ./nube-muestreo.js']) assert.ok(refs.includes(r), `no encontré ${r}`);
-  assert.equal(refs.filter((r) => r === 'lib/estandar/nube.js importa ./nube-worker.js').length, 2, 'nube.js carga el Worker por new URL() y por import()');
+  assert.equal(refs.filter((r) => r === 'lib/estandar/nube-cliente.js importa ./nube-worker.js').length, 2, 'nube-cliente.js carga el Worker por new URL() y por import()');
 });
 
 test('cada url() de la hoja copiada resuelve a un archivo de la copia', () => {
@@ -82,7 +161,7 @@ test('cada url() de la hoja copiada resuelve a un archivo de la copia', () => {
   const hoja = fs.readFileSync(path.join(d, 'styles/estandar.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const urls = [...hoja.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g)].map((m) => m[2]);
   assert.ok(urls.length >= 2, 'la hoja no declara sus fuentes');
-  for (const u of urls) assert.ok(fs.existsSync(path.resolve(d, 'styles', u)), `${u} no está en la copia`);
+  for (const u of urls) archivoDeCopia(d, 'styles/estandar.css', u);
 });
 
 // Rompe si los módulos copiados no cargan fuera del kit: el del Worker importa nube-muestreo.js por su ruta relativa.
