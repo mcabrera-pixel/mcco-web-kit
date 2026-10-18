@@ -38,6 +38,10 @@ if (faltan.length) throw new Error(`NubeAncla: falta respaldo.${faltan.join(', r
   @media (prefers-reduced-motion: reduce) {
     .std-nube__respaldo { display: block; }
   }
+  /* Sin JS ya está la copia de <noscript>: con movimiento reducido no se encima la otra (multiply oscurecería el doble). */
+  @media (scripting: none) {
+    .std-nube__respaldo:not(.std-nube__respaldo--sin-js) { display: none; }
+  }
   @media (max-width: 640px) {
     .std-nube { height: 250px; margin-top: 8px; }
   }

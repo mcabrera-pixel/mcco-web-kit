@@ -1,10 +1,12 @@
 ---
 // Historia de la nube antigravity: sección negra (data-std-oscuro) con título, bajada, la nube de puntos, un paso por
-// activo y el botón para pausar el movimiento. Cuando lib/estandar/nube.js tiene listas todas las formas, la sección
-// pasa a data-estado="nube": la nube llega bajando desde el hero y, mientras se recorre la sección, pasa de un activo
-// al siguiente y se enciende su paso. Desde 901 px la sección queda fija mientras se recorre ((formas + 0,2) × 100svh);
-// en celular la nube cambia mientras cruza la pantalla. Sin JS, sin WebGL2, con movimiento reducido o si un activo no
-// carga se ven las ilustraciones fijas, cada una con su rótulo (R11), y todos los pasos encendidos.
+// activo y el botón para pausar el movimiento. Cuando lib/estandar/nube.js tiene listas todas las formas, y si nadie
+// está mirando la parte que cambia (data-std-visual y lo que sigue), la sección pasa a data-estado="nube": la nube llega
+// bajando desde el hero y, mientras se recorre la sección, pasa de un activo al siguiente y se enciende su paso. Con 901
+// px de ancho y 700 de alto o más, la sección queda fija mientras se recorre ((formas + 0,2) × 100svh); en las demás
+// ventanas (celulares, celulares girados, laptops bajas) no cabría fija y la nube cambia mientras cruza la pantalla.
+// El título y la bajada quedan en el mismo lugar en los dos modos. Sin JS, sin WebGL2, con movimiento reducido o si un
+// activo no carga se ven las ilustraciones fijas, cada una con su rótulo (R11), y todos los pasos encendidos.
 // Los activos son ilustraciones en nube de puntos sobre negro (de 1 a 4, en el orden de la historia, de 960 × 540
 // como las del hero). El primero debería ser el respaldo de NubeAncla, porque es lo que la nube arma en el hero.
 import '../../styles/estandar.css';
@@ -56,7 +58,7 @@ const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${e
     <div class="std-historia__caja">
       <h2 class="std-h2" id={`${id}-titulo`}>{titulo}</h2>
       {bajada && <p class="std-tagline">{bajada}</p>}
-      <div class="std-historia__visual">
+      <div class="std-historia__visual" data-std-visual>
         <div class="std-historia__nube" data-std-nube="historia" role="img"
           aria-label={`Ilustración animada en nube de puntos: ${lista}.`}></div>
         <ul class="std-historia__fijas" role="list">
@@ -131,12 +133,15 @@ const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${e
   .std-historia[data-estado='nube'] .std-historia__etapa { color: inherit; }
   .std-historia[data-estado='nube'] .is-activo { color: var(--std-parchment); }
   .std-historia[data-estado='nube'] .is-activo .std-historia__etapa { color: var(--accion-oscuro); }
-  @media (min-width: 901px) {
+  /* Fija solo si cabe: el mismo corte que `escritorio` en nube.js. Arriba quedan los 80 px de siempre, así el título y
+     la bajada no se mueven al pasar a la nube; la nube cede alto (mínimo 200 px) para que los pasos, el rótulo y el
+     botón queden dentro de la pantalla. */
+  @media (min-width: 901px) and (min-height: 700px) {
     .std-historia[data-estado='nube'] { height: calc((var(--formas) + .2) * 100svh); }
     .std-historia[data-estado='nube'] .std-historia__pin {
-      position: sticky; top: var(--std-subnav); height: calc(100svh - var(--std-subnav)); min-height: 640px;
-      padding-block: 44px 26px;
+      position: sticky; top: var(--std-subnav); height: calc(100svh - var(--std-subnav)); padding-block: 80px 26px;
     }
+    .std-historia[data-estado='nube'] .std-historia__nube { min-height: 200px; }
   }
   @media (max-width: 900px) {
     .std-historia__nube { flex: none; height: 300px; min-height: 0; }
