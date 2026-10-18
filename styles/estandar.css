@@ -61,6 +61,29 @@
 /* Base. Sin desplazamiento suave: un salto a un ancla llega de inmediato y la nube lee la posición final. */
 html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
 .std {
+  /* Puente del sistema v1.1. Los alias se resuelven aquí, no en :root, para heredar los valores del estándar. */
+  --color-accent: var(--accion);
+  --color-bg: var(--std-blanco);
+  --color-bg-alt: var(--std-parchment);
+  --color-text: var(--std-tinta);
+  --color-muted: var(--std-gris);
+  --color-border: var(--std-linea);
+  --color-on-accent: var(--std-blanco);
+  --font-body: var(--std-fuente);
+  --font-display: var(--std-fuente-display);
+  --space: 22px;
+  --maxw: 1024px;
+  --mcco-color-accent: var(--color-accent);
+  --mcco-color-bg: var(--color-bg);
+  --mcco-color-bg-alt: var(--color-bg-alt);
+  --mcco-color-text: var(--color-text);
+  --mcco-color-muted: var(--color-muted);
+  --mcco-color-border: var(--color-border);
+  --mcco-color-on-accent: var(--color-on-accent);
+  --mcco-font-body: var(--font-body);
+  --mcco-font-display: var(--font-display);
+  --mcco-space: var(--space);
+  --mcco-maxw: var(--maxw);
   margin: 0;
   background: var(--std-blanco);
   color: var(--std-tinta);
@@ -111,6 +134,7 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
 /* La píldora chica y el enlace se ven más bajos, pero su área táctil es de 44 px. */
 .std-pildora--chica::before,
 .std-mas::before { content: ""; position: absolute; left: -1px; right: -1px; top: 50%; height: 44px; margin-top: -22px; }
+.std-mas::before { left: 50%; right: auto; width: max(100%, 44px); transform: translateX(-50%); }
 
 .std-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; margin: 26px 0 0; }
 

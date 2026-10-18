@@ -4,6 +4,31 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { morphDesdeProgreso, pasoActivo, progresoSeccion, trasladoNube } from '../lib/estandar/historia.js';
+import * as historia from '../lib/estandar/historia.js';
+
+test('cabeHistoria: exige el corte y reserva nube, textos, controles y subnav', () => {
+  const medidas = { escritorio: true, viewport: 700, subnav: 52, relleno: 106, contenido: 342, nube: 200 };
+  assert.equal(historia.cabeHistoria(medidas), true);
+  assert.equal(historia.cabeHistoria({ ...medidas, escritorio: false }), false);
+  assert.equal(historia.cabeHistoria({ ...medidas, contenido: 342.1 }), false);
+  assert.equal(historia.cabeHistoria({ ...medidas, nube: 201 }), false);
+});
+
+test('cabeHistoria: textos y espaciado mayores obligan al flujo y pueden volver a caber', () => {
+  const medidas = { escritorio: true, viewport: 800, subnav: 52, relleno: 106, contenido: 600, nube: 200 };
+  assert.equal(historia.cabeHistoria(medidas), false);
+  assert.equal(historia.cabeHistoria({ ...medidas, contenido: 300 }), true);
+  assert.equal(historia.cabeHistoria({ ...medidas, viewport: 1000 }), true);
+});
+
+test('cabeHistoria: una medición incompleta o inválida conserva el flujo', () => {
+  const medidas = { escritorio: true, viewport: 800, subnav: 52, relleno: 106, contenido: 300, nube: 200 };
+  for (const clave of ['viewport', 'subnav', 'relleno', 'contenido', 'nube']) {
+    for (const valor of [NaN, Infinity, undefined, -1]) {
+      assert.equal(historia.cabeHistoria({ ...medidas, [clave]: valor }), false, `${clave}: ${valor}`);
+    }
+  }
+});
 
 const T = 4.35;
 

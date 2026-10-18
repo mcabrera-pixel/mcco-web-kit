@@ -89,7 +89,22 @@ const subnav = {
 
 Es el `Base` del kit con `<body class="std">`, la barra global, la sub-navegación, la página dentro de `<main>` y el pie propio del sitio (slot `pie`) antes del bloque Grupo MCCO, que se quita con `footer={false}`. El slot `head` suma a la cabecera lo del sitio, como el favicon o una precarga. El layout precarga Inter latina para que el H1, que es el LCP, no cambie de letra cuando llega la fuente.
 
-`NavGlobal` es la barra negra de 44 px con el logo en claro y enlaces de 12 px. Bajo los 834 px quedan el logo y un botón de menú que abre los mismos enlaces como bandeja, y la bandeja se cierra con Escape, con un clic afuera, cuando el foco sale o al cruzar los 833 px. Sin JS, los enlaces se quedan en la barra. El enlace a la página actual lleva `aria-current="page"`.
+Dentro de `.std`, los tokens de v1.1 que consumen `FooterGrupo` y las piezas de `Revelar` toman los valores del estándar. Se redefinen también sus alias `--mcco-*` en ese ámbito, porque un alias heredado de `:root` ya tiene resuelto su valor. Las páginas fuera de `.std` conservan sus tokens.
+
+| Token de v1.1 | Valor dentro de `.std` |
+|---|---|
+| `--color-accent` | `var(--accion)` |
+| `--color-bg`, `--color-on-accent` | `var(--std-blanco)` |
+| `--color-bg-alt` | `var(--std-parchment)` |
+| `--color-text` | `var(--std-tinta)` |
+| `--color-muted` | `var(--std-gris)` |
+| `--color-border` | `var(--std-linea)` |
+| `--font-body`, `--font-display` | `var(--std-fuente)`, `var(--std-fuente-display)` |
+| `--space`, `--maxw` | `22px`, `1024px`, para el margen interior y el ancho máximo del pie de grupo |
+
+`NavGlobal` es la barra negra de 44 px con el logo en claro y enlaces de 12 px. Bajo los 834 px, el menú colapsa cuando `menu.js` termina de instalar sus manejadores y marca el nav con `data-std-menu-listo`. El botón abre los mismos enlaces como bandeja, que se cierra con Escape, con un clic afuera, cuando el foco sale o al cruzar los 833 px.
+
+Sin JS o si el módulo no carga, los enlaces siguen visibles y el botón queda oculto. El enlace a la página actual lleva `aria-current="page"`.
 
 `SubNav` es la barra esmerilada de 52 px (48 en ≤ 640 px) que queda fija arriba al bajar, con el título del sitio, enlaces de 12 px y la acción principal siempre a la vista. En ≤ 833 px quedan el título y la acción, y en ≤ 640 px la acción usa su `textoCorto`. Pasa a su versión oscura cuando tiene debajo un bloque negro a todo el ancho.
 
@@ -185,7 +200,13 @@ import NubeAncla from '@mcco/web-kit/components/estandar/NubeAncla.astro';
 
 Una sección negra con título, bajada, la nube, un paso por activo y el botón de pausa. Lleva de uno a cuatro activos, que son ilustraciones en nube de puntos sobre negro de 960 × 540, y el primero debería ser el respaldo del hero, porque es lo que la nube arma arriba. Por defecto, `rotulo` dice `'Ilustraciones en nube de puntos.'` e `id` vale `'historia'`.
 
-Cuando la nube tiene todas sus formas, y nadie está mirando la parte que cambia, la sección pasa a la nube. La nube llega bajando desde el hero y, mientras se recorre la sección, pasa por los activos y enciende el paso de cada uno. Con 901 px de ancho y 700 de alto o más, la sección queda fija mientras se recorre, y en las demás ventanas la nube cambia mientras cruza la pantalla.
+Cuando la nube tiene todas sus formas, y nadie está mirando la parte que cambia, la sección pasa a la nube. La nube llega bajando desde el hero y, mientras se recorre la sección, pasa por los activos y enciende el paso de cada uno.
+
+Con 901 px de ancho y 700 de alto o más, puede quedar fija si caben el título, la bajada, los pasos, los controles y el área mínima de la nube, junto con los márgenes y la sub-navegación. Si no caben, la historia sigue en flujo y la nube cambia mientras cruza la pantalla.
+
+El runtime mide ese espacio al cambiar el tamaño de la ventana, al cargar fuentes y cuando `ResizeObserver` detecta cambios en los bloques de texto. El atributo `data-std-fija` activa el CSS fijo y el cálculo de progreso correspondiente. Sin ese atributo, la historia fluye.
+
+El contenedor visual conserva al menos el mínimo del ancla: 200 px dentro del corte de escritorio y 300 px fuera de él. Dentro de la historia, el dibujo se limita al área visual para que los puntos no cubran textos ni controles al dispersarse o cambiar de forma.
 
 Sin JS, sin WebGL2, con movimiento reducido o si un activo no carga, se ven las ilustraciones fijas con su rótulo y todos los pasos encendidos.
 
@@ -297,7 +318,7 @@ Los límites y las mediciones de JS de esta tabla corresponden al build optimiza
 
 | Medida | Límite | Medido en v1.2.0-rc.1 |
 |---|---|---|
-| JS de la nube, gzip | 12 KB | 8365 B: runtime con `historia.js`, Worker, entradas y `pausa.js` |
+| JS de la nube, gzip | 12 KB | 9119 B: runtime con `historia.js`, Worker, entradas y `pausa.js` |
 | JS del campo, gzip | 5 KB | 3800 B, 4156 B con `pausa.js` |
 | Lighthouse móvil | 85 en rendimiento, 95 en accesibilidad | Se mide en la portada de mcco.cl |
 | LCP | El H1 | |
@@ -305,7 +326,7 @@ Los límites y las mediciones de JS de esta tabla corresponden al build optimiza
 | Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB | |
 | Videos | 8 MB, H.264 con `faststart`, poster WebP, `muted`, `playsinline`, `preload="none"`, en R2 | |
 
-El JS se midió con zlib nivel 9 sobre el build de Astro de la demo de `mcco-web-template`. El respaldo del hilo principal se descarga si no hay OffscreenCanvas o si el Worker falla. Al contar también ese módulo, la nube suma 9843 B. Con `lib/visual/comun.js`, compartido por el sistema visual, el total de la nube llega a 10 248 B y el del campo a 4561 B.
+El JS se midió con zlib nivel 9 sobre el build de Astro de la demo de `mcco-web-template`. El respaldo del hilo principal se descarga si no hay OffscreenCanvas o si el Worker falla. Al contar también ese módulo, la nube suma 10 597 B. Con `lib/visual/comun.js`, compartido por el sistema visual, el total de la nube llega a 11 002 B y el del campo a 4561 B.
 
 ## Regla de imágenes y rótulos de origen
 
@@ -353,5 +374,5 @@ El Worker de la nube se carga desde el mismo origen, así que la CSP del sitio t
 - La tarjeta de marca va en `#1d1d1f` sobre negro, fuera de las seis superficies, como en la prueba aprobada.
 - La barra global marca la página actual solo con `aria-current`, sin una marca a la vista.
 - Los botones de pausa cambian su texto («Pausar movimiento», «Reanudar movimiento») y no llevan `aria-pressed`, como pide el patrón de botón de WAI-ARIA para un botón cuyo texto cambia.
-- Un solo corte, `(min-width: 901px) and (min-height: 700px)`, decide si la historia queda fija y si la nube y el campo usan el presupuesto de computador.
+- Un solo corte, `(min-width: 901px) and (min-height: 700px)`, habilita la historia fija y el presupuesto de computador de nube y campo. La historia además debe caber completa; si no cabe, pasa a flujo sin cambiar ese presupuesto.
 - `Cifras` agrupa los números como en Chile y los redondea a dos decimales, así que un año o un código va como texto (`'2011'`).

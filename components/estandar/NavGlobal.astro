@@ -77,9 +77,11 @@ const esActual = (href: string) => href.startsWith('/') && !href.startsWith('//'
   .std-gnav__menu[aria-expanded='true'] .std-gnav__linea:last-child { transform: translateY(-4px) rotate(-45deg); }
 
   @media (max-width: 833px) {
-    .std-gnav__menu { display: inline-flex; }
-    .std-gnav__enlaces { display: none; }
-    .std-gnav.is-abierta .std-gnav__enlaces {
+    .std-gnav__in { flex-wrap: wrap; }
+    .std-gnav__enlaces { display: flex; flex-wrap: wrap; gap: 0; margin: 0 -8px; }
+    .std-gnav__in[data-std-menu-listo] .std-gnav__menu { display: inline-flex; }
+    .std-gnav__in[data-std-menu-listo] .std-gnav__enlaces { display: none; }
+    .std-gnav.is-abierta .std-gnav__in[data-std-menu-listo] .std-gnav__enlaces {
       display: block; position: absolute; top: 100%; left: 0; right: 0;
       margin: 0; padding: 8px 22px 28px; background: var(--std-negro);
     }
@@ -87,12 +89,6 @@ const esActual = (href: string) => href.startsWith('/') && !href.startsWith('//'
       justify-content: flex-start; height: auto; min-height: 44px; padding: 6px 0;
       color: var(--std-parchment); font: 600 28px/1.14 var(--std-fuente-display); letter-spacing: .007em;
     }
-  }
-  /* Sin JS no hay bandeja: los enlaces quedan en la barra, en una o más filas. */
-  @media (scripting: none) and (max-width: 833px) {
-    .std-gnav__menu { display: none; }
-    .std-gnav__in { flex-wrap: wrap; }
-    .std-gnav__enlaces { display: flex; flex-wrap: wrap; gap: 0; margin: 0 -8px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .std-gnav__enlaces a, .std-gnav__linea { transition: none; }

@@ -3,7 +3,7 @@
 // activo y el botón para pausar el movimiento. Cuando lib/estandar/nube.js tiene listas todas las formas, y si nadie
 // está mirando la parte que cambia (data-std-visual y lo que sigue), la sección pasa a data-estado="nube": la nube llega
 // bajando desde el hero y, mientras se recorre la sección, pasa de un activo al siguiente y se enciende su paso. Con 901
-// px de ancho y 700 de alto o más, la sección queda fija mientras se recorre ((formas + 0,2) × 100svh); en las demás
+// px de ancho y 700 de alto o más, y si cabe su contenido, queda fija ((formas + 0,2) × 100svh); en las demás
 // ventanas (celulares, celulares girados, laptops bajas) no cabría fija y la nube cambia mientras cruza la pantalla.
 // El título y la bajada quedan en el mismo lugar en los dos modos. Sin JS, sin WebGL2, con movimiento reducido o si un
 // activo no carga se ven las ilustraciones fijas, cada una con su rótulo (R11), y todos los pasos encendidos.
@@ -91,11 +91,15 @@ const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${e
 <script>import '../../lib/estandar/nube.js';</script>
 
 <style>
-  .std-historia { position: relative; background: var(--std-negro); color: var(--std-parchment); text-align: center; }
+  .std-historia {
+    --historia-nube-min: 300px; --historia-relleno-inicio: 80px; --historia-relleno-fin: 26px;
+    position: relative; background: var(--std-negro); color: var(--std-parchment); text-align: center;
+  }
   .std-historia__pin { padding: 80px 22px; }
   .std-historia__caja { display: flex; flex-direction: column; height: 100%; max-width: 1100px; margin: 0 auto; }
-  .std-historia__visual { display: flex; flex: 1; flex-direction: column; justify-content: center; min-height: 0; }
-  .std-historia__nube { display: none; width: 100%; height: 100%; min-height: 300px; }
+  .std-historia__caja > * { flex-shrink: 0; }
+  .std-historia__visual { display: flex; flex: 1 0 auto; flex-direction: column; justify-content: center; min-height: var(--historia-nube-min); }
+  .std-historia__nube { display: none; flex: 1; width: 100%; min-height: var(--historia-nube-min); }
   .std-historia__fijas {
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
     width: 100%; max-width: 900px; margin: 32px auto; padding: 0; list-style: none;
@@ -111,7 +115,7 @@ const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${e
     display: block; margin-bottom: 6px; font: 400 12px/1.3 var(--std-fuente); letter-spacing: .06em;
     text-transform: uppercase; color: var(--accion-oscuro);
   }
-  .std-historia__pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px; margin-top: 18px; }
+  .std-historia__pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; min-height: 44px; gap: 18px; margin-top: 18px; }
   .std-historia__pie .std-fina { margin: 0; }
   /* Píldora chica con 44 px de área táctil (::before), como .std-pildora--chica. */
   .std-historia__pausa {
@@ -133,18 +137,17 @@ const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${e
   .std-historia[data-estado='nube'] .std-historia__etapa { color: inherit; }
   .std-historia[data-estado='nube'] .is-activo { color: var(--std-parchment); }
   .std-historia[data-estado='nube'] .is-activo .std-historia__etapa { color: var(--accion-oscuro); }
-  /* Fija solo si cabe: el mismo corte que `escritorio` en nube.js. Arriba quedan los 80 px de siempre, así el título y
-     la bajada no se mueven al pasar a la nube; la nube cede alto (mínimo 200 px) para que los pasos, el rótulo y el
-     botón queden dentro de la pantalla. */
+  /* El runtime mide textos, controles y nube con estas mismas variables. Sin su atributo la historia fluye. */
   @media (min-width: 901px) and (min-height: 700px) {
-    .std-historia[data-estado='nube'] { height: calc((var(--formas) + .2) * 100svh); }
-    .std-historia[data-estado='nube'] .std-historia__pin {
-      position: sticky; top: var(--std-subnav); height: calc(100svh - var(--std-subnav)); padding-block: 80px 26px;
+    .std-historia { --historia-nube-min: 200px; }
+    .std-historia[data-estado='nube'][data-std-fija] { height: calc((var(--formas) + .2) * 100svh); }
+    .std-historia[data-estado='nube'][data-std-fija] .std-historia__pin {
+      position: sticky; top: var(--std-subnav); height: calc(100svh - var(--std-subnav));
+      padding-block: var(--historia-relleno-inicio) var(--historia-relleno-fin);
     }
-    .std-historia[data-estado='nube'] .std-historia__nube { min-height: 200px; }
   }
   @media (max-width: 900px) {
-    .std-historia__nube { flex: none; height: 300px; min-height: 0; }
+    .std-historia__nube { flex: none; height: 300px; }
     .std-historia__pasos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 420px; text-align: left; }
   }
   @media (max-width: 640px) {
