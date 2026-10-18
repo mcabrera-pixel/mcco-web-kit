@@ -1,0 +1,153 @@
+---
+// Historia de la nube antigravity: sección negra (data-std-oscuro) con título, bajada, la nube de puntos, un paso por
+// activo y el botón para pausar el movimiento. Cuando lib/estandar/nube.js tiene listas todas las formas, la sección
+// pasa a data-estado="nube": la nube llega bajando desde el hero y, mientras se recorre la sección, pasa de un activo
+// al siguiente y se enciende su paso. Desde 901 px la sección queda fija mientras se recorre ((formas + 0,2) × 100svh);
+// en celular la nube cambia mientras cruza la pantalla. Sin JS, sin WebGL2, con movimiento reducido o si un activo no
+// carga se ven las ilustraciones fijas, cada una con su rótulo (R11), y todos los pasos encendidos.
+// Los activos son ilustraciones en nube de puntos sobre negro (de 1 a 4, en el orden de la historia, de 960 × 540
+// como las del hero). El primero debería ser el respaldo de NubeAncla, porque es lo que la nube arma en el hero.
+import '../../styles/estandar.css';
+import { ROTULOS } from '../../lib/estandar/rotulos.mjs';
+
+interface Activo {
+  src: string;
+  /** Nombre corto del activo ("Espesador"), para el nombre accesible de la nube. */
+  etiqueta: string;
+  /** Texto alternativo de la ilustración fija. */
+  alt: string;
+}
+interface Paso {
+  /** Etapa, en mayúsculas de 12 px sobre el título ("Concentradora"). */
+  rotulo: string;
+  titulo: string;
+}
+interface Props {
+  titulo: string;
+  bajada?: string;
+  activos: Activo[];
+  /** Un paso por activo, en el mismo orden. */
+  pasos: Paso[];
+  /** Rótulo de origen bajo la nube. */
+  rotulo?: string;
+  id?: string;
+}
+const { titulo, bajada, activos = [], pasos = [], rotulo = 'Ilustraciones en nube de puntos.', id = 'historia' } = Astro.props;
+if (!titulo) throw new Error('HistoriaNube: falta `titulo`.');
+if (!Array.isArray(activos) || activos.length < 1 || activos.length > 4) {
+  throw new Error(`HistoriaNube: \`activos\` lleva de 1 a 4 ilustraciones (vienen ${activos?.length ?? 0}).`);
+}
+if (!Array.isArray(pasos) || pasos.length !== activos.length) {
+  throw new Error(`HistoriaNube: \`pasos\` necesita uno por activo (${activos.length}), vienen ${pasos?.length ?? 0}.`);
+}
+activos.forEach((a, i) => {
+  const faltan = [!a?.src && 'src', !a?.etiqueta && 'etiqueta', typeof a?.alt !== 'string' && 'alt'].filter(Boolean);
+  if (faltan.length) throw new Error(`HistoriaNube: al activo ${i + 1} le falta ${faltan.join(', ')}.`);
+});
+pasos.forEach((p, i) => {
+  if (!p?.rotulo || !p?.titulo) throw new Error(`HistoriaNube: al paso ${i + 1} le falta rotulo o titulo.`);
+});
+const etiquetas = activos.map((a) => a.etiqueta);
+const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${etiquetas.at(-1)}` : etiquetas[0];
+---
+<section class="std-historia" id={id} aria-labelledby={`${id}-titulo`} data-std-oscuro data-std-historia
+  style={`--formas: ${activos.length}`}>
+  <div class="std-historia__pin">
+    <div class="std-historia__caja">
+      <h2 class="std-h2" id={`${id}-titulo`}>{titulo}</h2>
+      {bajada && <p class="std-tagline">{bajada}</p>}
+      <div class="std-historia__visual">
+        <div class="std-historia__nube" data-std-nube="historia" role="img"
+          aria-label={`Ilustración animada en nube de puntos: ${lista}.`}></div>
+        <ul class="std-historia__fijas" role="list">
+          {activos.map((a) => (
+            <li>
+              <figure class="std-historia__figura">
+                <img src={a.src} alt={a.alt} width="960" height="540" loading="lazy" decoding="async"
+                  data-origen="ilustracion" data-std-forma />
+                <span class="std-rotulo" data-rotulo>{ROTULOS.ilustracion}</span>
+              </figure>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <ol class="std-historia__pasos">
+        {pasos.map((p, i) => (
+          <li class:list={['std-historia__paso', { 'is-activo': i === 0 }]} data-std-paso>
+            <span class="std-historia__etapa">{p.rotulo}</span>{p.titulo}
+          </li>
+        ))}
+      </ol>
+      <div class="std-historia__pie">
+        <p class="std-fina" data-rotulo>{rotulo}</p>
+        <button type="button" class="std-historia__pausa" data-std-pausa hidden>Pausar movimiento</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>import '../../lib/estandar/nube.js';</script>
+
+<style>
+  .std-historia { position: relative; background: var(--std-negro); color: var(--std-parchment); text-align: center; }
+  .std-historia__pin { padding: 80px 22px; }
+  .std-historia__caja { display: flex; flex-direction: column; height: 100%; max-width: 1100px; margin: 0 auto; }
+  .std-historia__visual { display: flex; flex: 1; flex-direction: column; justify-content: center; min-height: 0; }
+  .std-historia__nube { display: none; width: 100%; height: 100%; min-height: 300px; }
+  .std-historia__fijas {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+    width: 100%; max-width: 900px; margin: 32px auto; padding: 0; list-style: none;
+  }
+  .std-historia__figura { position: relative; margin: 0; }
+  .std-historia__figura img { width: 100%; aspect-ratio: 16 / 9; object-fit: contain; border-radius: var(--std-radio-tarjeta); }
+  .std-historia__pasos {
+    display: grid; grid-template-columns: repeat(var(--formas), minmax(0, 1fr)); gap: 24px;
+    width: 100%; max-width: 980px; margin: 0 auto; padding: 0; list-style: none;
+  }
+  .std-historia__paso { font: 600 21px/1.24 var(--std-fuente-display); color: var(--std-parchment); }
+  .std-historia__etapa {
+    display: block; margin-bottom: 6px; font: 400 12px/1.3 var(--std-fuente); letter-spacing: .06em;
+    text-transform: uppercase; color: var(--accion-oscuro);
+  }
+  .std-historia__pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px; margin-top: 18px; }
+  .std-historia__pie .std-fina { margin: 0; }
+  /* Píldora chica con 44 px de área táctil (::before), como .std-pildora--chica. */
+  .std-historia__pausa {
+    position: relative; padding: 9px 14px; border: 0; border-radius: 980px;
+    background: rgba(255, 255, 255, .12); color: var(--std-parchment);
+    font: 400 12px/1 var(--std-fuente); letter-spacing: -.01em; cursor: pointer;
+    transition: transform .12s ease;
+  }
+  .std-historia__pausa:active { transform: scale(.95); }
+  .std-historia__pausa::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; margin-top: -22px; }
+  .std-historia__pausa[hidden] { display: none; }
+
+  /* Con la nube: se ve el ancla en lugar de las ilustraciones y solo el paso de la forma actual queda encendido.
+     data-estado="nube" lo pone y lo quita nube.js, también al pedir movimiento reducido: así la sección cambia de alto
+     en el mismo momento en que el script lo sabe y puede devolver la ventana al inicio de la historia. */
+  .std-historia[data-estado='nube'] .std-historia__nube { display: block; }
+  .std-historia[data-estado='nube'] .std-historia__fijas { display: none; }
+  .std-historia[data-estado='nube'] .std-historia__paso { color: #a1a1a6; transition: color .5s; }
+  .std-historia[data-estado='nube'] .std-historia__etapa { color: inherit; }
+  .std-historia[data-estado='nube'] .is-activo { color: var(--std-parchment); }
+  .std-historia[data-estado='nube'] .is-activo .std-historia__etapa { color: var(--accion-oscuro); }
+  @media (min-width: 901px) {
+    .std-historia[data-estado='nube'] { height: calc((var(--formas) + .2) * 100svh); }
+    .std-historia[data-estado='nube'] .std-historia__pin {
+      position: sticky; top: var(--std-subnav); height: calc(100svh - var(--std-subnav)); min-height: 640px;
+      padding-block: 44px 26px;
+    }
+  }
+  @media (max-width: 900px) {
+    .std-historia__nube { flex: none; height: 300px; min-height: 0; }
+    .std-historia__pasos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 420px; text-align: left; }
+  }
+  @media (max-width: 640px) {
+    .std-historia__pin { padding: 56px 16px; }
+    .std-historia__paso { font-size: 17px; }
+    .std-historia__fijas { grid-template-columns: minmax(0, 1fr); margin: 24px auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .std-historia__pausa { transition: none; }
+  }
+</style>
