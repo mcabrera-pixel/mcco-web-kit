@@ -323,7 +323,7 @@ Los límites y las mediciones de JS de esta tabla corresponden al build optimiza
 | Lighthouse móvil | 85 en rendimiento, 95 en accesibilidad | Se mide en la portada de mcco.cl |
 | LCP | El H1 | |
 | CLS | Menos de 0,1 | |
-| Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB | |
+| Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB; el que sirve de respaldo del hero no pasa de 150 KB, el tope de héroes del contrato de cada sitio | |
 | Videos | 8 MB, H.264 con `faststart`, poster WebP, `muted`, `playsinline`, `preload="none"`, en R2 | |
 
 El JS se midió con zlib nivel 9 sobre el build de Astro de la demo de `mcco-web-template`. El respaldo del hilo principal se descarga si no hay OffscreenCanvas o si el Worker falla. Al contar también ese módulo, la nube suma 10 597 B. Con `lib/visual/comun.js`, compartido por el sistema visual, el total de la nube llega a 11 002 B y el del campo a 4561 B.
@@ -332,7 +332,7 @@ El JS se midió con zlib nivel 9 sobre el build de Astro de la demo de `mcco-web
 
 1. Primero material real: fotos y video de faena propios.
 2. Después render propio: nube de puntos, modelo, mapa de desviaciones.
-3. Las fotos y los videos hechos con IA muestran la atmósfera o cómo se trabaja, y van siempre con el rótulo «Ilustración». Llevan un prompt detallado y revisado, con la geometría real del activo y referencias, sin textos ni marcas inventadas, y se revisan imagen por imagen.
+3. Cuándo se usa IA lo fija la regla de imágenes del contrato de cada sitio (`AGENTS.md`). Las fotos y los videos hechos con IA van siempre con el rótulo «Ilustración». Llevan un prompt detallado y revisado, con la geometría real del activo y referencias, sin textos ni marcas inventadas, y se revisan imagen por imagen.
 4. La IA no inventa resultados: ninguna ilustración lleva escalas, cifras ni textos.
 5. Una simulación que se presenta como trabajo de MCCO es una captura real y lleva el rótulo «Captura de simulación». Va sin escala, valores, nombres de archivo ni logos de software que identifiquen al cliente, y sin nada que nombre al cliente, la faena, la planta o el folio. Antes de publicarla se revisa contra el `forbidden` del sitio y la lista negra del kit.
 6. Una captura chica va en formato chico o en el mosaico de `Galeria`, nunca estirada.
