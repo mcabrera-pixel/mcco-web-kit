@@ -1,0 +1,48 @@
+---
+// Ancla de la nube antigravity en el hero: el lugar bajo el título donde la nube (lib/estandar/nube.js) arma el primer
+// activo. La imagen fija de respaldo es una ilustración en nube de puntos sobre negro, que sobre blanco se muestra
+// invertida por CSS. Con JS no se ve, así el H1 queda como el LCP y la imagen no se descarga si la nube funciona
+// (loading="lazy" en un elemento oculto). Se ve sin WebGL2, si el muestreo falla o se pierde el contexto (nube.js pone
+// data-estado="fijo"), con movimiento reducido y sin JS (copia en <noscript>). Debería ser el primer activo de la
+// historia, que es lo que la nube arma aquí. El nombre accesible va en el ancla, así se lee igual con la nube o con la
+// imagen. El rótulo de origen lo pone quien la usa (HeroEstandar). El alto cabe en la primera pantalla: se ajusta a lo
+// que queda bajo el texto.
+import '../../styles/estandar.css';
+
+interface Props {
+  respaldo: { src: string; width: number; height: number; alt: string };
+}
+const { respaldo } = Astro.props;
+const faltan = [!respaldo?.src && 'src', !respaldo?.width && 'width', !respaldo?.height && 'height', typeof respaldo?.alt !== 'string' && 'alt'].filter(Boolean);
+if (faltan.length) throw new Error(`NubeAncla: falta respaldo.${faltan.join(', respaldo.')}.`);
+---
+<div class="std-nube" data-std-nube="hero" role={respaldo.alt ? 'img' : undefined} aria-label={respaldo.alt || undefined}>
+  <img class="std-nube__respaldo" src={respaldo.src} alt="" width={respaldo.width} height={respaldo.height}
+    loading="lazy" decoding="async" data-origen="ilustracion" />
+  <noscript><img class="std-nube__respaldo std-nube__respaldo--sin-js" src={respaldo.src} alt="" width={respaldo.width}
+    height={respaldo.height} decoding="async" data-origen="ilustracion" /></noscript>
+</div>
+
+<script>import '../../lib/estandar/nube.js';</script>
+
+<style>
+  .std-nube {
+    position: relative; contain: layout paint; max-width: 1060px; margin: 14px auto 0;
+    height: clamp(240px, calc(100svh - 450px), 540px);
+  }
+  .std-nube__respaldo {
+    display: none; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none;
+    filter: invert(1) grayscale(1) contrast(1.15); mix-blend-mode: multiply;
+  }
+  .std-nube[data-estado='fijo'] .std-nube__respaldo, .std-nube__respaldo--sin-js { display: block; }
+  @media (prefers-reduced-motion: reduce) {
+    .std-nube__respaldo { display: block; }
+  }
+  /* Sin JS ya está la copia de <noscript>: con movimiento reducido no se encima la otra (multiply oscurecería el doble). */
+  @media (scripting: none) {
+    .std-nube__respaldo:not(.std-nube__respaldo--sin-js) { display: none; }
+  }
+  @media (max-width: 640px) {
+    .std-nube { height: 250px; margin-top: 8px; }
+  }
+</style>

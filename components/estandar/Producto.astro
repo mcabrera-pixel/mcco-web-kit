@@ -1,0 +1,87 @@
+---
+// Tarjeta de la grilla de productos del estándar (GrillaProductos), como en apple.com: título, bajada y acciones
+// centrados arriba y la foto abajo, a sangre, con su rótulo de origen. Tonos parchment, claro, negro y negro suave;
+// los negros llevan data-std-oscuro y la hoja pasa la bajada y la píldora fantasma a su variante clara.
+// En computador mide 640 px de alto y la foto ocupa la mitad de abajo (320 px). La tarjeta `ancho` ocupa las dos
+// columnas, mide 700 px, su foto ocupa el 54 % (378 px) y su título es de 48 px en vez de 40. Si el texto no cabe, la
+// tarjeta crece y la foto no lo tapa. En ≤ 640 px la tarjeta toma el alto de su contenido y la foto queda bajo el
+// texto en 4:3. `nivel` solo cambia la etiqueta del título (h3 por defecto, h2 si la grilla no va bajo un h2).
+import '../../styles/estandar.css';
+import Acciones from './Acciones.astro';
+import { ROTULOS, rotuloDe } from '../../lib/estandar/rotulos.mjs';
+import type { ComponentProps } from 'astro/types';
+
+type Tono = 'parchment' | 'claro' | 'negro' | 'negro-suave';
+interface Props {
+  titulo: string;
+  nivel?: 2 | 3;
+  bajada?: string;
+  tono: Tono;
+  ancho?: boolean;
+  acciones: ComponentProps<typeof Acciones>['acciones'];
+  foto: {
+    src: string;
+    srcset?: string;
+    /** Por defecto, con srcset: el ancho de la tarjeta (media pantalla, o toda si es ancha o en ≤ 833 px). */
+    sizes?: string;
+    alt: string;
+    width: number;
+    height: number;
+    /** object-position de la foto, que se recorta para llenar su cuadro ('50% 40%'). */
+    encuadre?: string;
+    origen: keyof typeof ROTULOS;
+  };
+}
+const TONOS: Tono[] = ['parchment', 'claro', 'negro', 'negro-suave'];
+const { titulo, nivel = 3, bajada, tono, ancho = false, acciones, foto } = Astro.props;
+if (!titulo) throw new Error('Producto: falta `titulo`.');
+if (!TONOS.includes(tono)) throw new Error(`Producto "${titulo}": tono "${tono}" no existe (${TONOS.join(', ')}).`);
+if (nivel !== 2 && nivel !== 3) throw new Error(`Producto "${titulo}": nivel ${nivel} no existe (2, 3).`);
+const faltan = [!foto?.src && 'foto.src', typeof foto?.alt !== 'string' && 'foto.alt', !(foto?.width > 0) && 'foto.width', !(foto?.height > 0) && 'foto.height'].filter(Boolean);
+if (faltan.length) throw new Error(`Producto "${titulo}": falta ${faltan.join(', ')}.`);
+const rotulo = rotuloDe(foto.origen);
+const oscuro = tono === 'negro' || tono === 'negro-suave';
+const Titulo = nivel === 2 ? 'h2' : 'h3';
+const sizes = foto.sizes ?? (foto.srcset ? (ancho ? '100vw' : '(max-width: 833px) 100vw, 50vw') : undefined);
+---
+<article class:list={['std-producto', `std-producto--${tono}`, ancho && 'std-producto--ancho']} data-std-oscuro={oscuro ? '' : undefined}>
+  <div class="std-producto__texto">
+    <Titulo class={ancho ? 'std-h2' : 'std-h3'}>{titulo}</Titulo>
+    {bajada && <p class="std-tagline std-producto__bajada">{bajada}</p>}
+    <Acciones acciones={acciones} />
+  </div>
+  <figure class="std-producto__foto" data-origen={foto.origen}>
+    <img src={foto.src} srcset={foto.srcset} sizes={sizes} alt={foto.alt} width={foto.width} height={foto.height}
+      loading="lazy" decoding="async" data-origen={foto.origen} style={foto.encuadre ? `object-position: ${foto.encuadre}` : undefined} />
+    <span class="std-rotulo" data-rotulo>{rotulo}</span>
+  </figure>
+</article>
+
+<style>
+  .std-producto {
+    --std-producto-pad: 28px;
+    display: flex; flex-direction: column; min-height: 640px;
+    padding: 56px var(--std-producto-pad) 0;
+    background: var(--std-parchment); text-align: center;
+  }
+  .std-producto--claro { background: var(--std-blanco); }
+  .std-producto--negro { background: var(--std-negro); color: var(--std-parchment); }
+  .std-producto--negro-suave { background: var(--std-negro-3); color: var(--std-parchment); }
+  .std-producto--ancho { grid-column: 1 / -1; min-height: 700px; }
+  /* Los 32 px de abajo son lo mínimo entre el texto y la foto cuando el texto llena la tarjeta. */
+  .std-producto__texto { padding-bottom: 32px; }
+  .std-producto__bajada { max-width: 520px; margin-top: 8px; font-size: 21px; }
+  .std-producto__texto :global(.std-acciones) { margin-top: 18px; }
+  .std-producto__foto {
+    position: relative; flex: none; height: 320px;
+    margin: auto calc(-1 * var(--std-producto-pad)) 0;
+  }
+  .std-producto--ancho .std-producto__foto { height: 378px; }
+  .std-producto__foto img { width: 100%; height: 100%; object-fit: cover; }
+
+  @media (max-width: 640px) {
+    .std-producto, .std-producto--ancho { --std-producto-pad: 20px; min-height: 0; padding-top: 44px; }
+    .std-producto__foto, .std-producto--ancho .std-producto__foto { height: auto; }
+    .std-producto__foto img { height: auto; aspect-ratio: 4 / 3; }
+  }
+</style>

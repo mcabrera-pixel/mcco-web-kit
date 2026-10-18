@@ -1,0 +1,31 @@
+---
+// Layout del estándar Apple + antigravity: el Base del kit (cabecera, analítica y bloque Grupo MCCO) con <body
+// class="std">, la barra global, la sub-navegación fija, el <main> con la página y el pie propio del sitio (slot
+// "pie") antes de FooterGrupo. El slot "head" agrega lo propio del sitio a la cabecera (favicon, precargas).
+// Precarga Inter latina para que el H1, que es el LCP, no cambie de letra (ni se mueva) cuando llega la fuente.
+import type { ComponentProps } from 'astro/types';
+import Base from './Base.astro';
+import Head from '../components/Head.astro';
+import NavGlobal from '../components/estandar/NavGlobal.astro';
+import SubNav from '../components/estandar/SubNav.astro';
+import interLatin from '../styles/fuentes/inter-latin-wght-normal.woff2?url';
+import '../styles/estandar.css';
+
+interface Props extends ComponentProps<typeof Head> {
+  /** Bloque Grupo MCCO al final (por defecto sí). */
+  footer?: boolean;
+  /** Clases extra del <body>, además de std. */
+  bodyClass?: string;
+  nav: ComponentProps<typeof NavGlobal>;
+  subnav: ComponentProps<typeof SubNav>;
+}
+const { nav, subnav, bodyClass, ...base } = Astro.props;
+---
+<Base {...base} bodyClass={['std', bodyClass].filter(Boolean).join(' ')}>
+  <link slot="head" rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+  <slot name="head" slot="head" />
+  <NavGlobal {...nav} />
+  <SubNav {...subnav} />
+  <main><slot /></main>
+  <slot name="pie" />
+</Base>

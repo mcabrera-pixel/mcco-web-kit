@@ -1,0 +1,37 @@
+---
+// Bloque del estándar: sección a todo el ancho, sin redondeo, con el texto centrado y 80 px de aire arriba y abajo
+// (56 en ≤ 640 px). Los bloques alternan tono y el cambio de color es el separador. Los tonos negros llevan
+// data-std-oscuro: las piezas de la hoja usan su variante clara y la sub-navegación pasa a oscura sobre ellos.
+// Para que una foto llegue a los bordes, el contenido puede usar --std-bloque-pad (margen lateral) y
+// --std-bloque-aire (aire vertical) con signo negativo. Acepta cualquier otro atributo de <section> (aria-labelledby).
+import type { HTMLAttributes } from 'astro/types';
+import '../../styles/estandar.css';
+
+type Tono = 'claro' | 'parchment' | 'negro' | 'negro-suave';
+interface Props extends HTMLAttributes<'section'> {
+  tono: Tono;
+}
+const TONOS: Tono[] = ['claro', 'parchment', 'negro', 'negro-suave'];
+const { tono, class: clase, ...atributos } = Astro.props;
+if (!TONOS.includes(tono)) throw new Error(`Bloque: tono "${tono}" no existe (${TONOS.join(', ')}).`);
+const oscuro = tono === 'negro' || tono === 'negro-suave';
+---
+<section class:list={['std-bloque', `std-bloque--${tono}`, clase]} data-std-oscuro={oscuro ? '' : undefined} {...atributos}>
+  <slot />
+</section>
+
+<style>
+  .std-bloque {
+    --std-bloque-pad: 22px;
+    --std-bloque-aire: 80px;
+    position: relative; overflow-x: clip;
+    padding: var(--std-bloque-aire) var(--std-bloque-pad);
+    background: var(--std-blanco); text-align: center;
+  }
+  .std-bloque--parchment { background: var(--std-parchment); }
+  .std-bloque--negro { background: var(--std-negro); color: var(--std-parchment); }
+  .std-bloque--negro-suave { background: var(--std-negro-3); color: var(--std-parchment); }
+  @media (max-width: 640px) {
+    .std-bloque { --std-bloque-pad: 16px; --std-bloque-aire: 56px; }
+  }
+</style>

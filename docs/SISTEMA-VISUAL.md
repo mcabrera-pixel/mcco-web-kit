@@ -1,5 +1,7 @@
 # Sistema visual MCCO (kit v1.1)
 
+El estándar visual del grupo es el de [`ESTANDAR.md`](ESTANDAR.md) (Apple + antigravity, kit v1.2). Este sistema sigue funcionando en las webs que todavía no migran.
+
 El lenguaje del rediseño de as-built.cl (28-sep-2026), llevado a componentes del kit: partículas que arman el activo, video real de faena, procesos que se dibujan al bajar, imágenes con origen declarado y menos texto. Cada web lo usa con sus tokens y sus archivos; nadie copia código entre repos.
 
 - Componentes: `components/visual/*.astro`. JS: `lib/visual/*.js`.

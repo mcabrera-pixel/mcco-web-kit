@@ -1,0 +1,81 @@
+---
+// Tarjetas de marca del estándar: oscuras (#1d1d1f) y de 18 px de radio, con el logo de la marca pintado en un solo
+// tono claro (máscara CSS sobre el archivo), una frase y, al pie, el dominio con «›» o un aviso sin enlace («Sitio en
+// preparación» por defecto). Con `href` la tarjeta entera es el enlace. Tres por fila, dos en ≤ 900 px y una en
+// ≤ 640 px, como en la maqueta. Cada tarjeta lleva data-std-oscuro, así que se ve igual en un bloque claro o negro.
+import '../../styles/estandar.css';
+
+interface Marca {
+  /** Nombre de la marca: es el texto alternativo del logo. */
+  nombre: string;
+  /** Logo en SVG o PNG con transparencia (solo cuenta su forma). alto en px, 48 por defecto. */
+  logo: { src: string; alto?: number };
+  frase: string;
+  /** Sitio de la marca. Si no hay, la tarjeta no enlaza y muestra `pronto`. */
+  href?: string;
+  /** Aviso cuando no hay `href`. */
+  pronto?: string;
+}
+interface Props {
+  marcas: Marca[];
+}
+const { marcas = [] } = Astro.props;
+for (const m of marcas) {
+  const faltan = [!m?.nombre && 'nombre', !m?.logo?.src && 'logo.src', !m?.frase && 'frase',
+    m?.logo?.alto !== undefined && !(m.logo.alto > 0) && 'logo.alto (px, mayor que 0)'].filter(Boolean);
+  if (faltan.length) throw new Error(`TarjetasMarca ${m?.nombre ?? ''}: falta ${faltan.join(', ')}.`);
+}
+// Lo que se lee al pie del enlace: el dominio sin www. Un enlace interno dice «Más información».
+const dominio = (href: string) => (/^https?:\/\//i.test(href) ? new URL(href).hostname.replace(/^www\./, '') : 'Más información');
+const estiloLogo = ({ src, alto = 48 }: Marca['logo']) => `--logo: url(${JSON.stringify(src)}); height: ${alto}px`;
+---
+{marcas.length > 0 && (
+  <ul class="std-marcas" role="list">
+    {marcas.map((m) => {
+      const Tarjeta = m.href ? 'a' : 'div';
+      return (
+        <li>
+          <Tarjeta class="std-marca" href={m.href} data-std-oscuro="">
+            <span class="std-marca__logo" role="img" aria-label={m.nombre} style={estiloLogo(m.logo)}></span>
+            <p class="std-marca__frase">{m.frase}</p>
+            {m.href
+              ? <span class="std-mas std-marca__pie">{dominio(m.href)}</span>
+              : <span class="std-marca__pie std-marca__pronto">{m.pronto ?? 'Sitio en preparación'}</span>}
+          </Tarjeta>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
+<style>
+  .std-marcas {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;
+    max-width: 1024px; margin: 48px auto 0; padding: 0; list-style: none; text-align: left;
+  }
+  /* La tarjeta-enlace fija su color y quita el subrayado: la hoja deja los enlaces subrayados en color de acción. */
+  .std-marca {
+    display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 250px;
+    padding: 36px 28px 28px; border-radius: var(--std-radio-tarjeta);
+    background: var(--std-tinta); color: var(--std-parchment); text-decoration: none;
+  }
+  .std-marca__logo {
+    display: block; width: 100%; background: var(--std-parchment);
+    -webkit-mask: var(--logo) left center / contain no-repeat; mask: var(--logo) left center / contain no-repeat;
+  }
+  /* --std-gris-claro (#a1a1a6) es la letra fina sobre negro de la hoja: pasa AA sobre #1d1d1f (6,5:1). */
+  .std-marca__frase { margin: 4px 0 0; font-size: 17px; line-height: 1.35; color: var(--std-gris-claro); }
+  .std-marca__pie { margin-top: auto; font-size: 14px; }
+  .std-marca__pronto { color: var(--std-gris-claro); }
+  /* Con colores forzados el fondo del logo pasaría a Canvas, el mismo de la tarjeta, y la máscara no dejaría ver nada:
+     el logo queda en CanvasText. */
+  @media (forced-colors: active) {
+    .std-marca__logo { forced-color-adjust: none; background: CanvasText; }
+  }
+  @media (max-width: 900px) {
+    .std-marcas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .std-marcas { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

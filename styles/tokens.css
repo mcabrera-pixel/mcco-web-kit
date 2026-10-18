@@ -1,8 +1,12 @@
-/* Tokens del Estándar Web MCCO v2 — NOMBRES compartidos, VALORES por sitio (src/styles/theme.css).
-   El kit solo define fallbacks neutros para que sus componentes rendericen en cualquier sitio.
-   Cada sitio declara en su theme.css: --color-bg, --color-bg-alt, --color-text, --color-muted,
-   --color-accent, --color-border, --font-body, --font-display, --space, --radius, --maxw.
-   Opcionales (sistema visual v1.1): --color-on-accent (texto sobre el acento) y --font-mono (rótulos). */
+/* Tokens --mcco-* del Estándar Web MCCO v2. El kit fija el estándar visual del grupo, Apple + antigravity
+   (styles/estandar.css y components/estandar/), y cada sitio pone su color de acción, sus activos y su contenido.
+   Estos tokens siguen para los layouts, los componentes generales (FooterGrupo, Faq, Cta, la 404) y el sistema visual
+   v1.1.
+
+   El kit define valores neutros de respaldo y cada sitio declara los suyos en su src/styles/theme.css: --color-bg,
+   --color-bg-alt, --color-text, --color-muted, --color-accent, --color-border, --font-body, --font-display, --space,
+   --radius y --maxw. Son opcionales --color-on-accent (texto sobre el acento) y --font-mono (rótulos), que usa el
+   sistema visual v1.1. */
 :root {
   --mcco-color-bg: var(--color-bg, #ffffff);
   --mcco-color-bg-alt: var(--color-bg-alt, #f4f4f2);
