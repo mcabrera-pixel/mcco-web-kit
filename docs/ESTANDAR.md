@@ -22,7 +22,7 @@ El color de acción va en el `:root` de `src/styles/theme.css`, en cuatro varian
 | `--campo-claro` | Un tono del campo antigravity | `var(--accion-oscuro)` |
 | `--campo-oscuro` | El otro tono del campo | `var(--accion)` |
 
-Cada variante pasa AA en su uso: 4,5:1 para el texto y el botón y 3:1 para el anillo de foco. El azul de condron.cl (`#5B85AA`), por ejemplo, da 3,9:1 sobre blanco, así que para texto y botones necesita una variante más oscura. La nube toma `--accion-boton` para sus realces sobre blanco y `--accion-oscuro` sobre negro, y `--accion-foco` para las chispas sobre blanco. El campo mezcla `--accion-boton`, `--campo-claro`, `--campo-oscuro` y un neutro (`#48484a`).
+Cada variante que fija el sitio tiene que pasar AA en su uso: 4,5:1 para el texto y el botón y 3:1 para el anillo de foco. El azul de condron.cl (`#5B85AA`), por ejemplo, da 3,9:1 sobre blanco, así que para texto y botones necesita una variante más oscura. La nube toma `--accion-boton` para sus realces sobre blanco y `--accion-oscuro` sobre negro, y `--accion-foco` para las chispas sobre blanco. El campo mezcla `--accion-boton`, `--campo-claro`, `--campo-oscuro` y un neutro (`#48484a`).
 
 ```css
 /* src/styles/theme.css de mcco.cl */
