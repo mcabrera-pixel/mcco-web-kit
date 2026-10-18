@@ -16,7 +16,7 @@ globalThis.addEventListener = ventana.addEventListener.bind(ventana);
 globalThis.dispatchEvent = ventana.dispatchEvent.bind(ventana);
 const avisos = [];
 addEventListener('std-pausa', (e) => avisos.push(e.detail.pausa));
-const { pausado, fijarPausa } = await import('../lib/estandar/pausa.js');
+const { pausado, fijarPausa, marcarMovimiento } = await import('../lib/estandar/pausa.js');
 
 const botones = () => [hero, historia].map((b) => [b.textContent, b.getAttribute('aria-pressed')]);
 const clic = (b) => b.dispatchEvent(new Event('click'));
@@ -54,4 +54,20 @@ test('fijarPausa avisa solo cuando cambia el estado', () => {
   fijarPausa(false);
   assert.deepStrictEqual(avisos, [true, false, true, false]);
   assert.equal(pausado(), false);
+});
+
+// El botón de pausa del hero se ve mientras el hero lleve data-std-movimiento (sin depender de :has()). Rompe si una
+// fuente que se apaga (el campo sin contexto, por ejemplo) borra la marca de la otra, que sigue moviéndose.
+test('marcarMovimiento: una palabra por fuente en data-std-movimiento y sin atributo cuando no queda ninguna', () => {
+  const heroFalso = { dataset: {} };
+  marcarMovimiento(heroFalso, 'nube', true);
+  assert.equal(heroFalso.dataset.stdMovimiento, 'nube');
+  marcarMovimiento(heroFalso, 'campo', true);
+  marcarMovimiento(heroFalso, 'campo', true);
+  assert.equal(heroFalso.dataset.stdMovimiento, 'nube campo');
+  marcarMovimiento(heroFalso, 'nube', false);
+  assert.equal(heroFalso.dataset.stdMovimiento, 'campo');
+  marcarMovimiento(heroFalso, 'campo', false);
+  assert.equal('stdMovimiento' in heroFalso.dataset, false);
+  assert.doesNotThrow(() => marcarMovimiento(null, 'campo', true));
 });

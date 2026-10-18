@@ -51,7 +51,8 @@ if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta 
   /* Pausa del movimiento: en la esquina superior derecha, dentro del aire sobre el título, así no toca el texto, las
      acciones ni la nube. Píldora chica como la de la historia, con fondo propio (los guiones no pasan bajo la letra),
      44 px de área táctil (::before) y z-index 3, sobre el lienzo de la nube (z-index 2). Se ve solo con algo
-     moviéndose en el hero: la nube (data-estado="nube", nube.js) o el campo (data-estado="activo", campo.js). */
+     moviéndose en el hero: nube.js y campo.js marcan la sección con data-std-movimiento (marcarMovimiento de pausa.js),
+     así no depende de :has() y un hero con campo y sin historia siempre tiene su pausa. */
   .std-hero__pausa {
     display: none; position: absolute; top: 7px; right: 22px; z-index: 3;
     padding: 9px 14px; border: 0; border-radius: 980px;
@@ -62,9 +63,7 @@ if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta 
   .std-hero__pausa:active { transform: scale(.95); }
   .std-hero__pausa::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; margin-top: -22px; }
   @media (prefers-reduced-motion: no-preference) {
-    :global(.std-hero:has([data-std-nube="hero"][data-estado="nube"], [data-std-campo][data-estado="activo"])) .std-hero__pausa {
-      display: block;
-    }
+    .std-hero[data-std-movimiento] .std-hero__pausa { display: block; }
   }
   @media (max-width: 640px) {
     .std-hero { padding: 44px 16px 0; }
