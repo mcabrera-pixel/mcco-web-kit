@@ -11,7 +11,7 @@
 // reproduce solo a la vista y sin movimiento reducido ni ahorro de datos (Save-Data); si no, queda el poster y el botón
 // para reproducirlo. Sin JS se ve el poster. Un video real lleva «Video de faena», como VideoBanda: no es una foto.
 import '../../styles/estandar.css';
-import { ROTULOS, rotuloDe } from '../../lib/estandar/rotulos.mjs';
+import { ROTULOS, rotuloDe, rotuloDeVideo } from '../../lib/estandar/rotulos.mjs';
 
 interface Item {
   tipo: 'imagen' | 'video';
@@ -40,7 +40,7 @@ for (const it of items) {
   if (faltan.length) throw new Error(`Galeria ${it.src ?? ''}: falta ${faltan.join(', ')}.`);
   rotuloDe(it.origen);
 }
-const rotulo = (it: Item) => (it.tipo === 'video' && it.origen === 'real' ? 'Video de faena' : rotuloDe(it.origen));
+const rotulo = (it: Item) => (it.tipo === 'video' ? rotuloDeVideo(it.origen) : rotuloDe(it.origen));
 const tipoVideo = (src: string) => (/\.webm(?:[?#]|$)/i.test(src) ? 'video/webm' : 'video/mp4');
 ---
 {items.length > 0 && (
@@ -59,7 +59,7 @@ const tipoVideo = (src: string) => (/\.webm(?:[?#]|$)/i.test(src) ? 'video/webm'
             )}
             <span class="std-rotulo" data-rotulo>{rotulo(it)}</span>
             {it.tipo === 'video' && (
-              <button type="button" class="std-galeria__boton" data-video-boton aria-pressed="false" hidden>Pausar video <span aria-hidden="true">Ⅱ</span></button>
+              <button type="button" class="std-galeria__boton" data-video-boton data-accion="pausar" hidden>Pausar video <span aria-hidden="true">Ⅱ</span></button>
             )}
           </div>
           {it.pie && <figcaption class="std-galeria__pie">{it.pie}</figcaption>}
@@ -84,7 +84,7 @@ const tipoVideo = (src: string) => (/\.webm(?:[?#]|$)/i.test(src) ? 'video/webm'
   .std-galeria__marco img, .std-galeria__marco video { display: block; width: 100%; height: 100%; object-fit: cover; }
   .std-galeria__pie { margin: 10px 0 0; font-size: 14px; line-height: 1.43; letter-spacing: -.016em; color: var(--std-gris); }
   :global([data-std-oscuro]) .std-galeria__marco { background: var(--std-negro-1); }
-  :global([data-std-oscuro]) .std-galeria__pie { color: #a1a1a6; }
+  :global([data-std-oscuro]) .std-galeria__pie { color: var(--std-gris-claro); }
 
   /* Cuadros: iguales y sin crecer, así una fila incompleta queda centrada. */
   .std-galeria--cuadros .std-galeria__item { flex: 0 1 calc((100% - 32px) / 3); }
@@ -102,7 +102,7 @@ const tipoVideo = (src: string) => (/\.webm(?:[?#]|$)/i.test(src) ? 'video/webm'
 
   /* Botón del video, que video.js muestra: círculo de 44 px como el rótulo, abajo a la izquierda. Su texto queda
      fuera de la vista y lo leen los lectores de pantalla; el ícono de pausa o de reproducir lo dibuja el ::before
-     según aria-pressed (true: pausado por la persona o sin reproducción automática). */
+     según data-accion, lo que hace el botón (reproducir: pausado por la persona o sin reproducción automática). */
   .std-galeria__boton {
     position: absolute; left: 12px; bottom: 12px;
     width: 44px; height: 44px; padding: 0; overflow: hidden;
@@ -115,10 +115,10 @@ const tipoVideo = (src: string) => (/\.webm(?:[?#]|$)/i.test(src) ? 'video/webm'
   .std-galeria__boton[hidden] { display: none; }
   .std-galeria__boton :global(span) { display: none; }
   .std-galeria__boton::before { content: ""; position: absolute; top: 50%; left: 50%; }
-  .std-galeria__boton[aria-pressed='false']::before {
+  .std-galeria__boton[data-accion='pausar']::before {
     width: 12px; height: 14px; margin: -7px 0 0 -6px; border-left: 4px solid; border-right: 4px solid;
   }
-  .std-galeria__boton[aria-pressed='true']::before {
+  .std-galeria__boton[data-accion='reproducir']::before {
     width: 0; height: 0; margin: -8px 0 0 -5px;
     border-left: 13px solid; border-top: 8px solid transparent; border-bottom: 8px solid transparent;
   }

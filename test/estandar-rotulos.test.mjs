@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { ROTULOS, rotuloDe } from '../lib/estandar/rotulos.mjs';
+import { ROTULOS, rotuloDe, rotuloDeVideo } from '../lib/estandar/rotulos.mjs';
 
 // Rompe si cambia el texto de un rótulo o si aparece o se pierde un origen: el texto es el que exige la regla de
 // imágenes del grupo y el que lee la gente sobre cada imagen.
@@ -33,6 +33,15 @@ test('rotuloDe: lanza con un origen que no existe', () => {
   }
 });
 
+// Rompe si un video real deja de decir «Video de faena» (no es una foto, como en VideoBanda) o si un video de otro
+// origen pierde el rótulo de siempre. Un origen que no existe hace caer el build, igual que con rotuloDe.
+test('rotuloDeVideo: «Video de faena» para un video real y el rótulo de su origen para los demás', () => {
+  assert.equal(rotuloDeVideo('real'), 'Video de faena');
+  for (const origen of Object.keys(ROTULOS).filter((o) => o !== 'real')) assert.equal(rotuloDeVideo(origen), ROTULOS[origen]);
+  assert.throws(() => rotuloDeVideo('ia'), /ia/);
+  assert.throws(() => rotuloDeVideo(undefined));
+});
+
 // Rompe si los tipos de rotulos.d.mts se separan de ROTULOS. Esos tipos hacen que `origen` de Producto y Galeria
 // acepte solo los cinco orígenes en el chequeo de tipos del sitio (TypeScript no lee el JS de un paquete).
 test('rotulos.d.mts declara los mismos orígenes y textos que ROTULOS', () => {
@@ -42,4 +51,5 @@ test('rotulos.d.mts declara los mismos orígenes y textos que ROTULOS', () => {
   const declarados = Object.fromEntries([...bloque[1].matchAll(/(\w+)\s*:\s*'([^']*)'/g)].map((m) => [m[1], m[2]]));
   assert.deepEqual(declarados, { ...ROTULOS });
   assert.match(tipos, /export declare function rotuloDe\(origen: string\): string;/);
+  assert.match(tipos, /export declare function rotuloDeVideo\(origen: string\): string;/);
 });

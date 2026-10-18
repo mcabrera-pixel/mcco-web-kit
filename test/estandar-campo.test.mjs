@@ -42,7 +42,11 @@ test('anillos: la cantidad de guiones es Σ max(6, ⌊2π·r/30⌋) para r = 46 
   assert.equal(a.length % 3, 0);
   assert.equal(a.length / 3, suma(esperados(COMPUTADOR)));
   // En celular, con sus propios valores.
-  assert.equal(anillos(parametrosCampo(true), 777).length / 3, suma(esperados(CELULAR)));
+  const celular = anillos(parametrosCampo(true), 777);
+  assert.equal(celular.length / 3, suma(esperados(CELULAR)));
+  // Los totales escritos a mano: atrapan un cambio de la fórmula que se copie igual en anillos() y en esperados().
+  assert.equal(a.length / 3, 5184);
+  assert.equal(celular.length / 3, 2841);
 });
 
 test('anillos: misma semilla, mismo arreglo; todos los ángulos finitos', () => {

@@ -72,3 +72,11 @@ test('clases y valores por defecto que consumen los componentes', () => {
   assert.match(hoja(), /--campo-claro\s*:\s*var\(--accion-oscuro\)/);
   assert.match(hoja(), /--campo-oscuro\s*:\s*var\(--accion\)/);
 });
+
+// Rompe si el anillo de foco no pasa a la variante clara dentro de un bloque negro: el foco cobre de mcco.cl (#ba521a)
+// da 2,94:1 sobre #2a2a2c, bajo el 3:1 de WCAG 1.4.11. También si la píldora chica pierde su ancho mínimo: con un
+// texto corto quedaría bajo los 44 px de área táctil.
+test('foco claro sobre negro y píldora chica de 44 px de ancho mínimo', () => {
+  assert.match(regla(':where(.std [data-std-oscuro]) :focus-visible'), /outline-color\s*:\s*var\(--accion-oscuro\)/);
+  assert.match(regla('.std-pildora--chica'), /min-width\s*:\s*44px/);
+});

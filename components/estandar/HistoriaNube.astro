@@ -129,7 +129,7 @@ const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${e
      en el mismo momento en que el script lo sabe y puede devolver la ventana al inicio de la historia. */
   .std-historia[data-estado='nube'] .std-historia__nube { display: block; }
   .std-historia[data-estado='nube'] .std-historia__fijas { display: none; }
-  .std-historia[data-estado='nube'] .std-historia__paso { color: #a1a1a6; transition: color .5s; }
+  .std-historia[data-estado='nube'] .std-historia__paso { color: var(--std-gris-claro); transition: color .5s; }
   .std-historia[data-estado='nube'] .std-historia__etapa { color: inherit; }
   .std-historia[data-estado='nube'] .is-activo { color: var(--std-parchment); }
   .std-historia[data-estado='nube'] .is-activo .std-historia__etapa { color: var(--accion-oscuro); }

@@ -12,8 +12,16 @@ interface Props {
   enlaces: Enlace[];
 }
 const { logo, enlaces } = Astro.props;
-const faltan = [!logo?.src && 'logo.src', typeof logo?.alt !== 'string' && 'logo.alt', !logo?.width && 'logo.width', !logo?.height && 'logo.height'].filter(Boolean);
+// logo.alt es el nombre del enlace al inicio («<alt>, inicio»): vacío, el lector de pantalla diría «, inicio».
+const lleno = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+const faltan = [!logo?.src && 'logo.src', !lleno(logo?.alt) && 'logo.alt (el nombre del sitio, no puede ir vacío)',
+  !logo?.width && 'logo.width', !logo?.height && 'logo.height',
+  !Array.isArray(enlaces) && 'enlaces (una lista, que puede ir vacía)'].filter(Boolean);
 if (faltan.length) throw new Error(`NavGlobal: falta ${faltan.join(', ')}.`);
+enlaces.forEach((e, i) => {
+  const faltanEnlace = [!lleno(e?.href) && 'href', !lleno(e?.texto) && 'texto'].filter(Boolean);
+  if (faltanEnlace.length) throw new Error(`NavGlobal: al enlace ${i + 1} le falta ${faltanEnlace.join(', ')}.`);
+});
 // aria-current="page" en el enlace a la página actual. Se comparan rutas limpias con / final: con build.format
 // "preserve", Astro.url.pathname de una página suelta termina en .html (/demo-estandar.html). Un enlace con # apunta
 // a una sección y no se marca (#claro, /#contacto), ni uno que no empiece con /.

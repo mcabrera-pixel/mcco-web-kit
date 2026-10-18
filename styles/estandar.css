@@ -26,7 +26,7 @@
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Lo que fija cada sitio. Va con especificidad cero para que el :root del sitio gane sin importar el orden de las
+/* Lo que fija cada sitio. :where(:root) pesa 0,0,0, así el :root del sitio (0,1,0) gana sin importar el orden de las
    hojas. Por defecto, el azul de Apple, con contraste AA. */
 :where(:root) {
   --accion: #0066cc;                    /* texto y enlaces sobre blanco */
@@ -46,8 +46,10 @@
   --std-negro-2: #2a2a2c;
   --std-negro-3: #161617;
   --std-tinta: #1d1d1f;
-  --std-tinta-80: #333336;                       /* «Ink Muted 80» del DESIGN.md de Apple: bajadas y enlaces de 12 px */
+  /* Bajadas y enlaces de 12 px. Sale de la prueba aprobada: el «Ink Muted 80» del DESIGN.md de Apple es #333333. */
+  --std-tinta-80: #333336;
   --std-gris: #6e6e73;
+  --std-gris-claro: #a1a1a6;                     /* letra fina sobre las superficies oscuras, AA sobre todas */
   --std-linea: #d2d2d7;
   --std-sombra: rgba(0,0,0,.22) 3px 5px 30px 0;  /* la única sombra, solo en imágenes de producto */
   --std-radio-tarjeta: 18px;                     /* los bloques no se redondean y las píldoras usan 980 px */
@@ -66,13 +68,17 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
   letter-spacing: -.022em;
   -webkit-font-smoothing: antialiased;
 }
-/* Con especificidad cero, para que cualquier componente la pise. Los enlaces dentro de un texto conservan el
+/* :where() no suma especificidad: cada regla pesa solo lo que queda fuera de él (0,0,0 en *, 0,0,1 en img y a, 0,1,0
+   en :focus-visible), así un componente las pisa sin pelear con .std. Los enlaces dentro de un texto conservan el
    subrayado: el color solo no basta para distinguirlos (WCAG 1.4.1). */
 :where(.std) *, :where(.std) *::before, :where(.std) *::after { box-sizing: border-box; }
 :where(.std) img { display: block; max-width: 100%; height: auto; }
 :where(.std) a { color: var(--accion); }
 :where(.std [data-std-oscuro]) a { color: var(--accion-oscuro); }
 :where(.std) :focus-visible { outline: 2px solid var(--accion-foco); outline-offset: 3px; }
+/* Dentro de un bloque negro el anillo usa el color de acción claro: el de foco de un sitio puede quedar bajo el 3:1 sobre
+   los negros más claros (el cobre de mcco.cl da 2,94:1 sobre #2a2a2c, WCAG 1.4.11). */
+:where(.std [data-std-oscuro]) :focus-visible { outline-color: var(--accion-oscuro); }
 
 /* Titulares y textos. Escala 56, 48, 40, 34, 28, 24, 21, 17, 14 y 12 px. Pesos 300, 400, 600 y 700. */
 .std-h1, .std-h2, .std-h3, .std-lead, .std-tagline { text-wrap: balance; }
@@ -95,7 +101,7 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
 }
 .std-pildora:active { transform: scale(.95); }
 .std-pildora--fantasma { background: transparent; color: var(--accion); border-color: var(--accion); }
-.std-pildora--chica { position: relative; min-height: 28px; padding: 4px 12px; font-size: 12px; }
+.std-pildora--chica { position: relative; min-width: 44px; min-height: 28px; padding: 4px 12px; font-size: 12px; }
 
 /* Enlace con «›» decorativo. El texto alternativo vacío lo calla en los lectores de pantalla, y la primera
    declaración queda para los navegadores que no lo entienden. */
@@ -120,7 +126,7 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
 
 /* Sobre bloques negros. Los dos grises pasan AA sobre todas las superficies oscuras del estándar. */
 [data-std-oscuro] .std-tagline { color: #d2d2d7; }
-[data-std-oscuro] .std-fina { color: #a1a1a6; }
+[data-std-oscuro] .std-fina { color: var(--std-gris-claro); }
 [data-std-oscuro] .std-pildora--fantasma { color: var(--accion-oscuro); border-color: var(--accion-oscuro); }
 [data-std-oscuro] .std-mas { color: var(--accion-oscuro); }
 

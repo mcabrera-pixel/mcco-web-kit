@@ -13,6 +13,12 @@ interface Props {
 }
 const { titulo, enlaces, accion } = Astro.props;
 if (!titulo || !accion?.href || !accion?.texto) throw new Error('SubNav: falta titulo o accion { href, texto }.');
+if (!Array.isArray(enlaces)) throw new Error('SubNav: falta enlaces (una lista, que puede ir vacía).');
+const lleno = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+enlaces.forEach((e, i) => {
+  const faltan = [!lleno(e?.href) && 'href', !lleno(e?.texto) && 'texto'].filter(Boolean);
+  if (faltan.length) throw new Error(`SubNav: al enlace ${i + 1} le falta ${faltan.join(', ')}.`);
+});
 ---
 <div class="std-subnav">
   <div class="std-subnav__in">

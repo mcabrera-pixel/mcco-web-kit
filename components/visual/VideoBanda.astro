@@ -45,7 +45,7 @@ const conTexto = Astro.slots.has('default');
       {lista.map((f) => <source src={f.src} type={tipo(f)} />)}
     </video>
     <span class="mcco-rotulo" data-rotulo data-en="sup-izq">{rotulo}</span>
-    <button type="button" class="mcco-control mcco-video__boton" data-video-boton aria-pressed="false" hidden>Pausar video <span aria-hidden="true">Ⅱ</span></button>
+    <button type="button" class="mcco-control mcco-video__boton" data-video-boton data-accion="pausar" hidden>Pausar video <span aria-hidden="true">Ⅱ</span></button>
     {formato === 'banda' && conTexto && <div class="mcco-video__sobre"><slot /></div>}
   </div>
   {formato === 'partido' && conTexto && <div class="mcco-video__texto"><slot /></div>}

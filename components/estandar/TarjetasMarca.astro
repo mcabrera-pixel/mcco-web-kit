@@ -63,10 +63,15 @@ const estiloLogo = ({ src, alto = 48 }: Marca['logo']) => `--logo: url(${JSON.st
     display: block; width: 100%; background: var(--std-parchment);
     -webkit-mask: var(--logo) left center / contain no-repeat; mask: var(--logo) left center / contain no-repeat;
   }
-  /* #a1a1a6 es la letra fina sobre negro de la hoja: pasa AA sobre #1d1d1f (6,5:1). */
-  .std-marca__frase { margin: 4px 0 0; font-size: 17px; line-height: 1.35; color: #a1a1a6; }
+  /* --std-gris-claro (#a1a1a6) es la letra fina sobre negro de la hoja: pasa AA sobre #1d1d1f (6,5:1). */
+  .std-marca__frase { margin: 4px 0 0; font-size: 17px; line-height: 1.35; color: var(--std-gris-claro); }
   .std-marca__pie { margin-top: auto; font-size: 14px; }
-  .std-marca__pronto { color: #a1a1a6; }
+  .std-marca__pronto { color: var(--std-gris-claro); }
+  /* Con colores forzados el fondo del logo pasaría a Canvas, el mismo de la tarjeta, y la máscara no dejaría ver nada:
+     el logo queda en CanvasText. */
+  @media (forced-colors: active) {
+    .std-marca__logo { forced-color-adjust: none; background: CanvasText; }
+  }
   @media (max-width: 900px) {
     .std-marcas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }

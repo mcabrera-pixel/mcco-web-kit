@@ -8,3 +8,4 @@ export declare const ROTULOS: Readonly<{
   captura: 'Captura de simulación';
 }>;
 export declare function rotuloDe(origen: string): string;
+export declare function rotuloDeVideo(origen: string): string;
