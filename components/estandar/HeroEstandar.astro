@@ -1,10 +1,13 @@
 ---
 // Hero del estándar: blanco, H1 de 56 px (el LCP), bajada, acciones y, con `nube`, el lugar donde la nube antigravity
 // arma el primer activo (NubeAncla) con su rótulo de origen debajo. Para cortes de línea o énfasis en el título se usa
-// el slot "titulo". La píldora fantasma lleva fondo blanco: el campo antigravity pasa por detrás del texto.
+// el slot "titulo". Con `campo`, el campo antigravity (CampoAntigravity) ocupa todo el hero detrás del texto: la capa
+// va en z-index 0 y el contenido en z-index 1, sin fondos, así los guiones pasan entre las letras. La píldora fantasma
+// lleva fondo blanco para leerse sobre ellos.
 import '../../styles/estandar.css';
 import Acciones from './Acciones.astro';
 import NubeAncla from './NubeAncla.astro';
+import CampoAntigravity from './CampoAntigravity.astro';
 import type { ComponentProps } from 'astro/types';
 
 interface Props {
@@ -16,11 +19,14 @@ interface Props {
   nube?: ComponentProps<typeof NubeAncla>;
   /** Rótulo de origen bajo la nube. */
   rotulo?: string;
+  /** Campo antigravity detrás del texto: guiones en anillos que siguen al mouse con retraso. */
+  campo?: boolean;
 }
-const { titulo, bajada, acciones, nube, rotulo = 'Ilustración en nube de puntos.' } = Astro.props;
+const { titulo, bajada, acciones, nube, rotulo = 'Ilustración en nube de puntos.', campo = false } = Astro.props;
 if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta `titulo` o el slot "titulo".');
 ---
 <section class="std-hero" aria-labelledby="std-hero-titulo">
+  {campo && <CampoAntigravity />}
   <h1 class="std-h1" id="std-hero-titulo"><slot name="titulo">{titulo}</slot></h1>
   {bajada && <p class="std-lead std-hero__bajada">{bajada}</p>}
   <Acciones acciones={acciones} />
@@ -34,6 +40,8 @@ if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta 
 
 <style>
   .std-hero { position: relative; padding: 56px 22px 0; background: var(--std-blanco); text-align: center; }
+  /* El contenido va sobre el campo (z-index 0). :global alcanza también la raíz de Acciones, que es de otro componente. */
+  .std-hero > :global(:not([data-std-campo])) { position: relative; z-index: 1; }
   .std-hero__bajada { color: var(--std-tinta-80); }
   .std-hero :global(.std-pildora--fantasma) { background: var(--std-blanco); }
   .std-hero__nube { margin: 0; }

@@ -1,0 +1,19 @@
+---
+// Campo antigravity del hero: guiones cortos en anillos concéntricos alrededor de un centro que persigue al mouse con
+// unos 1,4 s de retraso, orientados hacia afuera y con el color según el ángulo (--accion-boton, --campo-claro,
+// --campo-oscuro y un neutro). lib/estandar/campo.js convierte esta capa en un lienzo WebGL2 que ocupa todo el hero
+// detrás del texto: la capa va en z-index 0 y el contenido del hero en z-index 1. HeroEstandar la pone como primer hijo
+// con `campo`; fuera de él necesita un contenedor con position: relative. Es decorativa (aria-hidden y sin eventos):
+// con movimiento reducido, sin JS o sin WebGL2 no se ve nada y el hero queda blanco con su texto.
+import '../../styles/estandar.css';
+---
+<div class="std-campo" data-std-campo aria-hidden="true"></div>
+
+<script>import '../../lib/estandar/campo.js';</script>
+
+<style>
+  .std-campo { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .std-campo { display: none; }
+  }
+</style>
