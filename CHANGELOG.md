@@ -3,6 +3,13 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.2.0-rc.1 · 2026-10-18
+- Estándar visual Apple + antigravity, aditivo: hoja `styles/estandar.css` (tokens `--std-*`, color de acción por sitio en `--accion*` e Inter autoalojada con su licencia OFL), `layouts/Estandar.astro`, componentes en `components/estandar/` y JS en `lib/estandar/` (nube con historia, campo, pausa común, sub-navegación y menú). La guía está en `docs/ESTANDAR.md`.
+- `mcco-estandar-copiar <destino>` copia la hoja, las fuentes y el JS del estándar para las webs sin Astro.
+- Rótulo de origen «Captura de simulación» (`origen: 'captura'`) para las capturas reales de simulación.
+- Los botones de video de `VideoBanda` y de pausa de `HeroParticulas` cambian su texto y ya no llevan `aria-pressed`. El de video lleva `data-accion` (`pausar` o `reproducir`), así que un sitio que estilice ese botón por `aria-pressed` pasa a `data-accion`. Los botones de escena del hero conservan `aria-pressed`.
+- El README y el encabezado de `styles/tokens.css` dicen ahora que el kit fija el estándar visual del grupo y que cada sitio pone su color de acción, sus activos y su contenido. Los tokens `--mcco-*` siguen para los layouts y el sistema visual v1.1.
+
 ## v1.1.3 · 2026-10-06
 - Workflows `site-ci` y `site-deploy` en `ubuntu-24.04` con Node 24.21.0 (npm 11.19.0). `ubuntu-latest` migra a Ubuntu 26 desde el 19-oct-2026.
 - El proyecto Cloudflare sale de `site.yaml` con el bin nuevo `mcco-sitio`; si el workflow del sitio pasa otro proyecto, la CI falla con el motivo.
