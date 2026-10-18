@@ -1,5 +1,5 @@
 // Pruebas de lib/estandar/pausa.js con un documento mínimo: una sola pausa para todos los botones [data-std-pausa] (el
-// del hero y el de la historia), con su texto y aria-pressed, y el evento std-pausa en window en cada cambio.
+// del hero y el de la historia), con su texto y sin aria-pressed, y el evento std-pausa en window en cada cambio.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -20,9 +20,11 @@ const { pausado, fijarPausa } = await import('../lib/estandar/pausa.js');
 
 const botones = () => [hero, historia].map((b) => [b.textContent, b.getAttribute('aria-pressed')]);
 const clic = (b) => b.dispatchEvent(new Event('click'));
-const PAUSAR = ['Pausar movimiento', 'false'], REANUDAR = ['Reanudar movimiento', 'true'];
+// El texto cambia con el estado, así que no lleva aria-pressed (patrón de botón de WAI-ARIA): con los dos, un lector
+// anunciaría «Reanudar movimiento, presionado» con el movimiento detenido.
+const PAUSAR = ['Pausar movimiento', null], REANUDAR = ['Reanudar movimiento', null];
 
-test('al cargar: sin pausa, los dos botones dicen «Pausar movimiento» con aria-pressed="false" y no hay aviso', () => {
+test('al cargar: sin pausa, los dos botones dicen «Pausar movimiento», sin aria-pressed, y no hay aviso', () => {
   assert.equal(pausado(), false);
   assert.deepStrictEqual(botones(), [PAUSAR, PAUSAR]);
   assert.deepStrictEqual(avisos, []);
