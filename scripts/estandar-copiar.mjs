@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// mcco-estandar-copiar: salida sin Astro del estándar visual (Apple + antigravity) para las webs sin framework, como
-// as-built.cl. Copia a <destino>/ la hoja con sus fuentes (styles/estandar.css y styles/fuentes/*) y el runtime
+// mcco-estandar-copiar: capa base sin Astro de rc.1, con fuentes sin minificar. No monta los componentes ni cumple
+// por sí sola el presupuesto de JS. Copia a <destino>/ la hoja con sus fuentes (styles/estandar.css y styles/fuentes/*) y el runtime
 // (lib/estandar/*.js y lib/visual/comun.js) con las mismas rutas relativas, así siguen resolviendo los import, el Worker
 // de la nube y los url() de la hoja. La web lo corre en su deploy, desde la tag del kit que fija, nunca a mano.
 // Uso: mcco-estandar-copiar <destino>

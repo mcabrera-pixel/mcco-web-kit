@@ -24,7 +24,7 @@ Kit compartido de las webs de MCCO Group. Implementa en código el **Estándar W
 | `scripts/parity.mjs` | **`mcco-parity`**: gate de migración (producción vs build, ruta por ruta). |
 | `scripts/headers.mjs` | **`mcco-headers`**: genera `public/_headers` (CSP) y `public/_redirects` desde `site.yaml`. |
 | `scripts/sitio-ci.mjs` | **`mcco-sitio`**: proyecto Cloudflare y dominio desde `site.yaml` para los workflows. |
-| `scripts/estandar-copiar.mjs` | **`mcco-estandar-copiar`**: copia la hoja, las fuentes y el JS del estándar a otra carpeta, para las webs sin Astro. |
+| `scripts/estandar-copiar.mjs` | **`mcco-estandar-copiar`**: capa base sin Astro (hoja, fuentes y runtimes sin minificar). La copia sola no monta el estándar ni cumple el presupuesto de JS del build de Astro. |
 | `scripts/smoke.sh` | Smoke del deploy sobre `<proyecto>.pages.dev` y, si está conectado, el dominio. |
 | `.github/workflows/site-ci.yml` | Reutilizable: PR → build + check + preview. |
 | `.github/workflows/site-deploy.yml` | Reutilizable: main → build + check + deploy + smoke. |
@@ -58,7 +58,7 @@ import Estandar from '@mcco/web-kit/layouts/Estandar.astro';
 import HeroEstandar from '@mcco/web-kit/components/estandar/HeroEstandar.astro';
 ```
 
-Uso de cada componente, variables por sitio, presupuesto, regla de imágenes y salida sin Astro: [`docs/ESTANDAR.md`](docs/ESTANDAR.md). Demo: `/demo-estandar` en la plantilla.
+Uso de cada componente, variables por sitio, presupuesto, regla de imágenes y alcance de la capa base sin Astro: [`docs/ESTANDAR.md`](docs/ESTANDAR.md). Demo: `/demo-estandar` en la plantilla.
 
 ## Sistema visual (v1.1)
 

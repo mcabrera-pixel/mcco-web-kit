@@ -58,9 +58,18 @@ La hoja trae las clases `.std-h1` (56 px), `.std-h2` (48), `.std-h3` (40), `.std
 
 ## Layout
 
+El layout del sitio importa `src/styles/theme.css`. Ni `Estandar` ni `Base` cargan esa hoja, por lo que omitir el import deja los colores azules por defecto.
+
 ```astro
 ---
+// src/layouts/Sitio.astro
 import Estandar from '@mcco/web-kit/layouts/Estandar.astro';
+import '../styles/theme.css';
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
 const nav = {
   logo: { src: '/favicon.svg', alt: 'Plantilla MCCO', width: 32, height: 32 },
   enlaces: [{ href: '#claro', texto: 'Bloques' }, { href: '/demo-estandar', texto: 'Estándar' }],
@@ -71,9 +80,9 @@ const subnav = {
   accion: { href: '/#contacto', texto: 'Hablar con un ingeniero', textoCorto: 'Contactar' },
 };
 ---
-<Estandar title="…" description="…" nav={nav} subnav={subnav}>
+<Estandar title={title} description={description} nav={nav} subnav={subnav}>
   <link slot="head" rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <!-- bloques de la página -->
+  <slot />
   <footer slot="pie">…</footer>
 </Estandar>
 ```
@@ -123,6 +132,29 @@ Una sección a todo el ancho, sin redondeo, con el texto centrado y 80 px de air
 | `campo` | `false` | El campo antigravity detrás del texto |
 
 El respaldo de la nube se ve sin WebGL2, con movimiento reducido y sin JS. Con `nube` o `campo` el hero lleva su propio botón «Pausar movimiento» (WCAG 2.2.2), arriba a la derecha y antes del H1 en el orden del foco. Se ve mientras algo se mueve en el hero.
+
+### NubeAncla
+
+Para usar el ancla directamente, pasa `respaldo` y escribe el rótulo de origen junto a ella. Este ejemplo pone también el botón de pausa en un contenedor `.std-hero`, que el runtime marca mientras la nube se mueve. Usa una sola ancla de hero por página.
+
+```astro
+---
+import NubeAncla from '@mcco/web-kit/components/estandar/NubeAncla.astro';
+---
+<figure class="std-hero nube-directa">
+  <button type="button" class="std-pildora std-pildora--chica" data-std-pausa>Pausar movimiento</button>
+  <NubeAncla respaldo={{
+    src: '/media/ilustracion/hero-chancado-960.webp', width: 960, height: 540,
+    alt: 'Edificio de chancado con su correa, en nube de puntos',
+  }} />
+  <figcaption class="std-fina" data-rotulo>Ilustración en nube de puntos.</figcaption>
+</figure>
+<style>
+  .nube-directa { margin: 0; text-align: center; }
+  .nube-directa [data-std-pausa] { display: none; }
+  .nube-directa[data-std-movimiento] [data-std-pausa] { display: inline-flex; }
+</style>
+```
 
 ### Acciones
 
@@ -222,13 +254,34 @@ Con colores forzados el logo se pinta en el color del texto del sistema. Con `hr
 
 `HeroEstandar` lo pone con `campo`, junto con su botón de pausa. Fuera del hero, el campo necesita un contenedor con `position: relative` y la página tiene que poner su propio botón `[data-std-pausa]` (WCAG 2.2.2). `pausa.js` le da el texto y el clic, y `campo.js` marca el contenedor con `data-std-movimiento` mientras el campo se mueve, para mostrar el botón solo entonces.
 
+```astro
+---
+import CampoAntigravity from '@mcco/web-kit/components/estandar/CampoAntigravity.astro';
+---
+<section class="campo-propio" aria-labelledby="campo-titulo">
+  <CampoAntigravity />
+  <div class="campo-propio__contenido">
+    <h2 class="std-h2" id="campo-titulo">Campo antigravity.</h2>
+    <button type="button" class="std-pildora" data-std-pausa>Pausar movimiento</button>
+  </div>
+</section>
+<style>
+  .campo-propio { position: relative; overflow: hidden; padding: 80px 22px; text-align: center; }
+  .campo-propio__contenido { position: relative; z-index: 1; }
+  .campo-propio [data-std-pausa] { display: none; }
+  .campo-propio[data-std-movimiento] [data-std-pausa] { display: inline-flex; }
+</style>
+```
+
+El runtime crea un solo campo por página. Usa este ejemplo en una página que no active `campo` en `HeroEstandar`.
+
 ## Nube, campo y pausa
 
 La nube usa un solo lienzo fijo. Después del primer pintado, los puntos suben desde abajo y en unos 2,6 s arman el primer activo bajo el título. Al bajar, la nube acompaña el scroll a media opacidad hasta la historia. El cursor dispersa los puntos y un barrido de luz los recorre.
 
 La nube arranca después de la carga, en tiempo ocioso y con un ancla cerca de la vista, y se detiene con la pestaña oculta o fuera de pantalla. Las formas se muestrean en un Worker con OffscreenCanvas, o por tramos en el hilo principal si no hay, y el Worker se cierra cuando llega la última. `window.__mccoNube.state` deja ver el estado para verificar.
 
-El campo vive solo en el hero, detrás del texto, y sus guiones pasan entre las letras sin recuadros blancos. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
+El campo queda detrás del texto de su contenedor y sus guiones pasan entre las letras sin recuadros blancos. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
 
 El centro del campo persigue al mouse con unos 1,4 s de retraso, sin cursor pasea despacio, los anillos giran a 0,012 rad/s y el scroll no los mueve. Sobre la nube los guiones bajan a un tercio. Con movimiento reducido no se crea, y sin WebGL2 no queda nada porque es decorativo. `window.__mccoCampo.state` deja ver su estado.
 
@@ -240,9 +293,11 @@ Los puntos de la nube se fijan al arrancar, y el campo rehace sus anillos si la 
 
 ## Presupuesto
 
+Los límites y las mediciones de JS de esta tabla corresponden al build optimizado de Astro. La copia de fuentes sin minificar de rc.1 no cumple estos presupuestos por sí sola.
+
 | Medida | Límite | Medido en v1.2.0-rc.1 |
 |---|---|---|
-| JS de la nube, gzip | 12 KB | 8274 B: runtime con `historia.js`, Worker, entradas y `pausa.js` |
+| JS de la nube, gzip | 12 KB | 8365 B: runtime con `historia.js`, Worker, entradas y `pausa.js` |
 | JS del campo, gzip | 5 KB | 3800 B, 4156 B con `pausa.js` |
 | Lighthouse móvil | 85 en rendimiento, 95 en accesibilidad | Se mide en la portada de mcco.cl |
 | LCP | El H1 | |
@@ -250,7 +305,7 @@ Los puntos de la nube se fijan al arrancar, y el campo rehace sus anillos si la 
 | Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB | |
 | Videos | 8 MB, H.264 con `faststart`, poster WebP, `muted`, `playsinline`, `preload="none"`, en R2 | |
 
-El JS se midió con zlib nivel 9 sobre el build de la demo de `mcco-web-template`. Si la nube necesita el respaldo del hilo principal, que se descarga solo en navegadores sin OffscreenCanvas, sube a 9752 B. Contando `lib/visual/comun.js`, que comparte todo el sistema visual, la nube llega a 10 157 B y el campo a 4561 B.
+El JS se midió con zlib nivel 9 sobre el build de Astro de la demo de `mcco-web-template`. El respaldo del hilo principal se descarga si no hay OffscreenCanvas o si el Worker falla. Al contar también ese módulo, la nube suma 9843 B. Con `lib/visual/comun.js`, compartido por el sistema visual, el total de la nube llega a 10 248 B y el del campo a 4561 B.
 
 ## Regla de imágenes y rótulos de origen
 
@@ -272,7 +327,9 @@ El JS se midió con zlib nivel 9 sobre el build de la demo de `mcco-web-template
 
 Los textos salen de `lib/estandar/rotulos.mjs`. `Producto` y `Galeria` piden `origen` y lo escriben en el chip de cada imagen. `mcco-check` revisa con R11 que toda imagen con `data-origen="ilustracion"` o bajo `/media/ilustracion/` tenga su rótulo a la vista.
 
-## Webs sin Astro: mcco-estandar-copiar
+## Capa base para webs sin Astro: mcco-estandar-copiar
+
+En v1.2.0-rc.1 la salida sin Astro se limita a la hoja, las fuentes y los runtimes como código fuente sin minificar. La copia sola no monta el estándar en un sitio sin framework ni cumple el presupuesto de JS del build de Astro.
 
 ```bash
 # En el deploy, con el kit instalado desde la tag que fija el sitio
@@ -281,20 +338,9 @@ node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar
 
 El script copia `styles/estandar.css`, `styles/fuentes/*` (con la licencia OFL), `lib/estandar/*.js` y `lib/visual/comun.js` al destino, con las mismas rutas relativas, y así siguen resolviendo los `import`, el Worker de la nube y los `url()` de las fuentes. No copia `lib/estandar/rotulos.mjs`, que solo usan los componentes de Astro al construir. Corre en el deploy desde la tag del kit, nunca a mano, y sin destino sale con código 1.
 
-```html
-<link rel="preload" href="/estandar/styles/fuentes/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estandar/styles/estandar.css">
-<link rel="stylesheet" href="/css/theme.css"><!-- el :root del sitio, con --accion y las demás -->
-<body class="std">
-  <!-- el mismo marcado que generan los componentes -->
-  <script type="module" src="/estandar/lib/estandar/menu.js"></script>
-  <script type="module" src="/estandar/lib/estandar/subnav.js"></script>
-  <script type="module" src="/estandar/lib/estandar/nube.js"></script>
-  <script type="module" src="/estandar/lib/estandar/campo.js"></script>
-</body>
-```
+Los estilos de los 13 componentes siguen dentro de sus archivos `.astro`, aislados por Astro, y no viajan en la copia. Tampoco se copian el marcado ni `lib/visual/video.js`, que reproduce los videos de `Galeria`.
 
-La copia no trae el marcado ni los estilos de cada componente, que viven en su archivo `.astro` con estilos que Astro aísla por componente. Una web sin Astro escribe el mismo HTML, con las clases `std-*` y los atributos `data-std-*`, y esos estilos. La referencia es `/demo-estandar` de la plantilla. Tampoco trae `lib/visual/video.js`, que reproduce los videos de `Galeria`.
+El plan de adopción de as-built definirá la entrega de esos estilos, el runtime de video y un build minificado que cumpla el presupuesto de JS, junto con la integración del marcado. Esa adopción va después del VB de mcco.cl, según la sección 6 de la especificación. rc.1 no incorpora un bundler ni refactoriza los componentes para esa salida.
 
 El Worker de la nube se carga desde el mismo origen, así que la CSP del sitio tiene que permitir `'self'` en `worker-src`, o en `script-src` si no declara `worker-src`.
 
