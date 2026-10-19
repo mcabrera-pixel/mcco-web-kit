@@ -144,7 +144,7 @@ Una sección a todo el ancho, sin redondeo, con el texto centrado y 80 px de air
 | `acciones` | (obligatorio) | Las de `Acciones` |
 | `nube` | | `{ respaldo: { src, width, height, alt } }`, la imagen fija del primer activo |
 | `rotulo` | `'Ilustración en nube de puntos.'` | Rótulo de origen bajo la nube |
-| `campo` | `false` | El campo antigravity detrás del texto |
+| `campo` | `false` | El campo antigravity detrás del texto. `true` usa los valores por defecto; `{ parametros }` los ajusta |
 
 El respaldo de la nube se ve sin WebGL2, con movimiento reducido y sin JS. Con `nube` o `campo` el hero lleva su propio botón «Pausar movimiento» (WCAG 2.2.2), arriba a la derecha y antes del H1 en el orden del foco. Se ve mientras algo se mueve en el hero.
 
@@ -305,6 +305,8 @@ La nube arranca después de la carga, en tiempo ocioso y con un ancla cerca de l
 El campo queda detrás del texto de su contenedor y sus guiones pasan entre las letras sin recuadros blancos. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
 
 El centro del campo persigue al mouse con unos 1,4 s de retraso, sin cursor pasea despacio, los anillos giran a 0,012 rad/s y el scroll no los mueve. Sobre la nube los guiones bajan a un tercio. Con movimiento reducido no se crea, y sin WebGL2 no queda nada porque es decorativo. `window.__mccoCampo.state` deja ver su estado.
+
+Un sitio ajusta el campo con `campo={{ parametros: { computador: { rmax: 2000 }, celular: { atenuacionNube: 0.5 } } }}` en `HeroEstandar`, o con `parametros` en `CampoAntigravity`. Cada tipo de pantalla lleva solo las claves que cambia, de las de `ParametrosCampo` (`r0`, `dr`, `paso`, `rmax`, `banda`, `alfa`, `largo`, `ancho`, `giro`, `tau` y `atenuacionNube`, que por defecto es 0,32), y una clave desconocida rompe el build.
 
 La pausa es una sola para todo el documento (`lib/estandar/pausa.js`). Los botones `[data-std-pausa]` del hero y de la historia dicen siempre lo mismo y cualquiera pausa o reanuda todo. Cada cambio avisa con el evento `std-pausa` en `window`, con `detail.pausa`.
 

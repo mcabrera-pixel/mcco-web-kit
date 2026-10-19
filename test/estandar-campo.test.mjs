@@ -3,16 +3,17 @@
 // (scripts/campo.js): anillos cada 28 px con un guion cada 30 px en computador (24 y 26 en celular), del radio 46 al
 // 1180 (760 en celular), y dos suavizados de 0,7 s.
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { parametrosCampo, anillos, seguir } from '../lib/estandar/campo-anillos.js';
 
 const COMPUTADOR = {
   r0: 46, dr: 28, paso: 30, rmax: 1180, banda: [150, 400, 680], alfa: [0.13, 0.85], largo: [2, 7], ancho: [2, 2.4],
-  giro: 0.012, tau: 0.7,
+  giro: 0.012, tau: 0.7, atenuacionNube: 0.32,
 };
 const CELULAR = {
   r0: 46, dr: 24, paso: 26, rmax: 760, banda: [110, 280, 500], alfa: [0.13, 0.85], largo: [2, 7], ancho: [2, 2.4],
-  giro: 0.012, tau: 0.7,
+  giro: 0.012, tau: 0.7, atenuacionNube: 0.32,
 };
 
 /** Guiones que espera cada anillo: max(6, ⌊2π·r/paso⌋) para r = r0 + dr·k < rmax. */
@@ -112,4 +113,50 @@ test('seguir dos veces: con el mouse a velocidad constante, el centro llega unos
   }
   const retraso = (v * 1200 * dt - centro[0]) / v;
   assert.ok(retraso > 1.35 && retraso < 1.42, `retraso de ${retraso.toFixed(3)} s`);
+});
+
+// Parámetros opcionales por sitio: parametrosCampo(movil, ajuste) y su lectura en campo.js y CampoAntigravity.
+test('parametrosCampo aplica el ajuste y conserva lo demás', () => {
+  const p = parametrosCampo(false, { rmax: 2000, banda: [220, 900, 1500], atenuacionNube: 0.5 });
+  assert.equal(p.rmax, 2000); assert.deepEqual(p.banda, [220, 900, 1500]);
+  assert.equal(p.atenuacionNube, 0.5); assert.equal(p.dr, 28); assert.equal(p.r0, 46);
+});
+test('sin ajuste quedan los valores de la prueba aprobada', () => {
+  assert.equal(parametrosCampo(true).rmax, 760); assert.equal(parametrosCampo(false).atenuacionNube, 0.32);
+  assert.deepStrictEqual(parametrosCampo(false, {}), COMPUTADOR);
+  assert.deepStrictEqual(parametrosCampo(true, undefined), CELULAR);
+});
+test('una clave desconocida falla', () => {
+  assert.throws(() => parametrosCampo(false, { radio: 1 }), /desconocida radio/);
+  assert.throws(() => parametrosCampo(true, { rmax: 900, radio: 1 }), { message: 'parametrosCampo: clave desconocida radio' });
+});
+test('el ajuste no queda enlazado al resultado ni cambia los valores por defecto', () => {
+  const banda = [220, 900, 1500];
+  const p = parametrosCampo(false, { banda });
+  banda[0] = 1;
+  assert.deepEqual(p.banda, [220, 900, 1500]);
+  assert.deepStrictEqual(parametrosCampo(false), COMPUTADOR);
+});
+
+const leer = (ruta) => readFileSync(new URL(ruta, import.meta.url), 'utf8');
+test('campo.js lee los parámetros del contenedor y usa atenuacionNube en el shader', () => {
+  const js = leer('../lib/estandar/campo.js');
+  assert.match(js, /JSON\.parse\(host\.dataset\.stdCampoParametros \|\| '\{\}'\)\[movil \? 'celular' : 'computador'\]/);
+  assert.match(js, /parametrosCampo\(movil, /);
+  assert.match(js, /gl\.uniform1f\(u\.uAtenuacion, p\.atenuacionNube\)/);
+  assert.match(js, /mix\(uAtenuacion, 1\., /);
+  assert.doesNotMatch(js, /mix\(\.32, 1\./);
+});
+test('CampoAntigravity y HeroEstandar pasan los parámetros al contenedor del campo', () => {
+  const campo = leer('../components/estandar/CampoAntigravity.astro');
+  assert.match(campo, /data-std-campo-parametros/);
+  const hero = leer('../components/estandar/HeroEstandar.astro');
+  assert.match(hero, /campo\?: boolean \| \{ parametros: ParametrosCampoSitio \}/);
+  assert.match(hero, /<CampoAntigravity parametros=/);
+});
+test('campo-anillos.d.ts declara las mismas claves que parametrosCampo', () => {
+  const tipos = leer('../lib/estandar/campo-anillos.d.ts');
+  const cuerpo = tipos.match(/interface ParametrosCampo \{([^}]*)\}/)[1];
+  const claves = [...cuerpo.matchAll(/^\s*(\w+):/gm)].map((m) => m[1]).sort();
+  assert.deepEqual(claves, Object.keys(parametrosCampo(false)).sort());
 });

@@ -1,15 +1,17 @@
 ---
 // Hero del estándar: blanco, H1 de 56 px (el LCP), bajada, acciones y, con `nube`, el lugar donde la nube antigravity
 // arma el primer activo (NubeAncla) con su rótulo de origen debajo. Para cortes de línea o énfasis en el título se usa
-// el slot "titulo". Con `campo`, el campo antigravity (CampoAntigravity) ocupa todo el hero detrás del texto: la capa
-// va en z-index 0 y el contenido en z-index 1, sin fondos, así los guiones pasan entre las letras. La píldora fantasma
-// lleva fondo blanco para leerse sobre ellos. Con nube o campo, el hero lleva su propio botón para pausar el movimiento
-// (WCAG 2.2.2): pausa la nube y el campo con la pausa común (lib/estandar/pausa.js), a la par con el de la historia.
+// el slot "titulo". Con `campo` (`true` o `{ parametros }`), el campo antigravity (CampoAntigravity) ocupa todo el hero
+// detrás del texto: la capa va en z-index 0 y el contenido en z-index 1, sin fondos, así los guiones pasan entre las
+// letras. La píldora fantasma lleva fondo blanco para leerse sobre ellos. Con nube o campo, el hero lleva su propio
+// botón para pausar el movimiento (WCAG 2.2.2): pausa la nube y el campo con la pausa común (lib/estandar/pausa.js),
+// a la par con el de la historia.
 import '../../styles/estandar.css';
 import Acciones from './Acciones.astro';
 import NubeAncla from './NubeAncla.astro';
 import CampoAntigravity from './CampoAntigravity.astro';
 import type { ComponentProps } from 'astro/types';
+import type { ParametrosCampoSitio } from '../../lib/estandar/campo-anillos.js';
 
 interface Props {
   /** Texto del H1. Para cortes de línea o énfasis usa el slot "titulo". */
@@ -20,14 +22,15 @@ interface Props {
   nube?: ComponentProps<typeof NubeAncla>;
   /** Rótulo de origen bajo la nube. */
   rotulo?: string;
-  /** Campo antigravity detrás del texto: guiones en anillos que siguen al mouse con retraso. */
-  campo?: boolean;
+  /** Campo antigravity detrás del texto: guiones en anillos que siguen al mouse con retraso. Con
+   *  `{ parametros }` el sitio ajusta el campo (CampoAntigravity); `true` lo deja con los valores por defecto. */
+  campo?: boolean | { parametros: ParametrosCampoSitio };
 }
 const { titulo, bajada, acciones, nube, rotulo = 'Ilustración en nube de puntos.', campo = false } = Astro.props;
 if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta `titulo` o el slot "titulo".');
 ---
 <section class="std-hero" aria-labelledby="std-hero-titulo">
-  {campo && <CampoAntigravity />}
+  {campo && <CampoAntigravity parametros={typeof campo === 'object' ? campo.parametros : undefined} />}
   {/* Antes del H1: se ve arriba a la derecha, así el orden del foco calza con el visual y la pausa llega primero. */}
   {(nube || campo) && <button type="button" class="std-hero__pausa" data-std-pausa>Pausar movimiento</button>}
   <h1 class="std-h1" id="std-hero-titulo"><slot name="titulo">{titulo}</slot></h1>

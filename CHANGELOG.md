@@ -3,6 +3,10 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## Sin publicar
+- Parámetros opcionales del campo antigravity, aditivos: `parametrosCampo(movil, ajuste)` acepta un ajuste parcial y lanza `Error('parametrosCampo: clave desconocida <clave>')` ante una clave que el campo no tiene. `CampoAntigravity` recibe `parametros` (`{ computador?, celular? }`), que viaja en `data-std-campo-parametros`, y `HeroEstandar` acepta `campo` como `boolean` o `{ parametros }`. Sin parámetros el campo queda igual que en rc.1.
+- Parámetro nuevo `atenuacionNube` (por defecto 0,32): la opacidad que conservan los guiones sobre la nube, que antes estaba fija en el shader. Tipos en `lib/estandar/campo-anillos.d.ts`.
+
 ## v1.2.0-rc.1 · 2026-10-18
 - Estándar visual Apple + antigravity, aditivo: hoja `styles/estandar.css` (tokens `--std-*`, color de acción por sitio en `--accion*` e Inter autoalojada con su licencia OFL), `layouts/Estandar.astro`, componentes en `components/estandar/` y JS en `lib/estandar/` (nube con historia, campo, pausa común, sub-navegación y menú). La guía está en `docs/ESTANDAR.md`.
 - `mcco-estandar-copiar <destino>` entrega una capa base para webs sin Astro: la hoja, las fuentes y los runtimes como fuentes sin minificar. La copia sola no monta el estándar en un sitio sin framework ni cumple el presupuesto de JS, que en rc.1 corresponde al build de Astro. Los estilos de los 13 componentes, `lib/visual/video.js` y el build minificado que cumpla ese presupuesto se definirán en el plan de adopción de as-built, después del VB de mcco.cl (spec §6).

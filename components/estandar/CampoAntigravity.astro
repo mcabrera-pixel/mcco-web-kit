@@ -7,9 +7,24 @@
 // su propio botón [data-std-pausa] para pausar el movimiento (WCAG 2.2.2): pausa.js le da su texto y su clic, y
 // campo.js marca el contenedor con data-std-movimiento mientras el campo se mueve. Es decorativa (aria-hidden y sin
 // eventos): con movimiento reducido, sin JS o sin WebGL2 no se ve nada y el hero queda blanco con su texto.
+// Con `parametros` el sitio ajusta el campo: { computador?, celular? }, cada uno con las claves de ParametrosCampo que
+// cambian (lib/estandar/campo-anillos.js). Se serializa a data-std-campo-parametros y campo.js lo lee; sin `parametros`
+// el atributo no existe y valen los de la prueba aprobada. Una clave desconocida rompe el build.
 import '../../styles/estandar.css';
+import { parametrosCampo } from '../../lib/estandar/campo-anillos.js';
+import type { ParametrosCampoSitio } from '../../lib/estandar/campo-anillos.js';
+
+interface Props {
+  /** Ajustes del campo por tipo de pantalla: solo las claves que cambian. */
+  parametros?: ParametrosCampoSitio;
+}
+const { parametros } = Astro.props;
+if (parametros) {
+  parametrosCampo(false, parametros.computador);
+  parametrosCampo(true, parametros.celular);
+}
 ---
-<div class="std-campo" data-std-campo aria-hidden="true"></div>
+<div class="std-campo" data-std-campo data-std-campo-parametros={parametros ? JSON.stringify(parametros) : undefined} aria-hidden="true"></div>
 
 <script>import '../../lib/estandar/campo.js';</script>
 
