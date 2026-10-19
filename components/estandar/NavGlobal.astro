@@ -1,0 +1,96 @@
+---
+// Barra global del estándar (Apple + antigravity): negra, 44 px, logo del sitio y enlaces de 12 px. Bajo los 834 px
+// quedan el logo y el botón de menú, y la misma lista de enlaces se abre como bandeja (lib/estandar/menu.js). Sin JS,
+// los enlaces se muestran en la barra y el botón no aparece. El logo va en claro: la barra siempre es negra.
+import { cleanPath } from '../../lib/routes.mjs';
+import '../../styles/estandar.css';
+
+interface Enlace { href: string; texto: string }
+interface Props {
+  /** Logo en claro para fondo negro. width y height son los del archivo: evitan el salto de layout. */
+  logo: { src: string; alt: string; width: number; height: number };
+  enlaces: Enlace[];
+}
+const { logo, enlaces } = Astro.props;
+// logo.alt es el nombre del enlace al inicio («<alt>, inicio»): vacío, el lector de pantalla diría «, inicio».
+const lleno = (v: unknown) => typeof v === 'string' && v.trim() !== '';
+const faltan = [!logo?.src && 'logo.src', !lleno(logo?.alt) && 'logo.alt (el nombre del sitio, no puede ir vacío)',
+  !logo?.width && 'logo.width', !logo?.height && 'logo.height',
+  !Array.isArray(enlaces) && 'enlaces (una lista, que puede ir vacía)'].filter(Boolean);
+if (faltan.length) throw new Error(`NavGlobal: falta ${faltan.join(', ')}.`);
+enlaces.forEach((e, i) => {
+  const faltanEnlace = [!lleno(e?.href) && 'href', !lleno(e?.texto) && 'texto'].filter(Boolean);
+  if (faltanEnlace.length) throw new Error(`NavGlobal: al enlace ${i + 1} le falta ${faltanEnlace.join(', ')}.`);
+});
+// aria-current="page" en el enlace a la página actual. Se comparan rutas limpias con / final: con build.format
+// "preserve", Astro.url.pathname de una página suelta termina en .html (/demo-estandar.html). Un enlace con # apunta
+// a una sección y no se marca (#claro, /#contacto), ni uno que no empiece con /.
+const conBarra = (ruta: string) => { const r = cleanPath(ruta); return r.endsWith('/') ? r : `${r}/`; };
+const paginaActual = conBarra(Astro.url.pathname);
+const esActual = (href: string) => href.startsWith('/') && !href.startsWith('//') && !href.includes('#') && conBarra(href.split('?')[0]) === paginaActual;
+---
+<header class="std-gnav" data-std-gnav>
+  <nav class="std-gnav__in" aria-label="Principal">
+    <a class="std-gnav__logo" href="/" aria-label={`${logo.alt}, inicio`}>
+      <img src={logo.src} alt={logo.alt} width={logo.width} height={logo.height} />
+    </a>
+    <button class="std-gnav__menu" type="button" aria-label="Menú" aria-expanded="false" aria-controls="std-gnav-enlaces" data-std-menu>
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+        <path class="std-gnav__linea" d="M1 2h16" /><path class="std-gnav__linea" d="M1 10h16" />
+      </svg>
+    </button>
+    <ul class="std-gnav__enlaces" id="std-gnav-enlaces">
+      {enlaces.map((e) => <li><a href={e.href} aria-current={esActual(e.href) ? 'page' : undefined}>{e.texto}</a></li>)}
+    </ul>
+  </nav>
+</header>
+
+<script>import '../../lib/estandar/menu.js';</script>
+
+<style>
+  .std-gnav { position: relative; z-index: 12; background: var(--std-negro); }
+  .std-gnav__in {
+    display: flex; align-items: center; justify-content: space-between;
+    max-width: 1024px; min-height: 44px; margin: 0 auto; padding: 0 22px;
+  }
+  .std-gnav__logo { display: flex; align-items: center; min-width: 44px; height: 44px; }
+  .std-gnav__logo img { width: auto; height: 15px; }
+  /* El margen negativo deja el texto del último enlace en el borde del contenido, como en la maqueta. */
+  .std-gnav__enlaces { display: flex; gap: 20px; margin: 0 -8px 0 0; padding: 0; list-style: none; }
+  /* 12 px a la vista y 44 × 44 de área táctil. El color y el subrayado se fijan aquí: la hoja del estándar deja
+     los enlaces de la base en color de acción y subrayados. */
+  .std-gnav__enlaces a {
+    display: flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 8px;
+    color: rgba(255, 255, 255, .8); font-size: 12px; letter-spacing: -.01em; text-decoration: none;
+    transition: color .2s;
+  }
+  .std-gnav__enlaces a:hover { color: var(--std-blanco); }
+  .std-gnav__menu {
+    display: none; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0;
+    border: 0; background: none; color: var(--std-parchment); cursor: pointer;
+  }
+  /* El anillo de foco va por dentro: la barra toca el borde de la ventana y la bandeja tapa el de afuera. */
+  .std-gnav a:focus-visible, .std-gnav__menu:focus-visible { outline-offset: -2px; }
+  /* Abierto, las dos líneas forman una X. */
+  .std-gnav__linea { transform-box: fill-box; transform-origin: center; transition: transform .2s ease; }
+  .std-gnav__menu[aria-expanded='true'] .std-gnav__linea:first-child { transform: translateY(4px) rotate(45deg); }
+  .std-gnav__menu[aria-expanded='true'] .std-gnav__linea:last-child { transform: translateY(-4px) rotate(-45deg); }
+
+  @media (max-width: 833px) {
+    .std-gnav__in { flex-wrap: wrap; }
+    .std-gnav__enlaces { display: flex; flex-wrap: wrap; gap: 0; margin: 0 -8px; }
+    .std-gnav__in[data-std-menu-listo] .std-gnav__menu { display: inline-flex; }
+    .std-gnav__in[data-std-menu-listo] .std-gnav__enlaces { display: none; }
+    .std-gnav.is-abierta .std-gnav__in[data-std-menu-listo] .std-gnav__enlaces {
+      display: block; position: absolute; top: 100%; left: 0; right: 0;
+      margin: 0; padding: 8px 22px 28px; background: var(--std-negro);
+    }
+    .std-gnav.is-abierta .std-gnav__enlaces a {
+      justify-content: flex-start; height: auto; min-height: 44px; padding: 6px 0;
+      color: var(--std-parchment); font: 600 28px/1.14 var(--std-fuente-display); letter-spacing: .007em;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .std-gnav__enlaces a, .std-gnav__linea { transition: none; }
+  }
+</style>

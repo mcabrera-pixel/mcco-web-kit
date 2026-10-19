@@ -11,7 +11,10 @@ Kit compartido de las webs de MCCO Group. Implementa en código el **Estándar W
 | `lib/routes.mjs` | Regla de URL canónica (la que sirve Cloudflare Pages: sin `.html`, carpetas con `/`). |
 | `layouts/Base.astro` | `<head>` estándar + analítica declarada + bloque Grupo MCCO. |
 | `layouts/Post.astro` | Artículo: cápsula GEO, FAQ, fuentes, relacionados, CTA, JSON-LD BlogPosting + Breadcrumb + FAQPage. |
+| `layouts/Estandar.astro` | Layout del estándar visual: `Base` con `<body class="std">`, barra global, sub-navegación y slots `head` y `pie`. |
 | `components/*` | `Head`, `SchemaOrg`, `Analytics`, `FooterGrupo`, `AiCapsule`, `Faq`, `Cta`, `PostCard`. |
+| `components/estandar/*` | Estándar visual Apple + antigravity: `NavGlobal`, `SubNav`, `Bloque`, `HeroEstandar`, `Acciones`, `NubeAncla`, `CampoAntigravity`, `HistoriaNube`, `GrillaProductos`, `Producto`, `Galeria`, `Cifras`, `TarjetasMarca` (JS en `lib/estandar/`). |
+| `styles/estandar.css` | Hoja del estándar: tokens `--std-*`, color de acción por sitio, tipografía, píldoras y rótulo de origen. Inter autoalojada en `styles/fuentes/`, con su licencia OFL. |
 | `components/visual/*` | Sistema visual v1.1: `HeroParticulas`, `VideoBanda`, `ProcesoScroll`, `Figura`, `Revelar`, `FranjaClientes`, `PrecioDesde` (JS en `lib/visual/`). |
 | `pages/NotFound.astro` | 404 estándar (obligatoria: sin ella Cloudflare sirve la home con 200). |
 | `endpoints/*` | `sitemap.xml`, `robots.txt`, `llms.txt`, `llms-full.txt` generados desde `site.yaml` + colecciones. |
@@ -21,6 +24,7 @@ Kit compartido de las webs de MCCO Group. Implementa en código el **Estándar W
 | `scripts/parity.mjs` | **`mcco-parity`**: gate de migración (producción vs build, ruta por ruta). |
 | `scripts/headers.mjs` | **`mcco-headers`**: genera `public/_headers` (CSP) y `public/_redirects` desde `site.yaml`. |
 | `scripts/sitio-ci.mjs` | **`mcco-sitio`**: proyecto Cloudflare y dominio desde `site.yaml` para los workflows. |
+| `scripts/estandar-copiar.mjs` | **`mcco-estandar-copiar`**: capa base sin Astro (hoja, fuentes y runtimes sin minificar). La copia sola no monta el estándar ni cumple el presupuesto de JS del build de Astro. |
 | `scripts/smoke.sh` | Smoke del deploy sobre `<proyecto>.pages.dev` y, si está conectado, el dominio. |
 | `.github/workflows/site-ci.yml` | Reutilizable: PR → build + check + preview. |
 | `.github/workflows/site-deploy.yml` | Reutilizable: main → build + check + deploy + smoke. |
@@ -45,9 +49,20 @@ export default defineConfig(mccoConfig());
 
 Los archivos `src/pages/{sitemap.xml,robots.txt,llms.txt,llms-full.txt}.ts`, `src/pages/404.astro` y `src/content.config.ts` se copian de la plantilla (una línea cada uno).
 
+## Estándar visual (v1.2)
+
+El lenguaje de apple.com, según el `DESIGN.md` de Apple del repositorio awesome-design-md, más antigravity: una nube de puntos que arma los activos del sitio y acompaña el scroll, y un campo de guiones detrás del texto del hero. El kit fija la hoja, los componentes y el JS, y cada sitio pone su color de acción, sus activos y su contenido. Sin dependencias en tiempo de ejecución.
+
+```astro
+import Estandar from '@mcco/web-kit/layouts/Estandar.astro';
+import HeroEstandar from '@mcco/web-kit/components/estandar/HeroEstandar.astro';
+```
+
+Uso de cada componente, variables por sitio, presupuesto, regla de imágenes y alcance de la capa base sin Astro: [`docs/ESTANDAR.md`](docs/ESTANDAR.md). Demo: `/demo-estandar` en la plantilla.
+
 ## Sistema visual (v1.1)
 
-Componentes para llevar a todas las webs el lenguaje del rediseño de as-built.cl: hero de partículas WebGL2 propio, bandas de video real, procesos que se dibujan al bajar, imágenes rotuladas por origen, revelado al hacer scroll y precio «desde UF». Sin dependencias en tiempo de ejecución y con el color de los tokens de cada sitio.
+Componentes para llevar a todas las webs el lenguaje del rediseño de as-built.cl: hero de partículas WebGL2 propio, bandas de video real, procesos que se dibujan al bajar, imágenes rotuladas por origen, revelado al hacer scroll y precio «desde UF». Sin dependencias en tiempo de ejecución y con el color de los tokens de cada sitio. Sigue funcionando en las webs que todavía no migran al estándar.
 
 ```astro
 import HeroParticulas from '@mcco/web-kit/components/visual/HeroParticulas.astro';
@@ -66,4 +81,4 @@ Historial en `CHANGELOG.md`. Los lockfiles de los sitios se generan en Linux: `d
 
 ## Qué NO es el kit
 
-No impone identidad visual: cada división conserva la suya en `DESIGN.md` y `src/styles/theme.css`. El kit solo fija **nombres** de tokens con fallbacks neutros; los componentes del sistema visual son piezas que toman esos tokens, no una estética.
+No trae el color, los activos ni el contenido de ninguna web. El kit fija el estándar visual del grupo, Apple + antigravity (`styles/estandar.css` y `components/estandar/`), y cada sitio pone su color de acción en `src/styles/theme.css`, sus activos en `public/` y su contenido en sus páginas. Los tokens `--mcco-*` de `styles/tokens.css` siguen para los layouts, los componentes generales (`FooterGrupo`, `Faq`, `Cta`, la 404) y el sistema visual v1.1.

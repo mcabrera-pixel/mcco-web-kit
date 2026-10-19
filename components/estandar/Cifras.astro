@@ -1,0 +1,50 @@
+---
+// Cifras grandes del estándar: cada valor en 56 px y en el color de acción (48 px en ≤ 640 px), con su etiqueta
+// debajo, entre líneas finas, y una nota opcional en letra fina al final. Un número se escribe como en Chile (1.500,
+// 2,5) y un texto va tal cual ('±2 mm'). Toma la alineación de su contenedor: en la maqueta va a la izquierda, en
+// una columna junto al mapa. Dentro de un bloque negro el valor usa el color de acción claro.
+import '../../styles/estandar.css';
+
+interface Props {
+  items: { valor: string | number; etiqueta: string }[];
+  nota?: string;
+}
+const { items = [], nota } = Astro.props;
+for (const it of items) {
+  const valorOk = typeof it?.valor === 'number' ? Number.isFinite(it.valor) : typeof it?.valor === 'string' && it.valor.trim() !== '';
+  if (!valorOk || !it?.etiqueta) throw new Error(`Cifras: cada cifra necesita { valor, etiqueta } (llegó ${JSON.stringify(it)}).`);
+}
+const numero = new Intl.NumberFormat('es-CL', { useGrouping: 'always', maximumFractionDigits: 2 });
+const valor = (v: string | number) => (typeof v === 'number' ? numero.format(v) : v);
+---
+{items.length > 0 && (
+  <div class="std-cifras">
+    <dl class="std-cifras__lista">
+      {items.map((it) => (
+        <div class="std-cifras__item">
+          <dt class="std-cifras__valor">{valor(it.valor)}</dt>
+          <dd class="std-cifras__etiqueta">{it.etiqueta}</dd>
+        </div>
+      ))}
+    </dl>
+    {nota && <p class="std-fina std-cifras__nota">{nota}</p>}
+  </div>
+)}
+
+<style>
+  .std-cifras__lista { margin: 0; }
+  .std-cifras__item { padding: 22px 0; border-top: 1px solid var(--std-linea); }
+  .std-cifras__item:last-child { border-bottom: 1px solid var(--std-linea); }
+  .std-cifras__valor {
+    font: 600 56px/1 var(--std-fuente-display); letter-spacing: -.03em;
+    color: var(--accion); font-variant-numeric: tabular-nums;
+  }
+  .std-cifras__etiqueta { margin: 8px 0 0; font-size: 17px; color: var(--std-tinta-80); }
+  .std-cifras__nota { margin-top: 22px; }
+  :global([data-std-oscuro]) .std-cifras__item { border-color: var(--std-tinta-80); }
+  :global([data-std-oscuro]) .std-cifras__valor { color: var(--accion-oscuro); }
+  :global([data-std-oscuro]) .std-cifras__etiqueta { color: var(--std-linea); }
+  @media (max-width: 640px) {
+    .std-cifras__valor { font-size: 48px; }
+  }
+</style>
