@@ -45,3 +45,23 @@ test('si OffscreenCanvas falta solo dentro del Worker avisa que se use el hilo p
   await self.onmessage({data:{id:7,src:'no-debe-descargarse'}});
   assert.deepEqual(mensajes,[{id:7,error:'sin worker'}]);
 });
+
+test('cerrar durante el respaldo real cancela el siguiente lote y las formas en cola', async t => {
+  const { crearClienteNube, CANCELADO } = await import('../lib/estandar/nube-cliente.js');
+  const claves = ['OffscreenCanvas','createImageBitmap','document'];
+  const anteriores = claves.map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]);
+  t.after(()=>anteriores.forEach(([k,d])=>d?Object.defineProperty(globalThis,k,d):delete globalThis[k]));
+  t.mock.method(globalThis,'fetch',async()=>({ok:true,blob:async()=>({})}));
+  globalThis.OffscreenCanvas=undefined;
+  globalThis.createImageBitmap=async()=>({width:720,height:405,close(){}});
+  const cliente=crearClienteNube(undefined);
+  let tramos=0;
+  t.mock.method(performance,'now',()=>++tramos*9);
+  globalThis.document={createElement:()=>({getContext:()=>({drawImage(){},getImageData(){
+    queueMicrotask(cliente.cerrarWorker);
+    return {data:new Uint8ClampedArray(720*405*4).fill(255)};
+  }})})};
+  const fin=await Promise.allSettled([0,1].map(semilla=>cliente.forma({src:'prueba',ancho:720,puntos:26000,semilla})));
+  assert.ok(fin.every(r=>r.status==='rejected'&&r.reason.message===CANCELADO));
+  assert.ok(tramos<4,`siguió calculando ${tramos} tramos después del cierre`);
+});
