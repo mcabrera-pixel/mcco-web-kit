@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { parse } from 'node-html-parser';
 
 const kit = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-html-'));
+const dir = fs.mkdtempSync(path.join(kit, '.tmp-prueba-'));
 const texto = '</script><script id="inyectado">alert("prueba")</script>< & \u2028\u2029';
 let html, dom;
 before(() => {
