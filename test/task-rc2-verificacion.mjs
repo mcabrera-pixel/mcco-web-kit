@@ -61,6 +61,7 @@ try {
   });
   await caso('DPR', `window.__resoluciones=[];const mm=window.matchMedia;window.matchMedia=q=>{const m=mm(q);if(q.includes('resolution:'))__resoluciones.push(m);return m;}`, async p => {
     await p.ir(); await p.hasta('window.__mccoNube?.state.frames > 10 && window.__mccoCampo?.state.puntos > 0');
+    ok('la nube animada no agrega mezcla al campo', await p.ev(`getComputedStyle(document.querySelector('.std-hero__nube')).mixBlendMode==='normal' && getComputedStyle(document.querySelector('[data-std-nube=hero]')).mixBlendMode==='normal'`));
     await p.ev('window.__resizes=0; addEventListener("resize",()=>__resizes++); window.dispatchEvent(new CustomEvent("std-pausa",{detail:{pausa:true}}))');
     for (const dpr of [1.25, 2, 1]) {
       await p.send('Emulation.setDeviceMetricsOverride', { width:1280, height:800, deviceScaleFactor:dpr, mobile:false });

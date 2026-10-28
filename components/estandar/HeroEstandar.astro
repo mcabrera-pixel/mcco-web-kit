@@ -47,8 +47,7 @@ if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta 
   .std-hero > :global(:not([data-std-campo], .std-hero__pausa)) { position: relative; z-index: 1; }
   .std-hero__bajada { color: var(--std-tinta-80); }
   .std-hero :global(.std-pildora--fantasma) { background: var(--std-blanco); }
-  /* La figura crea un contexto por su z-index: también mezcla el respaldo con el campo que queda detrás. */
-  .std-hero__nube { margin: 0; mix-blend-mode: multiply; }
+  .std-hero__nube { margin: 0; }
   .std-hero__rotulo { margin: 0 auto; padding-bottom: 8px; }
   /* Pausa del movimiento: en la esquina superior derecha, dentro del aire sobre el título, así no toca el texto, las
      acciones ni la nube. Píldora chica como la de la historia, con fondo propio (los guiones no pasan bajo la letra),

@@ -27,9 +27,10 @@ if (faltan.length) throw new Error(`NubeAncla: falta respaldo.${faltan.join(', r
 
 <style>
   .std-nube {
-    position: relative; contain: layout paint; mix-blend-mode: multiply; max-width: 1060px; margin: 14px auto 0;
+    position: relative; contain: layout paint; max-width: 1060px; margin: 14px auto 0;
     height: clamp(240px, calc(100svh - 450px), 540px);
   }
+  .std-nube[data-estado='fijo'] { mix-blend-mode: multiply; }
   .std-nube__respaldo {
     display: none; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none;
     filter: invert(1) grayscale(1) contrast(1.15); mix-blend-mode: multiply;
