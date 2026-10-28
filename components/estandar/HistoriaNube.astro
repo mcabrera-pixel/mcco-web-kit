@@ -101,7 +101,8 @@ const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${e
   .std-historia__visual { display: flex; flex: 1 0 auto; flex-direction: column; justify-content: center; min-height: var(--historia-nube-min); }
   .std-historia__nube { display: none; flex: 1; width: 100%; min-height: var(--historia-nube-min); }
   .std-historia__fijas {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+    /* 1, 2 y 3 activos van en una fila; 4 activos forman dos filas de dos. */
+    display: grid; grid-template-columns: repeat(min(var(--formas), calc(6 - var(--formas))), minmax(0, 1fr)); gap: 12px;
     width: 100%; max-width: 900px; margin: 32px auto; padding: 0; list-style: none;
   }
   .std-historia__figura { position: relative; margin: 0; }
