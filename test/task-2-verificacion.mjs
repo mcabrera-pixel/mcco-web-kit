@@ -9,7 +9,7 @@
 // Sale con 1 si alguna verificación falla. Refleja el estado de la Tarea 2: cuando la Tarea 4 oculte el respaldo de
 // la nube con WebGL, la verificación «nube: respaldo visible» tiene que pasar a decir eso.
 import { contrasteSubnav } from './fixtures/contraste-subnav.mjs';
-import http from 'node:http';
+import { servidor } from './fixtures/servidor-estatico.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -21,21 +21,6 @@ const [DIST = path.resolve(AQUI, '../../../base/mcco-web-template/dist'), OUT = 
 const CHROME = process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 if (!fs.existsSync(path.join(DIST, 'demo-estandar.html'))) { console.error(`No está ${DIST}/demo-estandar.html: corre npm run build en la plantilla.`); process.exit(2); }
 fs.mkdirSync(OUT, { recursive: true });
-
-const TIPOS = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml',
-  '.webp': 'image/webp', '.woff2': 'font/woff2', '.png': 'image/png', '.mp4': 'video/mp4', '.json': 'application/json' };
-function servidor(raiz) {
-  const s = http.createServer((req, res) => {
-    const p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    let f = path.join(raiz, p);
-    if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
-    if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f += '.html';
-    if (!fs.existsSync(f)) { res.writeHead(404); return res.end('404'); }
-    res.writeHead(200, { 'content-type': TIPOS[path.extname(f)] ?? 'application/octet-stream' });
-    fs.createReadStream(f).pipe(res);
-  });
-  return new Promise((r) => s.listen(0, '127.0.0.1', () => r({ s, base: `http://127.0.0.1:${s.address().port}` })));
-}
 
 const { s: srv, base: BASE } = await servidor(DIST);
 const maq = MAQUETA ? await servidor(MAQUETA) : null;

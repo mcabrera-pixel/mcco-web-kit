@@ -23,13 +23,28 @@ test('la normalización real del workflow acepta solo a-z, 0-9 y guion', () => {
   assert.ok(rama);
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-rama-'));
   try {
-    for (const [entrada, esperado] of [['feat/Kit_v1.2.0', 'feat-kit-v1-2-0'], ["A'\";$(echo sorpresa)`x`\nINJECT=1", 'a-echo-sorpresa-x-inject-1'], ['---ABC---', 'abc'], ['///', 'preview']]) {
+    for (const [entrada, esperado] of [['feat/Kit_v1.2.0', 'feat-kit-v1-2-0'], ["A'\";$(echo sorpresa)`x`\nINJECT=1", 'a-echo-sorpresa-x-inject-1'], ['---ABC---', 'abc'], ['///', 'preview'], ['Main', 'rama-main'], ['MAIN', 'rama-main'], ['main-', 'rama-main'], ['main_', 'rama-main'], ['main', 'rama-main']]) {
       const salida = path.join(dir, 'output');
       fs.writeFileSync(salida, '');
       const r = spawnSync('bash', ['-e', '-c', rama.run], { cwd: dir, encoding: 'utf8', env: { PATH: process.env.PATH, RAMA: entrada, GITHUB_OUTPUT: salida } });
       assert.equal(r.status, 0, r.stderr);
       assert.equal(fs.readFileSync(salida, 'utf8'), `branch=${esperado}\n`);
       assert.equal(r.stdout, '');
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+test('la normalización de preview nunca devuelve main', () => {
+  const rama = steps.find(s => s.id === 'rama');
+  assert.ok(rama);
+  const entradas = ['feat/Kit_v1.2.0', "A'\";$(echo sorpresa)`x`\nINJECT=1", '---ABC---', '///', 'Main', 'MAIN', 'main-', 'main_', 'main', 'main/main', 'main--main', '_main_', 'main\nmain'];
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-rama-'));
+  try {
+    for (const entrada of entradas) {
+      const salida = path.join(dir, 'output');
+      fs.writeFileSync(salida, '');
+      const r = spawnSync('bash', ['-e', '-c', rama.run], { cwd: dir, encoding: 'utf8', env: { PATH: process.env.PATH, RAMA: entrada, GITHUB_OUTPUT: salida } });
+      assert.equal(r.status, 0, r.stderr);
+      assert.doesNotMatch(fs.readFileSync(salida, 'utf8'), /^branch=main\n$/);
     }
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
