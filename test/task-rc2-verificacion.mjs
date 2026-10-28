@@ -89,6 +89,22 @@ try {
     await dormir(100);
     ok('campo apagado no revive', await p.ev('!__mccoCampo.state.running && !document.querySelector("[data-std-campo] canvas")'));
   });
+  await caso('apagado definitivo', instrumentos, async p => {
+    await p.ir(); await p.hasta('window.__mccoCampo?.state.puntos>0');
+    const cierre=await p.ev(`(()=>{
+      const c=document.querySelector('[data-std-campo] canvas'),gl=c.getContext('webgl2');
+      const vivo=!gl.isContextLost();
+      c.dispatchEvent(new Event('webglcontextlost',{cancelable:true}));
+      return {vivo,perdido:gl.isContextLost(),conectado:c.isConnected,marca:document.querySelector('.std-hero').getAttribute('data-std-movimiento'),
+        observadores:__campoRecursos.observadores.every(o=>o.desconectado),oyentes:__campoRecursos.oyentes.filter(o=>!o.quitado).map(o=>o.tipo)};
+    })()`);
+    ok('apagar con contexto vivo lo libera y desmonta sus recursos',cierre.vivo&&cierre.perdido&&!cierre.conectado&&cierre.observadores&&cierre.oyentes.length===0,cierre);
+  });
+  await caso('galeria', '', async p => {
+    await p.ir();
+    const aspecto=await p.ev(`(()=>{const propiedades=['backgroundColor','color','backdropFilter','webkitBackdropFilter'];const estilo=s=>{const c=getComputedStyle(document.querySelector(s));return Object.fromEntries(propiedades.map(k=>[k,c[k]]))};return{rotulo:estilo('.std-galeria .std-rotulo'),boton:estilo('.std-galeria__boton')}})()`);
+    ok('rótulo y video conservan la misma superficie',JSON.stringify(aspecto.rotulo)===JSON.stringify(aspecto.boton),aspecto);
+  });
   await caso('grilla', '', async p => {
     await p.send('Emulation.setEmulatedMedia', { features:[{name:'prefers-reduced-motion',value:'reduce'}] });
     await p.ir();

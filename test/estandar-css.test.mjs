@@ -102,3 +102,13 @@ test('los colores del sitio se declaran en :where(:root) y sobre negro usan vari
 test('ninguna variante de @import descarga hojas externas', () => {
   assert.doesNotMatch(hoja(), /@import\s+(?:url\(\s*)?['"]?(?:https?:)?\/\//i);
 });
+
+test('Galeria comparte con el rótulo la superficie del control de video', () => {
+  for (const selector of ['.std-rotulo', '.std-galeria__boton']) {
+    const css = regla(selector);
+    assert.match(css, /background\s*:\s*rgba\(210,210,215,\.72\)/);
+    assert.match(css, /-webkit-backdrop-filter\s*:\s*blur\(10px\)/);
+    assert.match(css, /(?:^|[;\s])backdrop-filter\s*:\s*blur\(10px\)/);
+    assert.match(css, /color\s*:\s*var\(--std-tinta\)/);
+  }
+});
