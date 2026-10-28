@@ -31,3 +31,17 @@ for (const [w, h, puntos, semilla] of [[720, 405, 26000, 9001], [480, 270, 11000
     assert.ok(pausas > 10, `el respaldo solo cedió ${pausas} veces`);
   });
 }
+
+test('si OffscreenCanvas falta solo dentro del Worker avisa que se use el hilo principal', async t => {
+  const claves = ['OffscreenCanvas', 'WorkerGlobalScope', 'self'];
+  const anteriores = claves.map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]);
+  t.after(()=>anteriores.forEach(([k,d])=>d?Object.defineProperty(globalThis,k,d):delete globalThis[k]));
+  globalThis.WorkerGlobalScope = class {};
+  globalThis.self = new WorkerGlobalScope();
+  globalThis.OffscreenCanvas = undefined;
+  const mensajes = [];
+  self.postMessage = dato => mensajes.push(dato);
+  await import('../lib/estandar/nube-worker.js?sin-offscreen-en-worker');
+  await self.onmessage({data:{id:7,src:'no-debe-descargarse'}});
+  assert.deepEqual(mensajes,[{id:7,error:'sin worker'}]);
+});

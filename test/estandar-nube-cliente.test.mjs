@@ -114,3 +114,43 @@ test('si el constructor falla mantiene el respaldo para los pedidos posteriores'
   assert.equal(await c.forma({ src: 'otra' }), 'otra');
   assert.equal(intentos, 1);
 });
+
+test('el respaldo serializa las formas concurrentes y sigue después de una imagen fallida', async () => {
+  let activos = 0, maximo = 0;
+  const c = entorno({ disponible: () => false, respaldo: async ({ src }) => {
+    maximo = Math.max(maximo, ++activos);
+    await new Promise((r) => setTimeout(r, 2));
+    activos--;
+    if (src === 'rota') throw new Error('imagen inválida');
+    return src;
+  } });
+  const fin = await Promise.allSettled(['una', 'rota', 'tres'].map((src) => c.forma({ src })));
+  assert.equal(maximo, 1, 'varias formas compiten por el presupuesto del hilo principal');
+  assert.deepEqual(fin.map((r) => r.status), ['fulfilled', 'rejected', 'fulfilled']);
+  assert.equal(fin[2].value, 'tres');
+});
+
+test('cerrar antes de iniciar el respaldo cancela los pedidos en espera', async () => {
+  const c = entorno({ disponible: () => false });
+  const fin = resultados([c.forma({ src: 'una' }), c.forma({ src: 'otra' })]);
+  c.cerrarWorker();
+  assert.deepEqual(await fin, [cancelacion(), cancelacion()]);
+  assert.deepEqual(c.respaldos, []);
+});
+
+test('un Worker averiado se termina antes de pasar al respaldo', async () => {
+  const c = entorno();
+  const fin = c.forma({ src: 'una' });
+  c.workers[0].onerror();
+  await fin;
+  assert.equal(c.workers[0].cierres, 1);
+});
+
+test('un Worker sin OffscreenCanvas se cierra y todos sus pedidos pasan a respaldo', async () => {
+  const c = entorno();
+  const fin = Promise.all(['una','otra'].map(src=>c.forma({src})));
+  c.workers[0].responder(0,{error:SIN_WORKER});
+  assert.deepEqual(await fin,[{principal:'una'},{principal:'otra'}]);
+  assert.equal(c.workers[0].cierres,1);
+  assert.equal(c.workers.length,1);
+});
