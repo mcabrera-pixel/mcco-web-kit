@@ -3,6 +3,13 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.2.0-rc.2 · 2026-10-28
+- Muestreo de respaldo por lotes de hasta 256 elementos, con un presupuesto de 8 ms entre pausas y ordenación estable. Conserva el resultado de rc.1 para cada semilla, serializa las formas y cancela el trabajo pendiente al cerrar la nube, también si OffscreenCanvas falta solo dentro del Worker.
+- El respaldo de la nube deja visible el campo del hero. El campo libera observadores, oyentes y recursos WebGL al apagarse, y ambos lienzos siguen los cambios de DPR sin depender de resize.
+- Enlace de shaders compartido con liberación de recursos en éxito, fallo y cancelación. La nube completa ocupa 11 658 B gzip y el campo 4960 B en la demo de Astro, incluidos los módulos compartidos.
+- La grilla de respaldo se ajusta a uno, dos, tres o cuatro activos. Galeria comparte la superficie translúcida del rótulo con el control de video; conserva `--w` y `--h` por compatibilidad.
+- Pruebas de equivalencia con rc.1, cancelación, limpieza WebGL, DPR, CSS y navegador. Sin cambios de API pública ni dependencias del kit.
+
 ## v1.2.0-rc.1 · 2026-10-18
 - Estándar visual Apple + antigravity, aditivo: hoja `styles/estandar.css` (tokens `--std-*`, color de acción por sitio en `--accion*` e Inter autoalojada con su licencia OFL), `layouts/Estandar.astro`, componentes en `components/estandar/` y JS en `lib/estandar/` (nube con historia, campo, pausa común, sub-navegación y menú). La guía está en `docs/ESTANDAR.md`.
 - `mcco-estandar-copiar <destino>` entrega una capa base para webs sin Astro: la hoja, las fuentes y los runtimes como fuentes sin minificar. La copia sola no monta el estándar en un sitio sin framework ni cumple el presupuesto de JS, que en rc.1 corresponde al build de Astro. Los estilos de los 13 componentes, `lib/visual/video.js` y el build minificado que cumpla ese presupuesto se definirán en el plan de adopción de as-built, después del VB de mcco.cl (spec §6).

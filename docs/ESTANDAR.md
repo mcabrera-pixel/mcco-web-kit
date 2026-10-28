@@ -208,7 +208,7 @@ El runtime mide ese espacio al cambiar el tamaño de la ventana, al cargar fuent
 
 El contenedor visual conserva al menos el mínimo del ancla: 200 px dentro del corte de escritorio y 300 px fuera de él. Dentro de la historia, el dibujo se limita al área visual para que los puntos no cubran textos ni controles al dispersarse o cambiar de forma.
 
-Sin JS, sin WebGL2, con movimiento reducido o si un activo no carga, se ven las ilustraciones fijas con su rótulo y todos los pasos encendidos.
+Sin JS, sin WebGL2, con movimiento reducido o si un activo no carga, se ven las ilustraciones fijas con su rótulo y todos los pasos encendidos. El respaldo distribuye uno, dos o tres activos en una fila y cuatro en dos filas de dos; en celular usa una sola columna.
 
 ### GrillaProductos y Producto
 
@@ -300,9 +300,9 @@ El runtime crea un solo campo por página. Usa este ejemplo en una página que n
 
 La nube usa un solo lienzo fijo. Después del primer pintado, los puntos suben desde abajo y en unos 2,6 s arman el primer activo bajo el título. Al bajar, la nube acompaña el scroll a media opacidad hasta la historia. El cursor dispersa los puntos y un barrido de luz los recorre.
 
-La nube arranca después de la carga, en tiempo ocioso y con un ancla cerca de la vista, y se detiene con la pestaña oculta o fuera de pantalla. Las formas se muestrean en un Worker con OffscreenCanvas, o por tramos en el hilo principal si no hay, y el Worker se cierra cuando llega la última. `window.__mccoNube.state` deja ver el estado para verificar.
+La nube arranca después de la carga, en tiempo ocioso y con un ancla cerca de la vista, y se detiene con la pestaña oculta o fuera de pantalla. Las formas se muestrean en un Worker con OffscreenCanvas. Si falta esa API o falla el Worker, el hilo principal procesa una forma por vez, con lotes de hasta 256 elementos y un presupuesto de 8 ms entre pausas. La ordenación estable conserva el resultado de rc.1 para cada semilla. El cierre cancela los pedidos pendientes y el respaldo activo entre lotes; el Worker se cierra cuando llega la última forma. `window.__mccoNube.state` deja ver el estado para verificar.
 
-El campo queda detrás del texto de su contenedor y sus guiones pasan entre las letras sin recuadros blancos. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
+El campo queda detrás del texto de su contenedor y sus guiones pasan entre las letras sin recuadros blancos, también cuando falla la primera forma y se muestra el respaldo de la nube. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
 
 El centro del campo persigue al mouse con unos 1,4 s de retraso, sin cursor pasea despacio, los anillos giran a 0,012 rad/s y el scroll no los mueve. Sobre la nube los guiones bajan a un tercio. Con movimiento reducido no se crea, y sin WebGL2 no queda nada porque es decorativo. `window.__mccoCampo.state` deja ver su estado.
 
@@ -310,23 +310,23 @@ La pausa es una sola para todo el documento (`lib/estandar/pausa.js`). Los boton
 
 Con 901 × 700 px o más, la nube usa 26 000 puntos y el campo sus anillos de computador, los dos con DPR hasta 1,65 y sin tope de cuadros. En las demás ventanas, celulares girados y laptops bajas incluidos, la nube usa 11 000 puntos y el campo los anillos de celular, con DPR hasta 1,35 y 30 cuadros por segundo.
 
-Los puntos de la nube se fijan al arrancar, y el campo rehace sus anillos si la ventana cruza el corte.
+Los puntos de la nube se fijan al arrancar, y el campo rehace sus anillos si la ventana cruza el corte. Ambos lienzos siguen los cambios de DPR mediante una consulta de resolución, incluso sin un evento resize y en pausa. Al apagarse definitivamente, el campo desconecta observadores, quita oyentes y libera sus recursos WebGL; una pérdida de contexto queda en respaldo y no intenta restaurarse.
 
 ## Presupuesto
 
 Los límites y las mediciones de JS de esta tabla corresponden al build optimizado de Astro. La copia de fuentes sin minificar de rc.1 no cumple estos presupuestos por sí sola.
 
-| Medida | Límite | Medido en v1.2.0-rc.1 |
+| Medida | Límite | Medido en v1.2.0-rc.2 |
 |---|---|---|
-| JS de la nube, gzip | 12 KB | 9119 B: runtime con `historia.js`, Worker, entradas y `pausa.js` |
-| JS del campo, gzip | 5 KB | 3800 B, 4156 B con `pausa.js` |
+| JS de la nube, gzip | 12 KB | 11 658 B, incluidos Worker, respaldo del hilo principal, entradas, `pausa.js` y utilidades compartidas |
+| JS del campo, gzip | 5 KB | 4960 B, incluidas `pausa.js` y utilidades compartidas |
 | Lighthouse móvil | 85 en rendimiento, 95 en accesibilidad | Se mide en la portada de mcco.cl |
 | LCP | El H1 | |
 | CLS | Menos de 0,1 | |
 | Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB; el que sirve de respaldo del hero no pasa de 150 KB, el tope de héroes del contrato de cada sitio | |
 | Videos | 8 MB, H.264 con `faststart`, poster WebP, `muted`, `playsinline`, `preload="none"`, en R2 | |
 
-El JS se midió con zlib nivel 9 sobre el build de Astro de la demo de `mcco-web-template`. El respaldo del hilo principal se descarga si no hay OffscreenCanvas o si el Worker falla. Al contar también ese módulo, la nube suma 10 597 B. Con `lib/visual/comun.js`, compartido por el sistema visual, el total de la nube llega a 11 002 B y el del campo a 4561 B.
+El JS se midió con zlib nivel 9 sobre el build de Astro 7.3.8 de la demo de `mcco-web-template`, sumando cada archivo comprimido por separado. Se cuentan las dos entradas de la nube y todos sus módulos alcanzables, incluido el respaldo dinámico aunque funcione el Worker. `node test/estandar-presupuesto.mjs <dist>` reproduce la medición y comprueba límites conservadores de 12 000 y 5000 bytes. El margen del campo es de 40 bytes: cualquier cambio en las utilidades compartidas requiere volver a medir ambos presupuestos.
 
 ## Regla de imágenes y rótulos de origen
 
@@ -350,7 +350,7 @@ Los textos salen de `lib/estandar/rotulos.mjs`. `Producto` y `Galeria` piden `or
 
 ## Capa base para webs sin Astro: mcco-estandar-copiar
 
-En v1.2.0-rc.1 la salida sin Astro se limita a la hoja, las fuentes y los runtimes como código fuente sin minificar. La copia sola no monta el estándar en un sitio sin framework ni cumple el presupuesto de JS del build de Astro.
+En v1.2.0-rc.2 la salida sin Astro se limita a la hoja, las fuentes y los runtimes como código fuente sin minificar. La copia sola no monta el estándar en un sitio sin framework ni cumple el presupuesto de JS del build de Astro.
 
 ```bash
 # En el deploy, con el kit instalado desde la tag que fija el sitio
