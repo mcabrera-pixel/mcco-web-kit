@@ -15,12 +15,13 @@ const hoja = () => (leida ??= fs.readFileSync(path.join(ESTILOS, 'estandar.css')
 /** true si la hoja declara la propiedad («--accion: …»), no si solo la usa dentro de var(). */
 const declara = (prop) => new RegExp(`(?:^|[{;\\s])${prop}\\s*:`).test(hoja());
 
-/** Declaraciones de la primera regla que tiene `sel` en su lista de selectores ('' si no hay ninguna). */
+/** Declaraciones de las reglas que incluyen `sel` en su lista de selectores. */
 function regla(sel) {
+  const cuerpos = [];
   for (const [, selectores, cuerpo] of hoja().matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    if (selectores.split(',').some((s) => s.trim() === sel)) return cuerpo;
+    if (selectores.split(',').some((s) => s.trim() === sel)) cuerpos.push(cuerpo);
   }
-  return '';
+  return cuerpos.join(';');
 }
 
 // Rompe si falta una variable de acción, si cambian los valores fijos (parchment, tinta, sombra única, píldora
@@ -79,4 +80,25 @@ test('clases y valores por defecto que consumen los componentes', () => {
 test('foco claro sobre negro y píldora chica de 44 px de ancho mínimo', () => {
   assert.match(regla(':where(.std [data-std-oscuro]) :focus-visible'), /outline-color\s*:\s*var\(--accion-oscuro\)/);
   assert.match(regla('.std-pildora--chica'), /min-width\s*:\s*44px/);
+});
+
+// Estas reglas ya existían en rc.1: se fija su contenido exacto y su baja especificidad.
+test('el enlace mas conserva el signo Unicode y la variante decorativa', () => {
+  const contenidos = [...regla('.std-mas::after').matchAll(/content\s*:\s*([^;]+)/g)].map(m => m[1]);
+  assert.deepEqual(contenidos, ['"\\00a0\\203a"', '"\\00a0\\203a" / ""']);
+});
+test('los colores del sitio se declaran en :where(:root) y sobre negro usan variantes claras', () => {
+  for (const prop of ['--accion', '--accion-boton', '--accion-foco', '--accion-oscuro', '--campo-claro', '--campo-oscuro']) {
+    assert.match(regla(':where(:root)'), new RegExp(`${prop}\\s*:`));
+    assert.doesNotMatch(regla(':root'), new RegExp(`${prop}\\s*:`));
+  }
+  for (const selector of ['[data-std-oscuro] .std-mas', '[data-std-oscuro] .std-pildora--fantasma']) {
+    assert.match(regla(selector), /color\s*:\s*var\(--accion-oscuro\)/);
+  }
+  assert.match(regla('[data-std-oscuro] .std-pildora--fantasma'), /border-color\s*:\s*var\(--accion-oscuro\)/);
+  assert.match(regla('[data-std-oscuro] .std-fina'), /color\s*:\s*var\(--std-gris-claro\)/);
+  assert.match(regla('[data-std-oscuro] .std-tagline'), /color\s*:\s*#d2d2d7/);
+});
+test('ninguna variante de @import descarga hojas externas', () => {
+  assert.doesNotMatch(hoja(), /@import\s+(?:url\(\s*)?['"]?(?:https?:)?\/\//i);
 });
