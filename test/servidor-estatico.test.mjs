@@ -59,3 +59,18 @@ test('enlace simbólico que apunta fuera da 403', async () => {
   const r = await fetchRuta('/fuera.lnk');
   assert.equal(r.status, 403);
 });
+
+test('una raíz que es un enlace simbólico sirve sus páginas y sigue sin salir de ella', async () => {
+  const enlace = path.join(kit, `.tmp-prueba-enlace-${process.pid}`);
+  fs.symlinkSync(raiz, enlace, 'dir');
+  const otra = await servidor(enlace);
+  try {
+    const r = await fetch(`${otra.base}/normal.txt`);
+    assert.equal(r.status, 200);
+    assert.equal(await r.text(), 'hola');
+    assert.equal((await fetch(`${otra.base}/..%2fmarca.txt`)).status, 403);
+  } finally {
+    otra.s.close();
+    fs.rmSync(enlace, { force: true });
+  }
+});

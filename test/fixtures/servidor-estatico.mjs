@@ -19,6 +19,8 @@ function dentroDeRaiz(raiz, archivo) {
 }
 
 export function servidor(raiz) {
+  // La raíz se compara ya resuelta: si DIST es un enlace, las páginas válidas no quedan fuera.
+  raiz = fs.realpathSync(raiz);
   const s = http.createServer((req, res) => {
     const ruta = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     let archivo = path.resolve(raiz, '.' + ruta);
