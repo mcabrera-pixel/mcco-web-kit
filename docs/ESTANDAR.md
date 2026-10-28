@@ -106,7 +106,7 @@ Dentro de `.std`, los tokens de v1.1 que consumen `FooterGrupo` y las piezas de 
 
 Sin JS o si el módulo no carga, los enlaces siguen visibles y el botón queda oculto. El enlace a la página actual lleva `aria-current="page"`.
 
-`SubNav` es la barra esmerilada de 52 px (48 en ≤ 640 px) que queda fija arriba al bajar, con el título del sitio, enlaces de 12 px y la acción principal siempre a la vista. En ≤ 833 px quedan el título y la acción, y en ≤ 640 px la acción usa su `textoCorto`. Pasa a su versión oscura cuando tiene debajo un bloque negro a todo el ancho.
+`SubNav` es la barra esmerilada de 52 px (48 en ≤ 640 px) que queda fija arriba al bajar, con el título del sitio, enlaces de 12 px y la acción principal siempre a la vista. En ≤ 833 px quedan el título y la acción, y en ≤ 640 px la acción usa su `textoCorto`. Pasa a su versión oscura cuando tiene debajo un bloque negro a todo el ancho. El fondo y el texto cambian juntos, sin transición del fondo, para conservar el contraste AA durante el cruce.
 
 Si a `NavGlobal` o a `SubNav` les falta una prop, el build cae con un mensaje que la nombra. Si un enlace no trae `href` o `texto`, el mensaje dice su número. `logo.alt` tampoco puede ir vacío, porque es el nombre del enlace al inicio.
 
@@ -182,6 +182,8 @@ import NubeAncla from '@mcco/web-kit/components/estandar/NubeAncla.astro';
 ```
 
 `variante` es `llena` (por defecto), `fantasma` o `mas`, el enlace con «›». Con `tamano="chica"` las píldoras se ven de 12 px y conservan su área táctil de 44 × 44 px. Las píldoras se achican a `scale(.95)` al presionarlas.
+
+Cada acción acepta `oculto?: string`, que se agrega dentro del enlace con `.std-oculto`, disponible para lectores de pantalla y buscadores, pero recortado visualmente. Incluye el espacio inicial si corresponde: `{ href: '/estructuras', texto: 'Más información', oculto: ' sobre Estructuras mineras' }`. Sin `oculto`, el HTML del enlace no cambia. También se puede pasar en las acciones de `HeroEstandar` y `Producto`.
 
 ### HistoriaNube
 

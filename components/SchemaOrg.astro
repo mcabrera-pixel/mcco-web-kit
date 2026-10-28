@@ -2,6 +2,7 @@
 // JSON-LD Organization del sitio, enlazado al grupo (entity graph MCCO).
 // Satélites: parentOrganization = MCCO Group. Corporativa: subOrganization = las satélites.
 import { loadSite, loadEntity, loadSites, loadActiveSites } from '../lib/site.mjs';
+import { serializarJsonLd } from '../lib/jsonld.mjs';
 
 interface Props { extra?: Record<string, unknown>; types?: string[] }
 const site = loadSite();
@@ -44,4 +45,4 @@ if (isCorporate) {
 }
 Object.assign(org, extra);
 ---
-<script is:inline type="application/ld+json" set:html={JSON.stringify(org)} />
+<script is:inline type="application/ld+json" set:html={serializarJsonLd(org)} />

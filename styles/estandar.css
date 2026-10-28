@@ -136,6 +136,11 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
 .std-mas::before { content: ""; position: absolute; left: -1px; right: -1px; top: 50%; height: 44px; margin-top: -22px; }
 .std-mas::before { left: 50%; right: auto; width: max(100%, 44px); transform: translateX(-50%); }
 
+/* Texto disponible para lectores de pantalla y buscadores, sin ocupar espacio visible. */
+.std-oculto {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
 .std-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; margin: 26px 0 0; }
 
 /* Rótulo de origen (R11) sobre cada foto o ilustración: chip translúcido con desenfoque en la esquina inferior

@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { onRequestPost } from '../functions/contact.js';
 
 const WORKER = 'https://formularios-mcco.prueba.workers.dev';
+const TURNSTILE = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 const RESEND = 'https://api.resend.com/emails';
 const ENV = { FORMULARIOS_URL: WORKER, FORMULARIOS_CLAVE: 'clave-de-prueba', MARCA: 'mcco' };
 const DATOS_PERSONALES = /ana@minera\.cl|Ana Pérez|1234 5678/;
@@ -40,10 +41,11 @@ function contexto(request, env) {
 }
 
 // Doble de fetch: registra { url, init } y responde según la URL. Una llamada a otra URL lanza.
-function dobleFetch(t, respuestaWorker) {
+function dobleFetch(t, respuestaWorker, respuestaTurnstile = () => Response.json({ success: true })) {
   const llamadas = [];
   t.mock.method(globalThis, 'fetch', async (url, init = {}) => {
     llamadas.push({ url: String(url), init });
+    if (String(url) === TURNSTILE) return respuestaTurnstile();
     if (String(url) === WORKER) return respuestaWorker();
     if (String(url) === RESEND) return Response.json({ id: 'acuse-prueba' });
     throw new Error(`fetch inesperado a ${url}`);
@@ -160,3 +162,59 @@ test('tras el éxito, el acuse va por Resend al correo del lead con el asunto si
   assert.deepEqual(acuse.to, ['ana@minera.cl']);
   assert.equal(acuse.subject, 'Recibimos tu solicitud: te respondemos dentro de 24 horas hábiles');
 });
+
+for (const token of [null, '']) {
+  test(`Turnstile configurado, token ${token === null ? 'ausente' : 'vacío'}: sin Worker ni acuse`, async (t) => {
+    capturarLogs(t);
+    const llamadas = dobleFetch(t, workerOk);
+    const form = formulario();
+    if (token === null) form.delete('cf-turnstile-response');
+    else form.set('cf-turnstile-response', token);
+    const ctx = contexto(solicitud(form), { ...ENV, TURNSTILE_SECRET: 'secreto-prueba', RESEND_API_KEY: 're_prueba' });
+    const r = await onRequestPost(ctx);
+    assert.equal(r.status, 302);
+    assert.equal(r.headers.get('location'), 'https://mcco.cl/contacto-error?reason=turnstile');
+    assert.deepEqual(llamadas, []);
+    assert.equal(ctx.pendientes.length, 0);
+  });
+}
+for (const success of [false, true, 'true']) {
+  test(`Turnstile success=${JSON.stringify(success)}: solo true admite el lead y el acuse`, async (t) => {
+    capturarLogs(t);
+    const llamadas = dobleFetch(t, workerOk, () => Response.json({ success }));
+    const ctx = contexto(solicitud(formulario()), { ...ENV, TURNSTILE_SECRET: 'secreto-prueba', RESEND_API_KEY: 're_prueba' });
+    const r = await onRequestPost(ctx);
+    await Promise.all(ctx.pendientes);
+    assert.equal(r.status, 302);
+    assert.equal(r.headers.get('location'), success === true ? 'https://mcco.cl/gracias' : 'https://mcco.cl/contacto-error?reason=turnstile');
+    assert.deepEqual(llamadas.map(l => l.url), success === true ? [TURNSTILE, WORKER, RESEND] : [TURNSTILE]);
+    assert.deepEqual(JSON.parse(llamadas[0].init.body), { secret: 'secreto-prueba', response: 'token-turnstile', remoteip: null });
+    assert.equal(ctx.pendientes.length, success === true ? 1 : 0);
+    if (success === true) assert.equal(JSON.parse(llamadas[1].init.body).campos['cf-turnstile-response'], undefined);
+  });
+}
+for (const token of [null, 'token-prueba']) {
+  test(`sin secreto, con token ${token}: conserva el envío sin Siteverify`, async (t) => {
+    const llamadas = dobleFetch(t, workerOk);
+    const form = formulario();
+    if (token === null) form.delete('cf-turnstile-response');
+    else form.set('cf-turnstile-response', token);
+    const r = await onRequestPost(contexto(solicitud(form), ENV));
+    assert.equal(r.headers.get('location'), 'https://mcco.cl/gracias');
+    assert.deepEqual(llamadas.map(l => l.url), [WORKER]);
+  });
+}
+for (const [caso, respuesta] of [
+  ['error de red', () => { throw new Error('red de prueba'); }],
+  ['JSON inválido', () => new Response('sin JSON')],
+]) {
+  test(`Turnstile ${caso}: conserva reason=exception sin Worker ni acuse`, async (t) => {
+    capturarLogs(t);
+    const llamadas = dobleFetch(t, workerOk, respuesta);
+    const ctx = contexto(solicitud(formulario()), { ...ENV, TURNSTILE_SECRET: 'secreto-prueba', RESEND_API_KEY: 're_prueba' });
+    const r = await onRequestPost(ctx);
+    assert.equal(r.headers.get('location'), 'https://mcco.cl/contacto-error?reason=exception');
+    assert.deepEqual(llamadas.map(l => l.url), [TURNSTILE]);
+    assert.equal(ctx.pendientes.length, 0);
+  });
+}

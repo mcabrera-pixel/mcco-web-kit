@@ -1,6 +1,6 @@
 // Pages Function estándar de contacto (Estándar Web MCCO v2 §10). Generalizada desde as-built.cl (en producción desde 2026-08).
 // POST /api/contact → honeypot → Turnstile (si hay secret) → Worker formularios-mcco → acuse Resend opcional → 302 /gracias.
-// Errores → 302 /contacto-error?reason= spam (honeypot) · config (faltan variables) · correo (falló el Worker) · exception.
+// Errores → 302 /contacto-error?reason= spam (honeypot) · config (faltan variables) · turnstile · correo (falló el Worker) · exception.
 // Uso en el sitio: functions/api/contact.js →  export { onRequestPost } from '@mcco/web-kit/functions/contact.js';
 // Variables (Cloudflare Pages → Settings → Environment variables; NUNCA en el repo):
 //   FORMULARIOS_URL (URL del Worker formularios-mcco) · FORMULARIOS_CLAVE (clave compartida con el Worker, como secreto)
@@ -80,16 +80,17 @@ export async function onRequestPost(context) {
       return Response.redirect(`${errorBase}?reason=config`, 302);
     }
 
-    // Turnstile: si hay token y secret, se valida. Sin token se sigue con honeypot (el widget puede fallar con TrustedTypes).
+    // Con secreto configurado, solo un token verificado permite llegar al Worker y al acuse.
     const token = formData.get("cf-turnstile-response");
-    if (token && env.TURNSTILE_SECRET) {
+    if (env.TURNSTILE_SECRET) {
+      if (!token) return Response.redirect(`${errorBase}?reason=turnstile`, 302);
       const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ secret: env.TURNSTILE_SECRET, response: token, remoteip: request.headers.get("CF-Connecting-IP") }),
       });
       const data = await res.json();
-      if (!data.success) console.warn("[contact] Turnstile inválido; se continúa solo con honeypot");
+      if (data?.success !== true) return Response.redirect(`${errorBase}?reason=turnstile`, 302);
     }
 
     // Lead al Worker: los campos de texto del formulario salvo NO_VIAJAN. Un campo repetido (casillas con el mismo

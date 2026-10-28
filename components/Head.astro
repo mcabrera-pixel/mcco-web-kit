@@ -2,6 +2,7 @@
 // <Head> — cabecera estándar: título, descripción, canonical limpia, OG/Twitter, hreflang, JSON-LD.
 import { loadSite } from '../lib/site.mjs';
 import { canonicalFor } from '../lib/routes.mjs';
+import { serializarJsonLd } from '../lib/jsonld.mjs';
 import SchemaOrg from './SchemaOrg.astro';
 
 interface Props {
@@ -51,5 +52,5 @@ const locale = site.lang.replace('-', '_');
 {published && <meta property="article:published_time" content={published} />}
 {modified && <meta property="article:modified_time" content={modified} />}
 {organization && <SchemaOrg />}
-{jsonld.map((o) => <script is:inline type="application/ld+json" set:html={JSON.stringify(o)} />)}
+{jsonld.map((o) => <script is:inline type="application/ld+json" set:html={serializarJsonLd(o)} />)}
 <slot />

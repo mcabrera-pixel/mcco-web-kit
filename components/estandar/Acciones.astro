@@ -5,7 +5,7 @@
 import '../../styles/estandar.css';
 
 type Variante = 'llena' | 'fantasma' | 'mas';
-interface Accion { href: string; texto: string; variante?: Variante }
+interface Accion { href: string; texto: string; variante?: Variante; oculto?: string }
 interface Props {
   acciones: Accion[];
   tamano?: 'normal' | 'chica';
@@ -25,6 +25,6 @@ const clases = ({ variante = 'llena' }: Accion) => [...CLASES[variante], tamano 
 ---
 {acciones.length > 0 && (
   <div class="std-acciones">
-    {acciones.map((a) => <a class:list={clases(a)} href={a.href}>{a.texto}</a>)}
+    {acciones.map((a) => <a class:list={clases(a)} href={a.href}>{a.texto}{a.oculto && <span class="std-oculto">{a.oculto}</span>}</a>)}
   </div>
 )}

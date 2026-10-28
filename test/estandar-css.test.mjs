@@ -112,3 +112,11 @@ test('Galeria comparte con el rótulo la superficie del control de video', () =>
     assert.match(css, /color\s*:\s*var\(--std-tinta\)/);
   }
 });
+
+test('std-oculto recorta visualmente sin display:none ni visibility:hidden', () => {
+  const css = regla('.std-oculto');
+  for (const patron of [/position\s*:\s*absolute/, /width\s*:\s*1px/, /height\s*:\s*1px/,
+    /padding\s*:\s*0/, /margin\s*:\s*-1px/, /overflow\s*:\s*hidden/, /clip-path\s*:\s*inset\(50%\)/,
+    /white-space\s*:\s*nowrap/, /border\s*:\s*0/]) assert.match(css, patron);
+  assert.doesNotMatch(css, /display\s*:\s*none|visibility\s*:\s*hidden/);
+});
