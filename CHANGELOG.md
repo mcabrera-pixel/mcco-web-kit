@@ -7,7 +7,7 @@ Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los
 - SubNav cambia el fondo y el texto juntos, sin transición del fondo, para conservar AA al cruzar bloques negros. La T2 mide el contraste durante la entrada y la salida.
 - Acciones acepta `oculto` opcional: texto adicional dentro del enlace con la nueva clase `.std-oculto`. Sin ese campo, conserva el HTML anterior.
 - Con `TURNSTILE_SECRET`, contacto exige token y `success: true` antes de enviar al Worker o programar el acuse. La ausencia o el rechazo del token redirige a `contacto-error?reason=turnstile`; sin secreto conserva el comportamiento anterior.
-- CI recibe la rama por `env`, la normaliza a `[a-z0-9-]` y usa solo esa salida en el comando de preview. El deploy de producción conserva `--branch=main`; separar los jobs queda para v1.3.0.
+- CI recibe la rama por `env`, la normaliza a `[a-z0-9-]` y usa solo esa salida en el comando de preview. Si queda `main`, usa `rama-main`: la vista previa nunca publica en producción. El deploy de producción conserva `--branch=main`; separar los jobs queda para v1.3.0.
 - Faq, Head y SchemaOrg comparten un serializador JSON-LD que escapa `<`, U+2028 y U+2029, sin alterar los datos ni su lectura por mcco-check R5.
 - Pruebas de render Astro, contacto y workflows, sin dependencias nuevas ni cambios incompatibles de API.
 
