@@ -1,6 +1,6 @@
 {
   "name": "@mcco/web-kit",
-  "version": "1.2.0-rc.2",
+  "version": "1.2.0",
   "description": "Kit compartido de las webs MCCO Group: el Estándar Web v2 (layouts y componentes Astro, entidad del grupo, endpoints SEO/GEO, verificador mcco-check, generador de _headers y workflows reutilizables) y el estándar visual del grupo, Apple + antigravity (hoja, componentes, nube y campo). La salida sin Astro es una capa base sin minificar.",
   "type": "module",
   "license": "UNLICENSED",

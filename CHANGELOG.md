@@ -3,6 +3,14 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.2.0 · 2026-10-28
+- SubNav cambia el fondo y el texto juntos, sin transición del fondo, para conservar AA al cruzar bloques negros. La T2 mide el contraste durante la entrada y la salida.
+- Acciones acepta `oculto` opcional: texto adicional dentro del enlace con la nueva clase `.std-oculto`. Sin ese campo, conserva el HTML anterior.
+- Con `TURNSTILE_SECRET`, contacto exige token y `success: true` antes de enviar al Worker o programar el acuse. La ausencia o el rechazo del token redirige a `contacto-error?reason=turnstile`; sin secreto conserva el comportamiento anterior.
+- CI recibe la rama por `env`, la normaliza a `[a-z0-9-]` y usa solo esa salida en el comando de preview. El deploy de producción conserva `--branch=main`; separar los jobs queda para v1.3.0.
+- Faq, Head y SchemaOrg comparten un serializador JSON-LD que escapa `<`, U+2028 y U+2029, sin alterar los datos ni su lectura por mcco-check R5.
+- Pruebas de render Astro, contacto y workflows, sin dependencias nuevas ni cambios incompatibles de API.
+
 ## v1.2.0-rc.2 · 2026-10-28
 - Muestreo de respaldo por lotes de hasta 256 elementos, con un presupuesto de 8 ms entre pausas y ordenación estable. Conserva el resultado de rc.1 para cada semilla, serializa las formas y cancela el trabajo pendiente al cerrar la nube, también si OffscreenCanvas falta solo dentro del Worker.
 - El respaldo de la nube deja visible el campo del hero. El campo libera observadores, oyentes y recursos WebGL al apagarse, y ambos lienzos siguen los cambios de DPR sin depender de resize.
