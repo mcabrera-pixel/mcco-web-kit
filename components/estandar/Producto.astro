@@ -7,6 +7,7 @@
 // tarjeta crece y la foto no lo tapa. En ≤ 640 px la tarjeta toma el alto de su contenido y la foto queda bajo el
 // texto en 4:3. `nivel` solo cambia la etiqueta del título (h3 por defecto, h2 si la grilla no va bajo un h2).
 import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
 import Acciones from './Acciones.astro';
 import { ROTULOS, rotuloDe } from '../../lib/estandar/rotulos.mjs';
 import type { ComponentProps } from 'astro/types';
@@ -56,32 +57,3 @@ const sizes = foto.sizes ?? (foto.srcset ? (ancho ? '100vw' : '(max-width: 833px
     <span class="std-rotulo" data-rotulo>{rotulo}</span>
   </figure>
 </article>
-
-<style>
-  .std-producto {
-    --std-producto-pad: 28px;
-    display: flex; flex-direction: column; min-height: 640px;
-    padding: 56px var(--std-producto-pad) 0;
-    background: var(--std-parchment); text-align: center;
-  }
-  .std-producto--claro { background: var(--std-blanco); }
-  .std-producto--negro { background: var(--std-negro); color: var(--std-parchment); }
-  .std-producto--negro-suave { background: var(--std-negro-3); color: var(--std-parchment); }
-  .std-producto--ancho { grid-column: 1 / -1; min-height: 700px; }
-  /* Los 32 px de abajo son lo mínimo entre el texto y la foto cuando el texto llena la tarjeta. */
-  .std-producto__texto { padding-bottom: 32px; }
-  .std-producto__bajada { max-width: 520px; margin-top: 8px; font-size: 21px; }
-  .std-producto__texto :global(.std-acciones) { margin-top: 18px; }
-  .std-producto__foto {
-    position: relative; flex: none; height: 320px;
-    margin: auto calc(-1 * var(--std-producto-pad)) 0;
-  }
-  .std-producto--ancho .std-producto__foto { height: 378px; }
-  .std-producto__foto img { width: 100%; height: 100%; object-fit: cover; }
-
-  @media (max-width: 640px) {
-    .std-producto, .std-producto--ancho { --std-producto-pad: 20px; min-height: 0; padding-top: 44px; }
-    .std-producto__foto, .std-producto--ancho .std-producto__foto { height: auto; }
-    .std-producto__foto img { height: auto; aspect-ratio: 4 / 3; }
-  }
-</style>

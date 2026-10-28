@@ -3,6 +3,13 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.3.0 · 2026-10-28
+- Distribución completa sin Astro en `dist/estandar/`, versionada y empaquetada: CSS compartido, Inter y licencia, módulos ESM minificados, Worker y respaldo dinámico. esbuild 0.28.2 es la única dependencia de desarrollo nueva; Astro pasa a peer opcional para los consumidores HTML.
+- `mcco-estandar-copiar <destino> --completo` valida versión, SHA-256, recursos obligatorios y grafos usando Node nativo. El modo base conserva sus archivos y bytes de v1.2.
+- `build:estandar`, `check:estandar` y `verificar`, con límites de 12 000/5000 B gzip y comunes contados por presupuesto. Nube: 9140 B; campo: 4935 B; página: 14 105 B.
+- Los 13 componentes Astro y el layout importan la única hoja de componentes. El respaldo del hero se ve también si falla la descarga de su módulo.
+- Contrato HTML documentado, pruebas de corrupción y reproducibilidad, fixtures HTML/Astro y verificación HTTP por CDP. Workflow de comprobación y evidencia sin publicar ni modificar los jobs de deploy existentes.
+
 ## v1.2.0 · 2026-10-28
 - SubNav cambia el fondo y el texto juntos, sin transición del fondo, para conservar AA al cruzar bloques negros. La T2 mide el contraste durante la entrada y la salida.
 - Acciones acepta `oculto` opcional: texto adicional dentro del enlace con la nueva clase `.std-oculto`. Sin ese campo, conserva el HTML anterior.

@@ -24,7 +24,7 @@ Kit compartido de las webs de MCCO Group. Implementa en código el **Estándar W
 | `scripts/parity.mjs` | **`mcco-parity`**: gate de migración (producción vs build, ruta por ruta). |
 | `scripts/headers.mjs` | **`mcco-headers`**: genera `public/_headers` (CSP) y `public/_redirects` desde `site.yaml`. |
 | `scripts/sitio-ci.mjs` | **`mcco-sitio`**: proyecto Cloudflare y dominio desde `site.yaml` para los workflows. |
-| `scripts/estandar-copiar.mjs` | **`mcco-estandar-copiar`**: capa base sin Astro (hoja, fuentes y runtimes sin minificar). La copia sola no monta el estándar ni cumple el presupuesto de JS del build de Astro. |
+| `scripts/estandar-copiar.mjs` | **`mcco-estandar-copiar`**: `--completo` copia CSS, fuentes y ESM minificado con manifiesto verificado; sin opción conserva el modo base v1.2. |
 | `scripts/smoke.sh` | Smoke del deploy sobre `<proyecto>.pages.dev` y, si está conectado, el dominio. |
 | `.github/workflows/site-ci.yml` | Reutilizable: PR → build + check + preview. |
 | `.github/workflows/site-deploy.yml` | Reutilizable: main → build + check + deploy + smoke. |
@@ -49,7 +49,7 @@ export default defineConfig(mccoConfig());
 
 Los archivos `src/pages/{sitemap.xml,robots.txt,llms.txt,llms-full.txt}.ts`, `src/pages/404.astro` y `src/content.config.ts` se copian de la plantilla (una línea cada uno).
 
-## Estándar visual (v1.2)
+## Estándar visual (v1.3)
 
 El lenguaje de apple.com, según el `DESIGN.md` de Apple del repositorio awesome-design-md, más antigravity: una nube de puntos que arma los activos del sitio y acompaña el scroll, y un campo de guiones detrás del texto del hero. El kit fija la hoja, los componentes y el JS, y cada sitio pone su color de acción, sus activos y su contenido. Sin dependencias en tiempo de ejecución.
 
@@ -58,7 +58,7 @@ import Estandar from '@mcco/web-kit/layouts/Estandar.astro';
 import HeroEstandar from '@mcco/web-kit/components/estandar/HeroEstandar.astro';
 ```
 
-Uso de cada componente, variables por sitio, presupuesto, regla de imágenes y alcance de la capa base sin Astro: [`docs/ESTANDAR.md`](docs/ESTANDAR.md). Demo: `/demo-estandar` en la plantilla.
+Uso de cada componente, variables por sitio, presupuesto, regla de imágenes y distribución completa sin Astro: [`docs/ESTANDAR.md`](docs/ESTANDAR.md). Demo: `/demo-estandar` en la plantilla.
 
 ## Sistema visual (v1.1)
 
@@ -82,3 +82,27 @@ Historial en `CHANGELOG.md`. Los lockfiles de los sitios se generan en Linux: `d
 ## Qué NO es el kit
 
 No trae el color, los activos ni el contenido de ninguna web. El kit fija el estándar visual del grupo, Apple + antigravity (`styles/estandar.css` y `components/estandar/`), y cada sitio pone su color de acción en `src/styles/theme.css`, sus activos en `public/` y su contenido en sus páginas. Los tokens `--mcco-*` de `styles/tokens.css` siguen para los layouts, los componentes generales (`FooterGrupo`, `Faq`, `Cta`, la 404) y el sistema visual v1.1.
+
+Para un sitio HTML sin Astro:
+
+```sh
+node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar --completo
+```
+
+No ejecuta ningún build ni requiere Astro/esbuild en el destino. El peer Astro es opcional para estos consumidores.
+El marcado público, las entradas y los ejemplos están en [docs/ESTANDAR-HTML.md](docs/ESTANDAR-HTML.md).
+`dist/estandar/` se versiona y forma parte del paquete instalado desde la tag.
+
+Verificación del kit (Node ≥22, esbuild exacto de desarrollo y Astro como peer para las fixtures):
+
+```sh
+npm test
+npm run build:estandar
+npm run check:estandar
+CHROME=/ruta/a/chrome node test/estandar-html.verificar.mjs
+# O los cuatro pasos: CHROME=/ruta/a/chrome npm run verificar
+```
+
+La suite usa el arnés CDP existente; no necesita Playwright. Guarda capturas, resultados y presupuesto en
+`.tmp-prueba-html/` (o `ESTANDAR_EVIDENCIA`). Los FPS se registran para repetirlos en PC con GPU; los demás fallos
+hacen salir con código 1. `npm test` compara dos builds limpios byte por byte con el artefacto versionado.

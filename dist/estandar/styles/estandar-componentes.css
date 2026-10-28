@@ -1,0 +1,379 @@
+/* Fuente única de los componentes Astro y del contrato HTML público. Selectores acotados a .std-*. */
+
+/* Bloque */
+.std-bloque {
+    --std-bloque-pad: 22px;
+    --std-bloque-aire: 80px;
+    position: relative; overflow-x: clip;
+    padding: var(--std-bloque-aire) var(--std-bloque-pad);
+    background: var(--std-blanco); text-align: center;
+  }
+  .std-bloque--parchment { background: var(--std-parchment); }
+  .std-bloque--negro { background: var(--std-negro); color: var(--std-parchment); }
+  .std-bloque--negro-suave { background: var(--std-negro-3); color: var(--std-parchment); }
+  @media (max-width: 640px) {
+    .std-bloque { --std-bloque-pad: 16px; --std-bloque-aire: 56px; }
+  }
+
+/* CampoAntigravity */
+.std-campo { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .std-campo { display: none; }
+  }
+
+/* Cifras */
+.std-cifras__lista { margin: 0; }
+  .std-cifras__item { padding: 22px 0; border-top: 1px solid var(--std-linea); }
+  .std-cifras__item:last-child { border-bottom: 1px solid var(--std-linea); }
+  .std-cifras__valor {
+    font: 600 56px/1 var(--std-fuente-display); letter-spacing: -.03em;
+    color: var(--accion); font-variant-numeric: tabular-nums;
+  }
+  .std-cifras__etiqueta { margin: 8px 0 0; font-size: 17px; color: var(--std-tinta-80); }
+  .std-cifras__nota { margin-top: 22px; }
+  [data-std-oscuro] .std-cifras__item { border-color: var(--std-tinta-80); }
+  [data-std-oscuro] .std-cifras__valor { color: var(--accion-oscuro); }
+  [data-std-oscuro] .std-cifras__etiqueta { color: var(--std-linea); }
+  @media (max-width: 640px) {
+    .std-cifras__valor { font-size: 48px; }
+  }
+
+/* Galeria */
+.std-galeria {
+    display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 16px;
+    max-width: 1024px; margin: 40px auto 0; padding: 0; list-style: none;
+  }
+  .std-galeria__figura { margin: 0; }
+  .std-galeria__marco {
+    position: relative; overflow: hidden;
+    border-radius: var(--std-radio-tarjeta); background: var(--std-parchment);
+  }
+  .std-galeria__marco img, .std-galeria__marco video { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .std-galeria__pie { margin: 10px 0 0; font-size: 14px; line-height: 1.43; letter-spacing: -.016em; color: var(--std-gris); }
+  [data-std-oscuro] .std-galeria__marco { background: var(--std-negro-1); }
+  [data-std-oscuro] .std-galeria__pie { color: var(--std-gris-claro); }
+
+  /* Cuadros: iguales y sin crecer, así una fila incompleta queda centrada. */
+  .std-galeria--cuadros .std-galeria__item { flex: 0 1 calc((100% - 32px) / 3); }
+  .std-galeria--cuadros .std-galeria__marco { aspect-ratio: 4 / 3; }
+
+  /* Mosaico: cada ítem crece en proporción a su ancho relativo (--w / --h), así todos los de una fila quedan del
+     mismo alto. El tope de 320 px de alto evita que la última fila crezca de más y el del ancho del archivo, que se
+     estire. */
+  .std-galeria--mosaico { gap: 12px; }
+  .std-galeria--mosaico .std-galeria__item {
+    flex: calc(var(--w) / var(--h)) 1 calc(var(--w) / var(--h) * 240px);
+    max-width: min(calc(var(--w) * 1px), calc(var(--w) / var(--h) * 320px));
+  }
+  .std-galeria--mosaico .std-galeria__marco { aspect-ratio: var(--w) / var(--h); }
+
+  /* Botón del video, que video.js muestra: círculo de 44 px como el rótulo, abajo a la izquierda. Su texto queda
+     fuera de la vista y lo leen los lectores de pantalla; el ícono de pausa o de reproducir lo dibuja el ::before
+     según data-accion, lo que hace el botón (reproducir: pausado por la persona o sin reproducción automática). */
+  .std-galeria__boton {
+    position: absolute; left: 12px; bottom: 12px;
+    width: 44px; height: 44px; padding: 0; overflow: hidden;
+    border: 0; border-radius: 50%;
+    white-space: nowrap; text-indent: 44px; cursor: pointer;
+    transition: transform .12s ease;
+  }
+  .std-galeria__boton:active { transform: scale(.95); }
+  .std-galeria__boton[hidden] { display: none; }
+  .std-galeria__boton span { display: none; }
+  .std-galeria__boton::before { content: ""; position: absolute; top: 50%; left: 50%; }
+  .std-galeria__boton[data-accion='pausar']::before {
+    width: 12px; height: 14px; margin: -7px 0 0 -6px; border-left: 4px solid; border-right: 4px solid;
+  }
+  .std-galeria__boton[data-accion='reproducir']::before {
+    width: 0; height: 0; margin: -8px 0 0 -5px;
+    border-left: 13px solid; border-top: 8px solid transparent; border-bottom: 8px solid transparent;
+  }
+
+  @media (max-width: 833px) {
+    .std-galeria--cuadros .std-galeria__item { flex-basis: calc((100% - 16px) / 2); }
+  }
+  @media (max-width: 640px) {
+    .std-galeria { margin-top: 32px; }
+    .std-galeria--cuadros .std-galeria__item { flex-basis: 100%; }
+    .std-galeria--mosaico .std-galeria__item { max-width: calc(var(--w) * 1px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .std-galeria__boton { transition: none; }
+  }
+
+/* GrillaProductos */
+.std-grilla {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+    padding: 12px; background: var(--std-blanco);
+  }
+  @media (max-width: 833px) {
+    .std-grilla { grid-template-columns: minmax(0, 1fr); }
+  }
+
+/* HeroEstandar */
+.std-hero { position: relative; padding: 56px 22px 0; background: var(--std-blanco); text-align: center; }
+  /* El contenido va sobre el campo (z-index 0). :global alcanza también la raíz de Acciones, que es de otro componente. */
+  .std-hero > :not([data-std-campo], .std-hero__pausa) { position: relative; z-index: 1; }
+  .std-hero__bajada { color: var(--std-tinta-80); }
+  .std-hero .std-pildora--fantasma { background: var(--std-blanco); }
+  .std-hero__nube { margin: 0; }
+  .std-hero__rotulo { margin: 0 auto; padding-bottom: 8px; }
+  /* Pausa del movimiento: en la esquina superior derecha, dentro del aire sobre el título, así no toca el texto, las
+     acciones ni la nube. Píldora chica como la de la historia, con fondo propio (los guiones no pasan bajo la letra),
+     44 px de área táctil (::before) y z-index 3, sobre el lienzo de la nube (z-index 2). Se ve solo con algo
+     moviéndose en el hero: nube.js y campo.js marcan la sección con data-std-movimiento (marcarMovimiento de pausa.js),
+     así no depende de :has() y un hero con campo y sin historia siempre tiene su pausa. */
+  .std-hero__pausa {
+    display: none; position: absolute; top: 7px; right: 22px; z-index: 3;
+    padding: 9px 14px; border: 0; border-radius: 980px;
+    background: var(--std-parchment); color: var(--std-tinta-80);
+    font: 400 12px/1 var(--std-fuente); letter-spacing: -.01em; cursor: pointer;
+    transition: transform .12s ease;
+  }
+  .std-hero__pausa:active { transform: scale(.95); }
+  .std-hero__pausa::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; margin-top: -22px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .std-hero[data-std-movimiento] .std-hero__pausa { display: block; }
+  }
+  @media (max-width: 640px) {
+    .std-hero { padding: 44px 16px 0; }
+    .std-hero__pausa { right: 16px; }
+  }
+
+/* HistoriaNube */
+.std-historia {
+    --historia-nube-min: 300px; --historia-relleno-inicio: 80px; --historia-relleno-fin: 26px;
+    position: relative; background: var(--std-negro); color: var(--std-parchment); text-align: center;
+  }
+  .std-historia__pin { padding: 80px 22px; }
+  .std-historia__caja { display: flex; flex-direction: column; height: 100%; max-width: 1100px; margin: 0 auto; }
+  .std-historia__caja > * { flex-shrink: 0; }
+  .std-historia__visual { display: flex; flex: 1 0 auto; flex-direction: column; justify-content: center; min-height: var(--historia-nube-min); }
+  .std-historia__nube { display: none; flex: 1; width: 100%; min-height: var(--historia-nube-min); }
+  .std-historia__fijas {
+    /* 1, 2 y 3 activos van en una fila; 4 activos forman dos filas de dos. */
+    display: grid; grid-template-columns: repeat(min(var(--formas), calc(6 - var(--formas))), minmax(0, 1fr)); gap: 12px;
+    width: 100%; max-width: 900px; margin: 32px auto; padding: 0; list-style: none;
+  }
+  .std-historia__figura { position: relative; margin: 0; }
+  .std-historia__figura img { width: 100%; aspect-ratio: 16 / 9; object-fit: contain; border-radius: var(--std-radio-tarjeta); }
+  .std-historia__pasos {
+    display: grid; grid-template-columns: repeat(var(--formas), minmax(0, 1fr)); gap: 24px;
+    width: 100%; max-width: 980px; margin: 0 auto; padding: 0; list-style: none;
+  }
+  .std-historia__paso { font: 600 21px/1.24 var(--std-fuente-display); color: var(--std-parchment); }
+  .std-historia__etapa {
+    display: block; margin-bottom: 6px; font: 400 12px/1.3 var(--std-fuente); letter-spacing: .06em;
+    text-transform: uppercase; color: var(--accion-oscuro);
+  }
+  .std-historia__pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; min-height: 44px; gap: 18px; margin-top: 18px; }
+  .std-historia__pie .std-fina { margin: 0; }
+  /* Píldora chica con 44 px de área táctil (::before), como .std-pildora--chica. */
+  .std-historia__pausa {
+    position: relative; min-width: 44px; padding: 9px 14px; border: 0; border-radius: 980px;
+    background: rgba(255, 255, 255, .12); color: var(--std-parchment);
+    font: 400 12px/1 var(--std-fuente); letter-spacing: -.01em; cursor: pointer;
+    transition: transform .12s ease;
+  }
+  .std-historia__pausa:active { transform: scale(.95); }
+  .std-historia__pausa::before { content: ""; position: absolute; left: -1px; right: -1px; top: 50%; height: 44px; margin-top: -22px; }
+  .std-historia__pausa[hidden] { display: none; }
+
+  /* Con la nube: se ve el ancla en lugar de las ilustraciones y solo el paso de la forma actual queda encendido.
+     data-estado="nube" lo pone y lo quita nube.js, también al pedir movimiento reducido: así la sección cambia de alto
+     en el mismo momento en que el script lo sabe y puede devolver la ventana al inicio de la historia. */
+  .std-historia[data-estado='nube'] .std-historia__nube { display: block; }
+  .std-historia[data-estado='nube'] .std-historia__fijas { display: none; }
+  .std-historia[data-estado='nube'] .std-historia__paso { color: var(--std-gris-claro); transition: color .5s; }
+  .std-historia[data-estado='nube'] .std-historia__etapa { color: inherit; }
+  .std-historia[data-estado='nube'] .is-activo { color: var(--std-parchment); }
+  .std-historia[data-estado='nube'] .is-activo .std-historia__etapa { color: var(--accion-oscuro); }
+  /* El runtime mide textos, controles y nube con estas mismas variables. Sin su atributo la historia fluye. */
+  @media (min-width: 901px) and (min-height: 700px) {
+    .std-historia { --historia-nube-min: 200px; }
+    .std-historia[data-estado='nube'][data-std-fija] { height: calc((var(--formas) + .2) * 100svh); }
+    .std-historia[data-estado='nube'][data-std-fija] .std-historia__pin {
+      position: sticky; top: var(--std-subnav); height: calc(100svh - var(--std-subnav));
+      padding-block: var(--historia-relleno-inicio) var(--historia-relleno-fin);
+    }
+  }
+  @media (max-width: 900px) {
+    .std-historia__nube { flex: none; height: 300px; }
+    .std-historia__pasos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 420px; text-align: left; }
+  }
+  @media (max-width: 640px) {
+    .std-historia__pin { padding: 56px 16px; }
+    .std-historia__paso { font-size: 17px; }
+    .std-historia__fijas { grid-template-columns: minmax(0, 1fr); margin: 24px auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .std-historia__pausa { transition: none; }
+  }
+
+/* NavGlobal */
+.std-gnav { position: relative; z-index: 12; background: var(--std-negro); }
+  .std-gnav__in {
+    display: flex; align-items: center; justify-content: space-between;
+    max-width: 1024px; min-height: 44px; margin: 0 auto; padding: 0 22px;
+  }
+  .std-gnav__logo { display: flex; align-items: center; min-width: 44px; height: 44px; }
+  .std-gnav__logo img { width: auto; height: 15px; }
+  /* El margen negativo deja el texto del último enlace en el borde del contenido, como en la maqueta. */
+  .std-gnav__enlaces { display: flex; gap: 20px; margin: 0 -8px 0 0; padding: 0; list-style: none; }
+  /* 12 px a la vista y 44 × 44 de área táctil. El color y el subrayado se fijan aquí: la hoja del estándar deja
+     los enlaces de la base en color de acción y subrayados. */
+  .std-gnav__enlaces a {
+    display: flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 8px;
+    color: rgba(255, 255, 255, .8); font-size: 12px; letter-spacing: -.01em; text-decoration: none;
+    transition: color .2s;
+  }
+  .std-gnav__enlaces a:hover { color: var(--std-blanco); }
+  .std-gnav__menu {
+    display: none; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0;
+    border: 0; background: none; color: var(--std-parchment); cursor: pointer;
+  }
+  /* El anillo de foco va por dentro: la barra toca el borde de la ventana y la bandeja tapa el de afuera. */
+  .std-gnav a:focus-visible, .std-gnav__menu:focus-visible { outline-offset: -2px; }
+  /* Abierto, las dos líneas forman una X. */
+  .std-gnav__linea { transform-box: fill-box; transform-origin: center; transition: transform .2s ease; }
+  .std-gnav__menu[aria-expanded='true'] .std-gnav__linea:first-child { transform: translateY(4px) rotate(45deg); }
+  .std-gnav__menu[aria-expanded='true'] .std-gnav__linea:last-child { transform: translateY(-4px) rotate(-45deg); }
+
+  @media (max-width: 833px) {
+    .std-gnav__in { flex-wrap: wrap; }
+    .std-gnav__enlaces { display: flex; flex-wrap: wrap; gap: 0; margin: 0 -8px; }
+    .std-gnav__in[data-std-menu-listo] .std-gnav__menu { display: inline-flex; }
+    .std-gnav__in[data-std-menu-listo] .std-gnav__enlaces { display: none; }
+    .std-gnav.is-abierta .std-gnav__in[data-std-menu-listo] .std-gnav__enlaces {
+      display: block; position: absolute; top: 100%; left: 0; right: 0;
+      margin: 0; padding: 8px 22px 28px; background: var(--std-negro);
+    }
+    .std-gnav.is-abierta .std-gnav__enlaces a {
+      justify-content: flex-start; height: auto; min-height: 44px; padding: 6px 0;
+      color: var(--std-parchment); font: 600 28px/1.14 var(--std-fuente-display); letter-spacing: .007em;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .std-gnav__enlaces a, .std-gnav__linea { transition: none; }
+  }
+
+/* NubeAncla */
+.std-nube {
+    position: relative; contain: layout paint; max-width: 1060px; margin: 14px auto 0;
+    height: clamp(240px, calc(100svh - 450px), 540px);
+  }
+  .std-nube:not([data-estado='nube']) { mix-blend-mode: multiply; }
+  .std-nube__respaldo {
+    display: none; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none;
+    filter: invert(1) grayscale(1) contrast(1.15); mix-blend-mode: multiply;
+  }
+  .std-nube:not([data-estado='nube']) .std-nube__respaldo, .std-nube__respaldo--sin-js { display: block; }
+  @media (prefers-reduced-motion: reduce) {
+    .std-nube__respaldo { display: block; }
+  }
+  /* Sin JS ya está la copia de <noscript>: con movimiento reducido no se encima la otra (multiply oscurecería el doble). */
+  @media (scripting: none) {
+    .std-nube__respaldo:not(.std-nube__respaldo--sin-js) { display: none; }
+  }
+  @media (max-width: 640px) {
+    .std-nube { height: 250px; margin-top: 8px; }
+  }
+
+/* Producto */
+.std-producto {
+    --std-producto-pad: 28px;
+    display: flex; flex-direction: column; min-height: 640px;
+    padding: 56px var(--std-producto-pad) 0;
+    background: var(--std-parchment); text-align: center;
+  }
+  .std-producto--claro { background: var(--std-blanco); }
+  .std-producto--negro { background: var(--std-negro); color: var(--std-parchment); }
+  .std-producto--negro-suave { background: var(--std-negro-3); color: var(--std-parchment); }
+  .std-producto--ancho { grid-column: 1 / -1; min-height: 700px; }
+  /* Los 32 px de abajo son lo mínimo entre el texto y la foto cuando el texto llena la tarjeta. */
+  .std-producto__texto { padding-bottom: 32px; }
+  .std-producto__bajada { max-width: 520px; margin-top: 8px; font-size: 21px; }
+  .std-producto__texto .std-acciones { margin-top: 18px; }
+  .std-producto__foto {
+    position: relative; flex: none; height: 320px;
+    margin: auto calc(-1 * var(--std-producto-pad)) 0;
+  }
+  .std-producto--ancho .std-producto__foto { height: 378px; }
+  .std-producto__foto img { width: 100%; height: 100%; object-fit: cover; }
+
+  @media (max-width: 640px) {
+    .std-producto, .std-producto--ancho { --std-producto-pad: 20px; min-height: 0; padding-top: 44px; }
+    .std-producto__foto, .std-producto--ancho .std-producto__foto { height: auto; }
+    .std-producto__foto img { height: auto; aspect-ratio: 4 / 3; }
+  }
+
+/* SubNav */
+.std-subnav {
+    position: sticky; top: 0; z-index: 11; height: var(--std-subnav);
+    border-bottom: 1px solid rgba(0, 0, 0, .08); background: rgba(250, 250, 252, .8);
+    -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+    /* Fondo y texto cambian juntos: interpolar solo el fondo rompe el contraste AA. */
+    transition: border-color .3s;
+  }
+  .std-subnav.is-oscura { border-bottom-color: rgba(255, 255, 255, .08); background: rgba(22, 22, 23, .8); }
+  .std-subnav__in {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    max-width: 1024px; height: 100%; margin: 0 auto; padding: 0 22px;
+  }
+  .std-subnav__titulo {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font: 600 21px/1.19 var(--std-fuente-display); letter-spacing: .011em;
+  }
+  .std-subnav.is-oscura .std-subnav__titulo { color: var(--std-parchment); }
+  .std-subnav__nav { display: flex; flex: none; align-items: center; gap: 12px; }
+  /* 12 px a la vista y 44 × 44 de área táctil; color y subrayado propios (la base los deja en color de acción). */
+  .std-subnav__enlace {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 6px;
+    color: var(--std-tinta-80); font-size: 12px; letter-spacing: -.01em; text-decoration: none;
+  }
+  .std-subnav.is-oscura .std-subnav__enlace { color: var(--std-linea); }
+  .std-subnav__accion { margin-left: 6px; }
+  .std-subnav__corto { display: none; }
+
+  @media (max-width: 833px) {
+    .std-subnav__enlace { display: none; }
+  }
+  @media (max-width: 640px) {
+    .std-subnav__titulo { font-size: 17px; }
+    .std-subnav__largo { display: none; }
+    .std-subnav__corto { display: inline; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .std-subnav { transition: none; }
+  }
+
+/* TarjetasMarca */
+.std-marcas {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;
+    max-width: 1024px; margin: 48px auto 0; padding: 0; list-style: none; text-align: left;
+  }
+  /* La tarjeta-enlace fija su color y quita el subrayado: la hoja deja los enlaces subrayados en color de acción. */
+  .std-marca {
+    display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 250px;
+    padding: 36px 28px 28px; border-radius: var(--std-radio-tarjeta);
+    background: var(--std-tinta); color: var(--std-parchment); text-decoration: none;
+  }
+  .std-marca__logo {
+    display: block; width: 100%; background: var(--std-parchment);
+    -webkit-mask: var(--logo) left center / contain no-repeat; mask: var(--logo) left center / contain no-repeat;
+  }
+  /* --std-gris-claro (#a1a1a6) es la letra fina sobre negro de la hoja: pasa AA sobre #1d1d1f (6,5:1). */
+  .std-marca__frase { margin: 4px 0 0; font-size: 17px; line-height: 1.35; color: var(--std-gris-claro); }
+  .std-marca__pie { margin-top: auto; font-size: 14px; }
+  .std-marca__pronto { color: var(--std-gris-claro); }
+  /* Con colores forzados el fondo del logo pasaría a Canvas, el mismo de la tarjeta, y la máscara no dejaría ver nada:
+     el logo queda en CanvasText. */
+  @media (forced-colors: active) {
+    .std-marca__logo { forced-color-adjust: none; background: CanvasText; }
+  }
+  @media (max-width: 900px) {
+    .std-marcas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .std-marcas { grid-template-columns: minmax(0, 1fr); }
+  }

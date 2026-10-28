@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Contrato HTML del estándar</title>
+<link rel="icon" href="/media/logo.svg">
+<link rel="stylesheet" href="/estandar/styles/estandar.css">
+<link rel="stylesheet" href="/estandar/styles/estandar-componentes.css">
+<script type="module" src="/estandar/lib/estandar/menu.js"></script>
+<script type="module" src="/estandar/lib/estandar/subnav.js"></script>
+<script type="module" src="/estandar/lib/estandar/nube.js"></script>
+<script type="module" src="/estandar/lib/estandar/campo.js"></script>
+<script type="module" src="/estandar/lib/visual/video.js"></script>
+</head><body class="std">
+<header class="std-gnav" data-std-gnav><nav class="std-gnav__in" aria-label="Principal">
+<a class="std-gnav__logo" href="/" aria-label="Prueba, inicio"><img src="/media/logo.svg" alt="Prueba" width="32" height="32"></a>
+<button class="std-gnav__menu" type="button" aria-label="Menú" aria-expanded="false" aria-controls="std-gnav-enlaces" data-std-menu><svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path class="std-gnav__linea" d="M1 2h16"/><path class="std-gnav__linea" d="M1 10h16"/></svg></button>
+<ul class="std-gnav__enlaces" id="std-gnav-enlaces"><li><a href="#historia">Historia</a></li><li><a href="#galeria">Galería</a></li></ul></nav></header>
+<div class="std-subnav"><div class="std-subnav__in"><span class="std-subnav__titulo">Estándar</span><nav class="std-subnav__nav" aria-label="Secciones"><a class="std-subnav__enlace" href="#historia">Historia</a><a class="std-pildora std-pildora--chica std-subnav__accion" href="#pie"><span class="std-subnav__largo">Contactar al equipo</span><span class="std-subnav__corto">Contactar</span></a></nav></div></div>
+<main>
+<section class="std-hero" aria-labelledby="std-hero-titulo">
+<div class="std-campo" data-std-campo aria-hidden="true"></div>
+<button type="button" class="std-hero__pausa" data-std-pausa>Pausar movimiento</button>
+<h1 class="std-h1" id="std-hero-titulo">Contrato del estándar.</h1><p class="std-lead std-hero__bajada">Todas las piezas, con HTML y Astro.</p>
+<div class="std-acciones"><a class="std-pildora" href="#galeria">Ver piezas</a><a class="std-pildora std-pildora--fantasma" href="#pie">Contacto</a></div>
+<figure class="std-hero__nube"><div class="std-nube" data-std-nube="hero" role="img" aria-label="Figura geométrica de prueba"><img class="std-nube__respaldo" src="/media/forma.png" alt="" width="960" height="540" loading="lazy" decoding="async" data-origen="ilustracion"><noscript><img class="std-nube__respaldo std-nube__respaldo--sin-js" src="/media/forma.png" alt="" width="960" height="540" decoding="async" data-origen="ilustracion"></noscript></div><figcaption class="std-fina std-hero__rotulo" data-rotulo>Ilustración en nube de puntos.</figcaption></figure>
+</section>
+<section class="std-historia" id="historia" aria-labelledby="historia-titulo" data-std-oscuro data-std-historia style="--formas: 2">
+<div class="std-historia__pin"><div class="std-historia__caja"><h2 class="std-h2" id="historia-titulo">Dos formas.</h2><p class="std-tagline">Activos sintéticos para verificar el runtime.</p>
+<div class="std-historia__visual" data-std-visual><div class="std-historia__nube" data-std-nube="historia" role="img" aria-label="Ilustración animada en nube de puntos: Forma 1 y Forma 2."></div>
+<ul class="std-historia__fijas" role="list"><li><figure class="std-historia__figura"><img src="/media/forma.png" alt="Figura geométrica de prueba" width="960" height="540" loading="lazy" decoding="async" data-origen="ilustracion" data-std-forma><span class="std-rotulo" data-rotulo>Ilustración</span></figure></li><li><figure class="std-historia__figura"><img src="/media/forma2.png" alt="Figura geométrica de prueba" width="960" height="540" loading="lazy" decoding="async" data-origen="ilustracion" data-std-forma><span class="std-rotulo" data-rotulo>Ilustración</span></figure></li></ul></div>
+<ol class="std-historia__pasos"><li class="std-historia__paso is-activo" data-std-paso><span class="std-historia__etapa">Paso 1</span>Forma 1</li><li class="std-historia__paso" data-std-paso><span class="std-historia__etapa">Paso 2</span>Forma 2</li></ol>
+<div class="std-historia__pie"><p class="std-fina" data-rotulo>Ilustraciones en nube de puntos.</p><button type="button" class="std-historia__pausa" data-std-pausa hidden>Pausar movimiento</button></div>
+</div></div></section>
+<section class="std-grilla" aria-label="Productos"><article class="std-producto std-producto--parchment"><div class="std-producto__texto"><h3 class="std-h3">Producto de prueba</h3><p class="std-tagline std-producto__bajada">Contenido legible.</p><div class="std-acciones"><a class="std-pildora" href="#galeria">Ver piezas</a><a class="std-pildora std-pildora--fantasma" href="#pie">Contacto</a></div></div><figure class="std-producto__foto" data-origen="esquema"><img src="/media/forma.png" alt="Figura geométrica de prueba" width="960" height="540" loading="lazy" decoding="async" data-origen="esquema"><span class="std-rotulo" data-rotulo>Esquema</span></figure></article></section>
+<section class="std-bloque std-bloque--claro" id="galeria" aria-label="Galería">
+<ul class="std-galeria std-galeria--cuadros" role="list"><li class="std-galeria__item" style="--w:960;--h:540"><figure class="std-galeria__figura" data-origen="esquema"><div class="std-galeria__marco"><img src="/media/forma.png" alt="Figura geométrica de prueba" width="960" height="540" loading="lazy" decoding="async" data-origen="esquema"><span class="std-rotulo" data-rotulo>Esquema</span></div><figcaption class="std-galeria__pie">Activo sintético de prueba.</figcaption></figure></li>
+<li class="std-galeria__item" style="--w:960;--h:540"><figure class="std-galeria__figura" data-origen="real"><div class="std-galeria__marco" data-mcco-video><video muted playsinline loop preload="none" poster="/media/forma.png" aria-label="Video de faena de la demo del kit" width="960" height="540" data-origen="real"><source src="/media/prueba.mp4" type="video/mp4"></video><span class="std-rotulo" data-rotulo>Video de faena</span><button type="button" class="std-galeria__boton" data-video-boton data-accion="pausar" hidden>Pausar video <span aria-hidden="true">Ⅱ</span></button></div></figure></li></ul>
+<ul class="std-galeria std-galeria--mosaico" role="list"><li class="std-galeria__item" style="--w:960;--h:540"><figure class="std-galeria__figura" data-origen="esquema"><div class="std-galeria__marco"><img src="/media/forma.png" alt="Figura geométrica de prueba" width="960" height="540" loading="lazy" decoding="async" data-origen="esquema"><span class="std-rotulo" data-rotulo>Esquema</span></div><figcaption class="std-galeria__pie">Activo sintético de prueba.</figcaption></figure></li></ul>
+<div class="std-cifras"><dl class="std-cifras__lista"><div class="std-cifras__item"><dt class="std-cifras__valor">44</dt><dd class="std-cifras__etiqueta">píxeles de área táctil</dd></div></dl><p class="std-fina std-cifras__nota">Valor del estándar.</p></div>
+</section>
+<section class="std-bloque std-bloque--negro" data-std-oscuro aria-label="Marcas"><ul class="std-marcas" role="list"><li><a class="std-marca" href="#pie" data-std-oscuro><span class="std-marca__logo" role="img" aria-label="Marca de prueba" style='--logo:url("/media/logo.svg");height:48px'></span><p class="std-marca__frase">Contenido sintético.</p><span class="std-mas std-marca__pie">Más información</span></a></li></ul></section>
+</main><footer class="std-bloque std-bloque--parchment" id="pie"><h2 class="std-h3">Pie del sitio</h2><a href="#std-hero-titulo">Volver al inicio</a></footer>
+</body></html>

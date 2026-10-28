@@ -6,6 +6,7 @@
 // lleva fondo blanco para leerse sobre ellos. Con nube o campo, el hero lleva su propio botón para pausar el movimiento
 // (WCAG 2.2.2): pausa la nube y el campo con la pausa común (lib/estandar/pausa.js), a la par con el de la historia.
 import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
 import Acciones from './Acciones.astro';
 import NubeAncla from './NubeAncla.astro';
 import CampoAntigravity from './CampoAntigravity.astro';
@@ -40,34 +41,3 @@ if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta 
     </figure>
   )}
 </section>
-
-<style>
-  .std-hero { position: relative; padding: 56px 22px 0; background: var(--std-blanco); text-align: center; }
-  /* El contenido va sobre el campo (z-index 0). :global alcanza también la raíz de Acciones, que es de otro componente. */
-  .std-hero > :global(:not([data-std-campo], .std-hero__pausa)) { position: relative; z-index: 1; }
-  .std-hero__bajada { color: var(--std-tinta-80); }
-  .std-hero :global(.std-pildora--fantasma) { background: var(--std-blanco); }
-  .std-hero__nube { margin: 0; }
-  .std-hero__rotulo { margin: 0 auto; padding-bottom: 8px; }
-  /* Pausa del movimiento: en la esquina superior derecha, dentro del aire sobre el título, así no toca el texto, las
-     acciones ni la nube. Píldora chica como la de la historia, con fondo propio (los guiones no pasan bajo la letra),
-     44 px de área táctil (::before) y z-index 3, sobre el lienzo de la nube (z-index 2). Se ve solo con algo
-     moviéndose en el hero: nube.js y campo.js marcan la sección con data-std-movimiento (marcarMovimiento de pausa.js),
-     así no depende de :has() y un hero con campo y sin historia siempre tiene su pausa. */
-  .std-hero__pausa {
-    display: none; position: absolute; top: 7px; right: 22px; z-index: 3;
-    padding: 9px 14px; border: 0; border-radius: 980px;
-    background: var(--std-parchment); color: var(--std-tinta-80);
-    font: 400 12px/1 var(--std-fuente); letter-spacing: -.01em; cursor: pointer;
-    transition: transform .12s ease;
-  }
-  .std-hero__pausa:active { transform: scale(.95); }
-  .std-hero__pausa::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; margin-top: -22px; }
-  @media (prefers-reduced-motion: no-preference) {
-    .std-hero[data-std-movimiento] .std-hero__pausa { display: block; }
-  }
-  @media (max-width: 640px) {
-    .std-hero { padding: 44px 16px 0; }
-    .std-hero__pausa { right: 16px; }
-  }
-</style>

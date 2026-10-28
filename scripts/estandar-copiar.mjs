@@ -1,20 +1,37 @@
 #!/usr/bin/env node
-// mcco-estandar-copiar: capa base sin Astro de rc.1, con fuentes sin minificar. No monta los componentes ni cumple
-// por sí sola el presupuesto de JS. Copia a <destino>/ la hoja con sus fuentes (styles/estandar.css y styles/fuentes/*) y el runtime
-// (lib/estandar/*.js y lib/visual/comun.js) con las mismas rutas relativas, así siguen resolviendo los import, el Worker
-// de la nube y los url() de la hoja. La web lo corre en su deploy, desde la tag del kit que fija, nunca a mano.
-// Uso: mcco-estandar-copiar <destino>
+// Sin opción: conserva la copia base v1.2 (fuentes JS sin minificar).
+// --completo: verifica y copia dist/estandar usando exclusivamente Node nativo.
+// Uso: mcco-estandar-copiar <destino> [--completo]
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verificar } from './estandar-verificar.mjs';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const USO = 'Uso: mcco-estandar-copiar <destino>';
+const USO = 'Uso: mcco-estandar-copiar <destino> [--completo]';
 
 const destino = process.argv[2];
-if (!destino || destino.startsWith('-')) {
+if (!destino || destino.startsWith('-') || process.argv.slice(3).some(a => a !== '--completo') || process.argv.length > 4) {
   console.error(`mcco-estandar-copiar: ${destino ? `no conozco la opción ${destino}` : 'falta el destino'}. ${USO}`);
   process.exit(1);
+}
+
+if (process.argv[3] === '--completo') {
+  try {
+    const origen = path.join(KIT, 'dist/estandar');
+    const { manifest, presupuesto } = verificar(origen);
+    if (Object.values(presupuesto).some(p => !p.cumple)) throw new Error('Presupuesto JS excedido');
+    const raiz = path.resolve(destino);
+    // Validar todo antes de crear el destino: un artefacto incompleto no deja una copia parcial.
+    for (const rel of [...Object.keys(manifest.archivos), 'manifest.json']) {
+      fs.mkdirSync(path.dirname(path.join(raiz, rel)), { recursive: true });
+      fs.copyFileSync(path.join(origen, rel), path.join(raiz, rel));
+    }
+    console.log(`mcco-estandar-copiar: distribución completa ${manifest.version} en ${raiz}`);
+  } catch (e) {
+    console.error(`mcco-estandar-copiar: ${e.message}`); process.exit(1);
+  }
+  process.exit(0);
 }
 
 // Los ayudantes del build (lib/estandar/rotulos.mjs y sus tipos) no viajan: solo los usan los componentes de Astro.

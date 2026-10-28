@@ -1,0 +1,157 @@
+{
+  "formato": 1,
+  "version": "1.3.0",
+  "generador": "esbuild@0.28.2",
+  "compresion": "gzip nivel 9; bytes por respuesta",
+  "archivos": {
+    "lib/estandar/campo.js": {
+      "bytes": 7612,
+      "gzip": 3636,
+      "sha256": "983707cf943d6df646499b4fcf81389d32ad40539f4975e452cd2d1a1468a986",
+      "dependencias": [
+        "lib/estandar/chunks/chunk-HUFLIRKM.js",
+        "lib/estandar/chunks/chunk-YKE6NFK2.js"
+      ]
+    },
+    "lib/estandar/chunks/chunk-HUFLIRKM.js": {
+      "bytes": 569,
+      "gzip": 367,
+      "sha256": "6799527c92716a8c630ca2b1c819eed8a60c64b088bda33cca8ff45f862a2380",
+      "dependencias": []
+    },
+    "lib/estandar/chunks/chunk-YKE6NFK2.js": {
+      "bytes": 1396,
+      "gzip": 820,
+      "sha256": "42ecae879c0560d9d669947b94b5564cb996aa68af94dfdf28aae302423da78f",
+      "dependencias": []
+    },
+    "lib/estandar/menu.js": {
+      "bytes": 869,
+      "gzip": 457,
+      "sha256": "38090a88fd01488ea97c56770fb868fb5d5ebfd180762ba5a54e4177ad040966",
+      "dependencias": []
+    },
+    "lib/estandar/nube-worker.js": {
+      "bytes": 3355,
+      "gzip": 1711,
+      "sha256": "efcff03df9edad0930a34037a6593134d0ff64d833256dc1656f1e0f2cc7ff3d",
+      "dependencias": []
+    },
+    "lib/estandar/nube.js": {
+      "bytes": 13798,
+      "gzip": 6130,
+      "sha256": "a58cfddc44061fbfa9ebe7ac59eb8f81d0948dd997ddce9f5cef7de0915ff51d",
+      "dependencias": [
+        "lib/estandar/chunks/chunk-HUFLIRKM.js",
+        "lib/estandar/chunks/chunk-YKE6NFK2.js",
+        "lib/estandar/nube-worker.js"
+      ]
+    },
+    "lib/estandar/pausa.js": {
+      "bytes": 106,
+      "gzip": 112,
+      "sha256": "09a45efc61cdcbced33132094a313d630334f6e38807dcd3ae772515c46546b3",
+      "dependencias": [
+        "lib/estandar/chunks/chunk-HUFLIRKM.js"
+      ]
+    },
+    "lib/estandar/subnav.js": {
+      "bytes": 540,
+      "gzip": 341,
+      "sha256": "8b6ed5abe1eba99bd2cbd30866e465dbd533e1008c3e0dd0c0668b725f259241",
+      "dependencias": []
+    },
+    "lib/visual/video.js": {
+      "bytes": 870,
+      "gzip": 531,
+      "sha256": "ec1137adfafe01e1c39d4431b4d9dbd2197768740c4365b9c8b716eed1189e38",
+      "dependencias": [
+        "lib/estandar/chunks/chunk-YKE6NFK2.js"
+      ]
+    },
+    "styles/estandar-componentes.css": {
+      "bytes": 20250,
+      "gzip": 5263,
+      "sha256": "19d82cca1dc48ee26ca6bcb8e1584da2df85b4b41cdeff728f75da8a81dd1205",
+      "dependencias": []
+    },
+    "styles/estandar.css": {
+      "bytes": 9530,
+      "gzip": 3613,
+      "sha256": "7eabd6eb45f2007363d65bd7722eaf2854ac3bf6a526b53445a5442231fb5b18",
+      "dependencias": [
+        "styles/fuentes/inter-latin-ext-wght-normal.woff2",
+        "styles/fuentes/inter-latin-wght-normal.woff2"
+      ]
+    },
+    "styles/fuentes/OFL-Inter.txt": {
+      "bytes": 4379,
+      "gzip": 1971,
+      "sha256": "ff8d6de2d53d50b0c7e80355a40d6a8388e5c2f4d53d528da936257eb102a5a3",
+      "dependencias": []
+    },
+    "styles/fuentes/inter-latin-ext-wght-normal.woff2": {
+      "bytes": 85068,
+      "gzip": 85116,
+      "sha256": "34b9c504cab7a73e37b746343a449132e56cf7b5481af2cb81dc74dcff25c956",
+      "dependencias": []
+    },
+    "styles/fuentes/inter-latin-wght-normal.woff2": {
+      "bytes": 48256,
+      "gzip": 48254,
+      "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
+      "dependencias": []
+    }
+  },
+  "entradas": {
+    "menu": {
+      "ruta": "lib/estandar/menu.js",
+      "recursos": [
+        "lib/estandar/menu.js"
+      ]
+    },
+    "subnav": {
+      "ruta": "lib/estandar/subnav.js",
+      "recursos": [
+        "lib/estandar/subnav.js"
+      ]
+    },
+    "nube": {
+      "ruta": "lib/estandar/nube.js",
+      "recursos": [
+        "lib/estandar/chunks/chunk-HUFLIRKM.js",
+        "lib/estandar/chunks/chunk-YKE6NFK2.js",
+        "lib/estandar/nube-worker.js",
+        "lib/estandar/nube.js"
+      ]
+    },
+    "campo": {
+      "ruta": "lib/estandar/campo.js",
+      "recursos": [
+        "lib/estandar/campo.js",
+        "lib/estandar/chunks/chunk-HUFLIRKM.js",
+        "lib/estandar/chunks/chunk-YKE6NFK2.js"
+      ]
+    },
+    "pausa": {
+      "ruta": "lib/estandar/pausa.js",
+      "recursos": [
+        "lib/estandar/chunks/chunk-HUFLIRKM.js",
+        "lib/estandar/pausa.js"
+      ]
+    },
+    "nube-worker": {
+      "ruta": "lib/estandar/nube-worker.js",
+      "recursos": [
+        "lib/estandar/nube-worker.js"
+      ]
+    },
+    "video": {
+      "ruta": "lib/visual/video.js",
+      "recursos": [
+        "lib/estandar/chunks/chunk-YKE6NFK2.js",
+        "lib/visual/video.js"
+      ]
+    }
+  }
+}

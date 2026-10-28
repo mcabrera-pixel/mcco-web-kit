@@ -11,6 +11,7 @@
 // reproduce solo a la vista y sin movimiento reducido ni ahorro de datos (Save-Data); si no, queda el poster y el botón
 // para reproducirlo. Sin JS se ve el poster. Un video real lleva «Video de faena», como VideoBanda: no es una foto.
 import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
 import { ROTULOS, rotuloDe, rotuloDeVideo } from '../../lib/estandar/rotulos.mjs';
 
 interface Item {
@@ -70,67 +71,3 @@ const tipoVideo = (src: string) => (/\.webm(?:[?#]|$)/i.test(src) ? 'video/webm'
 )}
 
 <script>import '../../lib/visual/video.js';</script>
-
-<style>
-  .std-galeria {
-    display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 16px;
-    max-width: 1024px; margin: 40px auto 0; padding: 0; list-style: none;
-  }
-  .std-galeria__figura { margin: 0; }
-  .std-galeria__marco {
-    position: relative; overflow: hidden;
-    border-radius: var(--std-radio-tarjeta); background: var(--std-parchment);
-  }
-  .std-galeria__marco img, .std-galeria__marco video { display: block; width: 100%; height: 100%; object-fit: cover; }
-  .std-galeria__pie { margin: 10px 0 0; font-size: 14px; line-height: 1.43; letter-spacing: -.016em; color: var(--std-gris); }
-  :global([data-std-oscuro]) .std-galeria__marco { background: var(--std-negro-1); }
-  :global([data-std-oscuro]) .std-galeria__pie { color: var(--std-gris-claro); }
-
-  /* Cuadros: iguales y sin crecer, así una fila incompleta queda centrada. */
-  .std-galeria--cuadros .std-galeria__item { flex: 0 1 calc((100% - 32px) / 3); }
-  .std-galeria--cuadros .std-galeria__marco { aspect-ratio: 4 / 3; }
-
-  /* Mosaico: cada ítem crece en proporción a su ancho relativo (--w / --h), así todos los de una fila quedan del
-     mismo alto. El tope de 320 px de alto evita que la última fila crezca de más y el del ancho del archivo, que se
-     estire. */
-  .std-galeria--mosaico { gap: 12px; }
-  .std-galeria--mosaico .std-galeria__item {
-    flex: calc(var(--w) / var(--h)) 1 calc(var(--w) / var(--h) * 240px);
-    max-width: min(calc(var(--w) * 1px), calc(var(--w) / var(--h) * 320px));
-  }
-  .std-galeria--mosaico .std-galeria__marco { aspect-ratio: var(--w) / var(--h); }
-
-  /* Botón del video, que video.js muestra: círculo de 44 px como el rótulo, abajo a la izquierda. Su texto queda
-     fuera de la vista y lo leen los lectores de pantalla; el ícono de pausa o de reproducir lo dibuja el ::before
-     según data-accion, lo que hace el botón (reproducir: pausado por la persona o sin reproducción automática). */
-  .std-galeria__boton {
-    position: absolute; left: 12px; bottom: 12px;
-    width: 44px; height: 44px; padding: 0; overflow: hidden;
-    border: 0; border-radius: 50%;
-    white-space: nowrap; text-indent: 44px; cursor: pointer;
-    transition: transform .12s ease;
-  }
-  .std-galeria__boton:active { transform: scale(.95); }
-  .std-galeria__boton[hidden] { display: none; }
-  .std-galeria__boton :global(span) { display: none; }
-  .std-galeria__boton::before { content: ""; position: absolute; top: 50%; left: 50%; }
-  .std-galeria__boton[data-accion='pausar']::before {
-    width: 12px; height: 14px; margin: -7px 0 0 -6px; border-left: 4px solid; border-right: 4px solid;
-  }
-  .std-galeria__boton[data-accion='reproducir']::before {
-    width: 0; height: 0; margin: -8px 0 0 -5px;
-    border-left: 13px solid; border-top: 8px solid transparent; border-bottom: 8px solid transparent;
-  }
-
-  @media (max-width: 833px) {
-    .std-galeria--cuadros .std-galeria__item { flex-basis: calc((100% - 16px) / 2); }
-  }
-  @media (max-width: 640px) {
-    .std-galeria { margin-top: 32px; }
-    .std-galeria--cuadros .std-galeria__item { flex-basis: 100%; }
-    .std-galeria--mosaico .std-galeria__item { max-width: calc(var(--w) * 1px); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .std-galeria__boton { transition: none; }
-  }
-</style>

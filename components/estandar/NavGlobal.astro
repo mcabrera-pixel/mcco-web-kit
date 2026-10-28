@@ -4,6 +4,7 @@
 // los enlaces se muestran en la barra y el botón no aparece. El logo va en claro: la barra siempre es negra.
 import { cleanPath } from '../../lib/routes.mjs';
 import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
 
 interface Enlace { href: string; texto: string }
 interface Props {
@@ -46,51 +47,3 @@ const esActual = (href: string) => href.startsWith('/') && !href.startsWith('//'
 </header>
 
 <script>import '../../lib/estandar/menu.js';</script>
-
-<style>
-  .std-gnav { position: relative; z-index: 12; background: var(--std-negro); }
-  .std-gnav__in {
-    display: flex; align-items: center; justify-content: space-between;
-    max-width: 1024px; min-height: 44px; margin: 0 auto; padding: 0 22px;
-  }
-  .std-gnav__logo { display: flex; align-items: center; min-width: 44px; height: 44px; }
-  .std-gnav__logo img { width: auto; height: 15px; }
-  /* El margen negativo deja el texto del último enlace en el borde del contenido, como en la maqueta. */
-  .std-gnav__enlaces { display: flex; gap: 20px; margin: 0 -8px 0 0; padding: 0; list-style: none; }
-  /* 12 px a la vista y 44 × 44 de área táctil. El color y el subrayado se fijan aquí: la hoja del estándar deja
-     los enlaces de la base en color de acción y subrayados. */
-  .std-gnav__enlaces a {
-    display: flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 8px;
-    color: rgba(255, 255, 255, .8); font-size: 12px; letter-spacing: -.01em; text-decoration: none;
-    transition: color .2s;
-  }
-  .std-gnav__enlaces a:hover { color: var(--std-blanco); }
-  .std-gnav__menu {
-    display: none; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0;
-    border: 0; background: none; color: var(--std-parchment); cursor: pointer;
-  }
-  /* El anillo de foco va por dentro: la barra toca el borde de la ventana y la bandeja tapa el de afuera. */
-  .std-gnav a:focus-visible, .std-gnav__menu:focus-visible { outline-offset: -2px; }
-  /* Abierto, las dos líneas forman una X. */
-  .std-gnav__linea { transform-box: fill-box; transform-origin: center; transition: transform .2s ease; }
-  .std-gnav__menu[aria-expanded='true'] .std-gnav__linea:first-child { transform: translateY(4px) rotate(45deg); }
-  .std-gnav__menu[aria-expanded='true'] .std-gnav__linea:last-child { transform: translateY(-4px) rotate(-45deg); }
-
-  @media (max-width: 833px) {
-    .std-gnav__in { flex-wrap: wrap; }
-    .std-gnav__enlaces { display: flex; flex-wrap: wrap; gap: 0; margin: 0 -8px; }
-    .std-gnav__in[data-std-menu-listo] .std-gnav__menu { display: inline-flex; }
-    .std-gnav__in[data-std-menu-listo] .std-gnav__enlaces { display: none; }
-    .std-gnav.is-abierta .std-gnav__in[data-std-menu-listo] .std-gnav__enlaces {
-      display: block; position: absolute; top: 100%; left: 0; right: 0;
-      margin: 0; padding: 8px 22px 28px; background: var(--std-negro);
-    }
-    .std-gnav.is-abierta .std-gnav__enlaces a {
-      justify-content: flex-start; height: auto; min-height: 44px; padding: 6px 0;
-      color: var(--std-parchment); font: 600 28px/1.14 var(--std-fuente-display); letter-spacing: .007em;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .std-gnav__enlaces a, .std-gnav__linea { transition: none; }
-  }
-</style>

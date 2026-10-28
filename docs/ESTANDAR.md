@@ -1,4 +1,4 @@
-# Estándar visual MCCO: Apple + antigravity (kit v1.2)
+# Estándar visual MCCO: Apple + antigravity (kit v1.3)
 
 Las webs del grupo usan el lenguaje de apple.com, tal como lo describe `design-md/apple/DESIGN.md` del repositorio VoltAgent/awesome-design-md (licencia MIT), y le suman antigravity: una nube de puntos que arma un activo y acompaña el scroll, y un campo de guiones que se mueve detrás del texto del hero. El kit fija el estándar. Cada sitio pone su color de acción, sus activos y su contenido. mcco.cl es el piloto y después vienen as-built.cl, condron.cl y 3d-ultra.cl.
 
@@ -361,9 +361,32 @@ node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar
 
 El script copia `styles/estandar.css`, `styles/fuentes/*` (con la licencia OFL), `lib/estandar/*.js` y `lib/visual/comun.js` al destino, con las mismas rutas relativas, y así siguen resolviendo los `import`, el Worker de la nube y los `url()` de las fuentes. No copia `lib/estandar/rotulos.mjs`, que solo usan los componentes de Astro al construir. Corre en el deploy desde la tag del kit, nunca a mano, y sin destino sale con código 1.
 
-Los estilos de los 13 componentes siguen dentro de sus archivos `.astro`, aislados por Astro, y no viajan en la copia. Tampoco se copian el marcado ni `lib/visual/video.js`, que reproduce los videos de `Galeria`.
+El modo base conserva exactamente sus archivos v1.2: no incluye la hoja de componentes ni video. Los componentes Astro importan ahora `styles/estandar-componentes.css`, que es también la fuente de estilos de la distribución completa.
 
-El plan de adopción de as-built definirá la entrega de esos estilos, el runtime de video y un build minificado que cumpla el presupuesto de JS, junto con la integración del marcado. Esa adopción va después del VB de mcco.cl, según la sección 6 de la especificación. rc.1 no incorpora un bundler ni refactoriza los componentes para esa salida.
+Desde v1.3.0, `--completo` copia `dist/estandar/`: CSS base y de componentes, fuentes/licencia, menú, subnav,
+nube e historia, campo/anillos, pausa pública, video, Worker y muestreo de respaldo. El comando verifica primero
+versión, archivos obligatorios, SHA-256, tamaños y grafos; no instala ni importa herramientas de build.
+
+```sh
+node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar --completo
+```
+
+Contrato HTML, marcado completo de cada pieza y variantes independientes: [ESTANDAR-HTML.md](ESTANDAR-HTML.md).
+El modo completo cumple los límites conservadores: nube **9140 B gzip / 12 000 B**, campo **4935 B / 5000 B**,
+con pausa pública y comunes en cada presupuesto aislado. Total JS de página **14 105 B**, contando cada recurso
+una vez. `npm run check:estandar` reconstruye el grafo (también imports dinámicos y URL del Worker), comprime cada
+respuesta con `gzipSync` nivel 9 y falla si hay corrupción o se excede un límite. Menú **457 B**, subnav **341 B**,
+video **1351 B** con su común. La medición vigente completa está en `dist/estandar/manifest.json` y en la salida
+del verificador; estos valores no reemplazan la medición de la página del sitio con sus adaptadores.
+
+El empaquetado usa esbuild **0.28.2**, división de módulos comunes y entradas estables. Retira comentarios de GLSL
+sin cambiar sus instrucciones. `pausa.js` reexporta el único estado de pausa compartido por nube y campo; ambos
+usan una sola instancia de `comun.js`. El mismo `nube-worker.js` es Worker ESM y respaldo importado dinámicamente.
+La distribución no incluye fechas ni rutas absolutas y dos builds limpios deben producir los mismos bytes.
+
+Astro sigue usando los runtimes fuente y recibe las mismas hojas a través de cada componente o del layout.
+El respaldo del hero permanece visible hasta que el runtime confirma la nube: un módulo bloqueado no lo oculta.
+No se modifican los componentes ni los runtimes visuales v1.1.
 
 El Worker de la nube se carga desde el mismo origen, así que la CSP del sitio tiene que permitir `'self'` en `worker-src`, o en `script-src` si no declara `worker-src`.
 

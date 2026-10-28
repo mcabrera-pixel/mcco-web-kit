@@ -4,6 +4,7 @@
 // cualquier atributo de <section> (id para el ancla, aria-label si la grilla no tiene título visible).
 import type { HTMLAttributes } from 'astro/types';
 import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
 
 type Props = HTMLAttributes<'section'>;
 const { class: clase, ...atributos } = Astro.props;
@@ -11,13 +12,3 @@ const { class: clase, ...atributos } = Astro.props;
 <section class:list={['std-grilla', clase]} {...atributos}>
   <slot />
 </section>
-
-<style>
-  .std-grilla {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
-    padding: 12px; background: var(--std-blanco);
-  }
-  @media (max-width: 833px) {
-    .std-grilla { grid-template-columns: minmax(0, 1fr); }
-  }
-</style>

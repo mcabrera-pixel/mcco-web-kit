@@ -1,0 +1,2 @@
+PNG y SVG: geometría sintética determinista, creada para estas pruebas (Python/zlib).
+prueba.mp4: copia sin cambios de mcco-web-template/public/media/video/faro-terreno.mp4, medio propio ya usado en la demo v1.2. Video de faena; el poster geométrico es solo un sustituto de pruebas. No demuestra resultados ni se publica.

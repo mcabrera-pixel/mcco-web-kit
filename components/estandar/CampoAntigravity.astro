@@ -8,14 +8,8 @@
 // campo.js marca el contenedor con data-std-movimiento mientras el campo se mueve. Es decorativa (aria-hidden y sin
 // eventos): con movimiento reducido, sin JS o sin WebGL2 no se ve nada y el hero queda blanco con su texto.
 import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
 ---
 <div class="std-campo" data-std-campo aria-hidden="true"></div>
 
 <script>import '../../lib/estandar/campo.js';</script>
-
-<style>
-  .std-campo { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-  @media (prefers-reduced-motion: reduce) {
-    .std-campo { display: none; }
-  }
-</style>

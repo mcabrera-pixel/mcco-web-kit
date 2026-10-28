@@ -1,0 +1,29 @@
+---
+import NavGlobal from '../../../../../components/estandar/NavGlobal.astro';
+import SubNav from '../../../../../components/estandar/SubNav.astro';
+import HeroEstandar from '../../../../../components/estandar/HeroEstandar.astro';
+import HistoriaNube from '../../../../../components/estandar/HistoriaNube.astro';
+import Bloque from '../../../../../components/estandar/Bloque.astro';
+import GrillaProductos from '../../../../../components/estandar/GrillaProductos.astro';
+import Producto from '../../../../../components/estandar/Producto.astro';
+import Galeria from '../../../../../components/estandar/Galeria.astro';
+import Cifras from '../../../../../components/estandar/Cifras.astro';
+import TarjetasMarca from '../../../../../components/estandar/TarjetasMarca.astro';
+const acciones = [{href:'#galeria',texto:'Ver piezas'},{href:'#pie',texto:'Contacto',variante:'fantasma' as const}];
+const respaldo = {src:'/media/forma.png',width:960,height:540,alt:'Figura geométrica de prueba'};
+const activos = [respaldo,{...respaldo,src:'/media/forma2.png'}].map((a,i)=>({...a,etiqueta:`Forma ${i+1}`}));
+const pasos = activos.map((a,i)=>({rotulo:`Paso ${i+1}`,titulo:a.etiqueta}));
+const items = [{tipo:'imagen' as const,...respaldo,origen:'esquema' as const,pie:'Activo sintético de prueba.'},
+  {tipo:'video' as const,src:'/media/prueba.mp4',poster:respaldo.src,width:960,height:540,alt:'Video de faena de la demo del kit',origen:'real' as const}];
+---
+<!doctype html><html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Contrato HTML del estándar</title><link rel="icon" href="/media/logo.svg" /></head><body class="std">
+<NavGlobal logo={{src:'/media/logo.svg',alt:'Prueba',width:32,height:32}} enlaces={[{href:'#historia',texto:'Historia'},{href:'#galeria',texto:'Galería'}]} />
+<SubNav titulo="Estándar" enlaces={[{href:'#historia',texto:'Historia'}]} accion={{href:'#pie',texto:'Contactar al equipo',textoCorto:'Contactar'}} />
+<main>
+<HeroEstandar titulo="Contrato del estándar." bajada="Todas las piezas, con HTML y Astro." acciones={acciones} nube={{respaldo}} campo />
+<HistoriaNube titulo="Dos formas." bajada="Activos sintéticos para verificar el runtime." activos={activos} pasos={pasos} />
+<GrillaProductos aria-label="Productos"><Producto titulo="Producto de prueba" tono="parchment" bajada="Contenido legible." acciones={acciones} foto={{...respaldo,origen:'esquema'}} /></GrillaProductos>
+<Bloque tono="claro" id="galeria" aria-label="Galería"><Galeria items={items} /><Galeria formato="mosaico" items={[items[0]]} /><Cifras items={[{valor:44,etiqueta:'píxeles de área táctil'}]} nota="Valor del estándar." /></Bloque>
+<Bloque tono="negro" aria-label="Marcas"><TarjetasMarca marcas={[{nombre:'Marca de prueba',logo:{src:'/media/logo.svg',alto:48},frase:'Contenido sintético.',href:'#pie'}]} /></Bloque>
+</main><footer class="std-bloque std-bloque--parchment" id="pie"><h2 class="std-h3">Pie del sitio</h2><a href="#std-hero-titulo">Volver al inicio</a></footer>
+</body></html>

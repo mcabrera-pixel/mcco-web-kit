@@ -1,0 +1,30 @@
+name: Distribución del estándar sin Astro
+on:
+  pull_request:
+    paths: ['components/**', 'layouts/**', 'lib/**', 'styles/**', 'scripts/**', 'test/**', 'dist/estandar/**', 'package.json', '.github/workflows/estandar-distribucion.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verificar:
+    runs-on: ubuntu-24.04
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      # El kit no versiona lockfile; B4 no autoriza agregarlo. Astro es un peer opcional ya existente,
+      # instalado solo aquí para la prueba de compatibilidad. El consumidor HTML no lo necesita.
+      - run: npm install --package-lock=false --include=dev
+      - run: npm install --no-save --package-lock=false astro@7.3.8
+      - run: npm run verificar
+      - name: El artefacto generado coincide con el versionado
+        run: git diff --exit-code -- dist/estandar
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: estandar-html-evidencia
+          path: .tmp-prueba-html/
