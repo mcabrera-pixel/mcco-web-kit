@@ -106,9 +106,8 @@ const tipoVideo = (src: string) => (/\.webm(?:[?#]|$)/i.test(src) ? 'video/webm'
   .std-galeria__boton {
     position: absolute; left: 12px; bottom: 12px;
     width: 44px; height: 44px; padding: 0; overflow: hidden;
-    border: 0; border-radius: 50%; background: rgba(210,210,215,.72);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    color: var(--std-tinta); white-space: nowrap; text-indent: 44px; cursor: pointer;
+    border: 0; border-radius: 50%;
+    white-space: nowrap; text-indent: 44px; cursor: pointer;
     transition: transform .12s ease;
   }
   .std-galeria__boton:active { transform: scale(.95); }

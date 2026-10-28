@@ -143,9 +143,13 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
 .std-rotulo {
   position: absolute; right: 12px; bottom: 12px;
   padding: 5px 9px; border-radius: 980px;
+  font-size: 11px; letter-spacing: -.01em;
+}
+/* La superficie translúcida también viste el control de video de Galeria. */
+.std-rotulo, .std-galeria__boton {
   background: rgba(210,210,215,.72);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  color: var(--std-tinta); font-size: 11px; letter-spacing: -.01em;
+  color: var(--std-tinta);
 }
 
 /* Sobre bloques negros. Los dos grises pasan AA sobre todas las superficies oscuras del estándar. */
