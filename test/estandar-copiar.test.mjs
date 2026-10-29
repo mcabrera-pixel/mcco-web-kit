@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { verificar } from '../scripts/estandar-verificar.mjs';
+import { verificar, sha256, gzip } from '../scripts/estandar-verificar.mjs';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(KIT, 'scripts', 'estandar-copiar.mjs');
@@ -197,11 +197,47 @@ test('copiar: actualizar desde una versión anterior retira los recursos viejos 
   const d = path.join(raiz, 'destino');
   assert.equal(correr(d, '--completo').status, 0, 'primera copia debe salir bien');
   verificar(d);
-  // Simular un recurso viejo que ya no está en la nueva distribución.
+  // Simular un recurso viejo que ya no está en la nueva distribución, pero que pertenecía a la anterior.
+  const manifest = JSON.parse(fs.readFileSync(path.join(d, 'manifest.json'), 'utf8'));
+  const viejoRel = 'lib/estandar/chunks/chunk-viejo-de-version-anterior.js';
+  const viejoBytes = Buffer.from('export const viejo = 1;\n');
   fs.mkdirSync(path.join(d, 'lib/estandar/chunks'), { recursive: true });
-  fs.writeFileSync(path.join(d, 'lib/estandar/chunks/chunk-viejo-de-version-anterior.js'), 'export const viejo = 1;\n');
-  assert.throws(() => verificar(d), /Archivos y manifiesto no coinciden/);
-  assert.equal(correr(d, '--completo').status, 0, 'actualización debe salir bien');
-  assert.equal(fs.existsSync(path.join(d, 'lib/estandar/chunks/chunk-viejo-de-version-anterior.js')), false, 'el recurso viejo debe desaparecer');
+  fs.writeFileSync(path.join(d, viejoRel), viejoBytes);
+  manifest.archivos[viejoRel] = {
+    bytes: viejoBytes.length,
+    gzip: gzip(viejoBytes),
+    sha256: sha256(viejoBytes),
+    dependencias: [],
+  };
+  fs.writeFileSync(path.join(d, 'manifest.json'), JSON.stringify(manifest, null, 2));
   verificar(d);
+  assert.equal(correr(d, '--completo').status, 0, 'actualización debe salir bien');
+  assert.equal(fs.existsSync(path.join(d, viejoRel)), false, 'el recurso viejo debe desaparecer');
+  verificar(d);
+});
+
+test('copiar: un destino con archivos ajenos al manifiesto no se toca y la copia falla', () => {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'kit completo ajeno '));
+  carpetas.push(raiz);
+  const d = path.join(raiz, 'destino');
+  assert.equal(correr(d, '--completo').status, 0, 'primera copia debe salir bien');
+  fs.writeFileSync(path.join(d, 'lib/estandar/ajeno.js'), 'export const ajeno = 1;\n');
+  const antes = listar(d).sort();
+  const r = correr(d, '--completo');
+  assert.equal(r.status, 1, 'la copia debe fallar');
+  assert.match(r.stderr, /no es una copia administrada del estándar; usa una carpeta propia/);
+  assert.deepEqual(listar(d).sort(), antes, 'el destino no debe cambiar');
+});
+
+test('copiar: un destino sin manifest.json y con archivos no se toca y la copia falla', () => {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'kit completo sin manifest '));
+  carpetas.push(raiz);
+  const d = path.join(raiz, 'destino');
+  assert.equal(correr(d, '--completo').status, 0, 'primera copia debe salir bien');
+  fs.rmSync(path.join(d, 'manifest.json'));
+  const antes = listar(d).sort();
+  const r = correr(d, '--completo');
+  assert.equal(r.status, 1, 'la copia debe fallar');
+  assert.match(r.stderr, /no es una copia administrada del estándar; usa una carpeta propia/);
+  assert.deepEqual(listar(d).sort(), antes, 'el destino no debe cambiar');
 });

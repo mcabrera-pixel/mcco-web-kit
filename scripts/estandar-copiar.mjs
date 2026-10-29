@@ -10,6 +10,30 @@ import { verificar } from './estandar-verificar.mjs';
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USO = 'Uso: mcco-estandar-copiar <destino> [--completo]';
 
+function listarRel(raiz, dir = '') {
+  return fs.readdirSync(path.join(raiz, dir), { withFileTypes: true }).flatMap((e) => {
+    const rel = dir ? `${dir}/${e.name}` : e.name;
+    if (e.isSymbolicLink()) throw new Error(`${raiz} no es una copia administrada del estándar; usa una carpeta propia`);
+    return e.isDirectory() ? listarRel(raiz, rel) : [rel];
+  });
+}
+
+function destinoAdministrado(raiz) {
+  if (!fs.existsSync(raiz)) return true;
+  if (!fs.statSync(raiz).isDirectory()) return false;
+  const archivos = listarRel(raiz);
+  if (archivos.length === 0) return true;
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(path.join(raiz, 'manifest.json'), 'utf8'));
+  } catch {
+    return false;
+  }
+  if (manifest.formato !== 1 || !manifest.archivos || typeof manifest.archivos !== 'object') return false;
+  const permitidos = new Set([...Object.keys(manifest.archivos), 'manifest.json']);
+  return archivos.every(rel => permitidos.has(rel.replace(/\\/g, '/')));
+}
+
 const destino = process.argv[2];
 if (!destino || destino.startsWith('-') || process.argv.slice(3).some(a => a !== '--completo') || process.argv.length > 4) {
   console.error(`mcco-estandar-copiar: ${destino ? `no conozco la opción ${destino}` : 'falta el destino'}. ${USO}`);
@@ -35,6 +59,7 @@ if (process.argv[3] === '--completo') {
         fs.copyFileSync(path.join(origen, rel), destinoRel);
       }
       verificar(tmp);
+      if (!destinoAdministrado(raiz)) throw new Error(`${raiz} no es una copia administrada del estándar; usa una carpeta propia`);
       fs.rmSync(raiz, { recursive: true, force: true });
       fs.renameSync(tmp, raiz);
     } finally {

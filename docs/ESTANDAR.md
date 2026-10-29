@@ -364,8 +364,10 @@ El script copia `styles/estandar.css`, `styles/fuentes/*` (con la licencia OFL),
 El modo base conserva exactamente sus archivos v1.2: no incluye la hoja de componentes ni video. Los componentes Astro importan ahora `styles/estandar-componentes.css`, que es también la fuente de estilos de la distribución completa.
 
 Desde v1.3.0, `--completo` copia `dist/estandar/`: CSS base y de componentes, fuentes/licencia, menú, subnav,
-nube e historia, campo/anillos, pausa pública, video, Worker y muestreo de respaldo. El comando verifica primero
-versión, archivos obligatorios, SHA-256, tamaños y grafos; no instala ni importa herramientas de build.
+nube e historia, campo/anillos, pausa pública, video, Worker y muestreo de respaldo. El destino de `--completo`
+es una carpeta propia del estándar: si ya existe y tiene archivos, deben ser una distribución administrada por
+este comando. El comando verifica primero versión, archivos obligatorios, SHA-256, tamaños y grafos; no instala
+ni importa herramientas de build.
 
 ```sh
 node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar --completo
