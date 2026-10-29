@@ -241,3 +241,36 @@ test('copiar: un destino sin manifest.json y con archivos no se toca y la copia 
   assert.match(r.stderr, /no es una copia administrada del estándar; usa una carpeta propia/);
   assert.deepEqual(listar(d).sort(), antes, 'el destino no debe cambiar');
 });
+
+// Reproduce el hallazgo OCR: si el renombrado final falla, la versión anterior debe quedar intacta y no deben
+// quedar temporales ni respaldos junto al destino.
+test('copiar: si falla el reemplazo final se conserva la copia anterior', () => {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'kit reemplazo fallido '));
+  carpetas.push(raiz);
+  const d = path.join(raiz, 'destino');
+  assert.equal(correr(d, '--completo').status, 0, 'primera copia debe salir bien');
+  const antes = listar(d).sort();
+
+  const codigo = `
+    import fs from 'node:fs';
+    import path from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const [script, destino] = process.argv.slice(1);
+    const rename = fs.renameSync;
+    fs.renameSync = (desde, hacia) => {
+      if (path.basename(desde).startsWith('.tmp-') && hacia === destino) {
+        throw Object.assign(new Error('EACCES simulado al renombrar final'), { code: 'EACCES' });
+      }
+      return rename(desde, hacia);
+    };
+    process.argv = [process.execPath, script, destino, '--completo'];
+    await import(pathToFileURL(script));
+  `;
+  const r = spawnSync(process.execPath, ['--input-type=module', '-e', codigo, SCRIPT, d], { encoding: 'utf8', timeout: 10000 });
+  assert.equal(r.status, 1, `la copia debe fallar: ${r.stderr}`);
+  assert.match(r.stderr, /EACCES simulado/);
+  assert.equal(fs.existsSync(path.join(d, 'manifest.json')), true, 'el destino debe conservar manifest.json');
+  assert.deepEqual(listar(d).sort(), antes, 'el destino debe conservar todos sus archivos');
+  const residuos = fs.readdirSync(raiz).filter(n => n.startsWith('.old-') || n.startsWith('.tmp-'));
+  assert.deepEqual(residuos, [], 'no debe quedar respaldo ni temporal al lado');
+});

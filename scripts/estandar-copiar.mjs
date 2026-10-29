@@ -4,6 +4,7 @@
 // Uso: mcco-estandar-copiar <destino> [--completo]
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { verificar } from './estandar-verificar.mjs';
 
@@ -52,6 +53,8 @@ if (process.argv[3] === '--completo') {
     const padre = path.dirname(raiz);
     fs.mkdirSync(padre, { recursive: true });
     const tmp = fs.mkdtempSync(path.join(padre, `.tmp-${path.basename(raiz)}-`));
+    let backup = null;
+    let instalado = false;
     try {
       for (const rel of [...Object.keys(manifest.archivos), 'manifest.json']) {
         const destinoRel = path.join(tmp, rel);
@@ -60,10 +63,21 @@ if (process.argv[3] === '--completo') {
       }
       verificar(tmp);
       if (!destinoAdministrado(raiz)) throw new Error(`${raiz} no es una copia administrada del estándar; usa una carpeta propia`);
-      fs.rmSync(raiz, { recursive: true, force: true });
+      if (fs.existsSync(raiz)) {
+        const aleatorio = crypto.randomBytes(4).toString('hex');
+        backup = path.join(padre, `.old-${path.basename(raiz)}-${aleatorio}`);
+        fs.renameSync(raiz, backup);
+      }
       fs.renameSync(tmp, raiz);
+      instalado = true;
+    } catch (e) {
+      if (!instalado && backup && fs.existsSync(backup) && !fs.existsSync(raiz)) {
+        try { fs.renameSync(backup, raiz); } catch (e2) { /* el error original ya describe la falla */ }
+      }
+      throw new Error(`no se pudo instalar la distribución (${e.message})`);
     } finally {
-      fs.rmSync(tmp, { recursive: true, force: true });
+      if (backup && fs.existsSync(backup) && instalado) fs.rmSync(backup, { recursive: true, force: true });
+      if (fs.existsSync(tmp)) fs.rmSync(tmp, { recursive: true, force: true });
     }
     console.log(`mcco-estandar-copiar: distribución completa ${manifest.version} en ${raiz}`);
   } catch (e) {
