@@ -1,6 +1,7 @@
 ---
 // Layout de artículo (blog/guía): cabecera, cápsula GEO, contenido, fuentes, FAQ, relacionados, CTA,
 // JSON-LD BlogPosting + BreadcrumbList (+ FAQPage vía <Faq>). Recibe la entrada de la colección.
+import type { ComponentProps } from 'astro/types';
 import Base from './Base.astro';
 import AiCapsule from '../components/AiCapsule.astro';
 import Faq from '../components/Faq.astro';
@@ -8,9 +9,9 @@ import Cta from '../components/Cta.astro';
 import { loadSite } from '../lib/site.mjs';
 import { canonicalFor } from '../lib/routes.mjs';
 
-interface Props { post: any; section?: string; sectionTitle?: string; wordCount?: number }
+interface Props extends Pick<ComponentProps<typeof Base>, 'lang' | 'ogTitle' | 'ogDescription' | 'ogUrl' | 'robots'> { post: any; section?: string; sectionTitle?: string; wordCount?: number }
 const site = loadSite();
-const { post, section = 'blog', sectionTitle = 'Blog', wordCount } = Astro.props;
+const { post, section = 'blog', sectionTitle = 'Blog', wordCount, lang = site.lang, ogTitle, ogDescription, ogUrl, robots } = Astro.props;
 const d = post.data;
 const url = canonicalFor(Astro.url.pathname, site.domain);
 const author = d.author ?? site.content.author ?? { name: 'MCCO Group', role: '' };
@@ -29,7 +30,7 @@ const blogPosting: Record<string, unknown> = {
   image: hero,
   datePublished: published,
   dateModified: modified,
-  inLanguage: site.lang,
+  inLanguage: lang,
   author: { '@type': 'Person', name: author.name, jobTitle: author.role, worksFor: { '@id': `${site.domain}/#organization` } },
   publisher: { '@type': 'Organization', name: site.name, url: `${site.domain}/`, logo: { '@type': 'ImageObject', url: logo } },
   mainEntityOfPage: { '@type': 'WebPage', '@id': url },
@@ -49,7 +50,8 @@ const breadcrumb = {
 const fecha = d.date.toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
 ---
 <Base title={d.seo_title ?? d.title} description={d.description} type="article" ogImage={hero}
-      published={published} modified={modified} jsonld={[blogPosting, breadcrumb]}>
+      published={published} modified={modified} jsonld={[blogPosting, breadcrumb]}
+      lang={lang} ogTitle={ogTitle} ogDescription={ogDescription} ogUrl={ogUrl} robots={robots}>
   <slot name="nav" />
   <main class="mcco-post" data-mcco="post">
     <article>

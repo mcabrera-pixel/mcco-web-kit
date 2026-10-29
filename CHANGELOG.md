@@ -3,6 +3,12 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.4.0 · 2026-10-29
+- `Base`, `Estandar` y `Post` aceptan `lang` por página: llega al documento y a `og:locale`; `Post` también lo usa en BlogPosting. Sin la prop conservan `site.lang`.
+- `Head` y los layouts aceptan `ogTitle`, `ogDescription` y `ogUrl` independientes del SEO, y `robots` como texto o `false` para omitirla. Sin estas props conservan los valores anteriores y la regla de `noindex`, sin metas duplicadas.
+- Contacto espera al Worker hasta 25 segundos. `TimeoutError` redirige con `reason=demora`, también al leer el JSON; rechazo, JSON inválido y red conservan `reason=correo`. Las páginas de error propias deben agregar el nuevo caso con el correo del sitio, sin prometer plazos.
+- Pruebas de render de los tres layouts, comparación literal con v1.3.1, detección de metas duplicadas y vencimiento con fetch y reloj simulados. Distribución regenerada en `dist/estandar`.
+
 ## v1.3.1 · 2026-10-29
 - `NubeAncla` y `HistoriaNube` aceptan `origen`, validado con `rotuloDe`; cada activo de la historia puede sobrescribirlo. Por defecto conservan el HTML de ilustración. `HeroEstandar` propaga el origen de su nube.
 - Contacto limita el cuerpo a 32 KiB antes del parser, admite hasta 40 entradas y recorta cada valor a 5000 caracteres, también al juntar campos repetidos. El exceso redirige con `reason=tamano` sin llamadas externas.

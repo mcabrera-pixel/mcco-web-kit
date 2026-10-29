@@ -45,8 +45,8 @@ function dobleFetch(t, respuestaWorker, respuestaTurnstile = () => Response.json
   const llamadas = [];
   t.mock.method(globalThis, 'fetch', async (url, init = {}) => {
     llamadas.push({ url: String(url), init });
-    if (String(url) === TURNSTILE) return respuestaTurnstile();
-    if (String(url) === WORKER) return respuestaWorker();
+    if (String(url) === TURNSTILE) return respuestaTurnstile(init);
+    if (String(url) === WORKER) return respuestaWorker(init);
     if (String(url) === RESEND) return Response.json({ id: 'acuse-prueba' });
     throw new Error(`fetch inesperado a ${url}`);
   });
@@ -110,13 +110,14 @@ for (const falta of ['FORMULARIOS_URL', 'FORMULARIOS_CLAVE', 'MARCA']) {
   });
 }
 
-// Rompe si el éxito se decide solo con r.ok, si un JSON inválido o un timeout terminan en reason=exception,
+// Rompe si el éxito se decide solo con r.ok o si JSON inválido y errores de red cambian de reason,
 // si sale el acuse aunque el Worker falló o si el log trae datos del lead.
 const FALLOS_DEL_WORKER = [
   ['502 y { ok: false }', () => Response.json({ ok: false, error: 'send falló' }, { status: 502 })],
   ['200 y { ok: false }', () => Response.json({ ok: false })],
   ['200 con HTML en vez de JSON', () => new Response('<html>Error</html>', { headers: { 'content-type': 'text/html' } })],
-  ['timeout', () => Promise.reject(new DOMException('The operation was aborted due to timeout', 'TimeoutError'))],
+  ['error de red', () => Promise.reject(new TypeError('fetch falló'))],
+  ['aborto ajeno al plazo', () => Promise.reject(new DOMException('Abortado', 'AbortError'))],
 ];
 for (const [caso, respuestaWorker] of FALLOS_DEL_WORKER) {
   test(`Worker con ${caso}: reason=correo y sin acuse`, async (t) => {
@@ -334,5 +335,48 @@ for (const fase of ['fetch', 'JSON']) {
     assert.deepEqual(llamadas.map(l => l.url), [TURNSTILE]);
     assert.equal(llamadas[0].init.signal, ctrl.signal);
     assert.equal(ctx.pendientes.length, 0);
+  });
+}
+
+// El reloj simulado avanza hasta el plazo real solicitado por la función. La respuesta del Worker
+// tarda 26 s; se comprueba el límite de 25 s y también el aborto mientras se consume el JSON.
+for (const fase of ['fetch', 'JSON']) {
+  test(`Worker lento durante ${fase}: plazo de 25000 ms, reason=demora y sin acuse`, async (t) => {
+    const logs = capturarLogs(t);
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const plazos = [];
+    t.mock.method(AbortSignal, 'timeout', ms => {
+      plazos.push(ms);
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(new DOMException('Venció el plazo', 'TimeoutError')), ms);
+      return ctrl.signal;
+    });
+    let iniciar;
+    const iniciado = new Promise(resolve => { iniciar = resolve; });
+    const lento = signal => new Promise((resolve, reject) => {
+      const timer = setTimeout(() => resolve(fase === 'fetch' ? workerOk() : { ok: true }), 26000);
+      signal.addEventListener('abort', () => {
+        clearTimeout(timer);
+        reject(fase === 'JSON' ? new DOMException('Lectura abortada', 'AbortError') : signal.reason);
+      }, { once: true });
+      iniciar();
+    });
+    const llamadas = dobleFetch(t, ({ signal }) => fase === 'fetch' ? lento(signal) : { ok: true, json: () => lento(signal) });
+    const ctx = contexto(solicitud(formulario()), { ...ENV, RESEND_API_KEY: 're_prueba' });
+    let terminado = false;
+    const pendiente = onRequestPost(ctx).then(r => { terminado = true; return r; });
+    await iniciado;
+    assert.deepEqual(plazos, [25000]);
+    t.mock.timers.tick(24999);
+    await Promise.resolve();
+    assert.equal(terminado, false);
+    assert.equal(llamadas[0].init.signal.aborted, false);
+    t.mock.timers.tick(1);
+    const r = await pendiente;
+    assert.equal(r.status, 302);
+    assert.equal(r.headers.get('location'), 'https://mcco.cl/contacto-error?reason=demora');
+    assert.deepEqual(llamadas.map(l => l.url), [WORKER]);
+    assert.equal(ctx.pendientes.length, 0);
+    assert.doesNotMatch(logs.map(l => l.texto).join('\n'), DATOS_PERSONALES);
   });
 }

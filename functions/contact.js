@@ -1,6 +1,6 @@
 // Pages Function estándar de contacto (Estándar Web MCCO v2 §10). Generalizada desde as-built.cl (en producción desde 2026-08).
 // POST /api/contact → honeypot → Turnstile (si hay secret) → Worker formularios-mcco → acuse Resend opcional → 302 /gracias.
-// Errores → 302 /contacto-error?reason= spam (honeypot) · config (faltan variables) · turnstile · correo (falló el Worker) · tamano (cuerpo o campos excesivos) · exception.
+// Errores → 302 /contacto-error?reason= spam (honeypot) · config (faltan variables) · turnstile · correo (falló el Worker) · demora (venció el plazo del Worker) · tamano (cuerpo o campos excesivos) · exception.
 // Uso en el sitio: functions/api/contact.js →  export { onRequestPost } from '@mcco/web-kit/functions/contact.js';
 // Variables (Cloudflare Pages → Settings → Environment variables; NUNCA en el repo):
 //   FORMULARIOS_URL (URL del Worker formularios-mcco) · FORMULARIOS_CLAVE (clave compartida con el Worker, como secreto)
@@ -72,23 +72,26 @@ async function enviarAcuse(env, origin, email, nombre) {
   }
 }
 
-// Envía el lead al Worker formularios-mcco. true solo si responde 2xx con { ok: true }. Los fallos (rechazo, JSON
-// inválido, timeout o red) quedan en el log sin datos personales.
+// Envía el lead al Worker: null si responde 2xx con { ok: true }, o el reason del fallo.
+// Los fallos quedan en el log sin datos personales; vencer el plazo no confirma que el lead se haya perdido.
 async function enviarAlWorker(env, lead) {
+  const signal = AbortSignal.timeout(25000);
   try {
     const r = await fetch(env.FORMULARIOS_URL, {
       method: "POST",
       headers: { "content-type": "application/json", "x-formularios-clave": env.FORMULARIOS_CLAVE },
       body: JSON.stringify(lead),
-      signal: AbortSignal.timeout(15000),
+      signal,
     });
-    const data = await r.json().catch(() => null);
-    if (r.ok && data?.ok === true) return true;
+    const data = await r.json();
+    if (r.ok && data?.ok === true) return null;
     console.error("[contact] el Worker formularios-mcco no aceptó el lead:", r.status);
   } catch (e) {
     console.error("[contact] el Worker formularios-mcco no respondió:", e.name);
+    // La lectura del cuerpo puede rechazar con AbortError aunque la causa sea TimeoutError.
+    if (e.name === "TimeoutError" || (signal.aborted && signal.reason?.name === "TimeoutError")) return "demora";
   }
-  return false;
+  return "correo";
 }
 
 export async function onRequestPost(context) {
@@ -145,11 +148,12 @@ export async function onRequestPost(context) {
       campos.set(clave, (campos.has(clave) ? `${campos.get(clave)}, ${valor}` : valor).slice(0, MAX_VALOR));
     }
     const origen = request.headers.get("Referer") || "/contacto/";
-    if (await enviarAlWorker(env, { marca: env.MARCA, origen, campos: Object.fromEntries(campos) })) {
+    const reason = await enviarAlWorker(env, { marca: env.MARCA, origen, campos: Object.fromEntries(campos) });
+    if (reason === null) {
       context.waitUntil(enviarAcuse(env, origin, formData.get("email"), formData.get("nombre") || formData.get("name")));
       return Response.redirect(`${origin}/gracias`, 302);
     }
-    return Response.redirect(`${errorBase}?reason=correo`, 302);
+    return Response.redirect(`${errorBase}?reason=${reason}`, 302);
   } catch (e) {
     console.error("[contact] excepción:", e.message);
     return Response.redirect(`${errorBase}?reason=exception`, 302);

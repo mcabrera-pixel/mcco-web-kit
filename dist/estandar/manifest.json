@@ -1,6 +1,6 @@
 {
   "formato": 1,
-  "version": "1.3.1",
+  "version": "1.4.0",
   "generador": "esbuild@0.28.2",
   "compresion": "gzip nivel 9; bytes por respuesta",
   "archivos": {

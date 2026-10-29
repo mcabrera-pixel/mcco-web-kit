@@ -5,14 +5,13 @@
 // Precarga Inter latina para que el H1, que es el LCP, no cambie de letra (ni se mueva) cuando llega la fuente.
 import type { ComponentProps } from 'astro/types';
 import Base from './Base.astro';
-import Head from '../components/Head.astro';
 import NavGlobal from '../components/estandar/NavGlobal.astro';
 import SubNav from '../components/estandar/SubNav.astro';
 import interLatin from '../styles/fuentes/inter-latin-wght-normal.woff2?url';
 import '../styles/estandar.css';
 import '../styles/estandar-componentes.css';
 
-interface Props extends ComponentProps<typeof Head> {
+interface Props extends ComponentProps<typeof Base> {
   /** Bloque Grupo MCCO al final (por defecto sí). */
   footer?: boolean;
   /** Clases extra del <body>, además de std. */

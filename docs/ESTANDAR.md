@@ -1,4 +1,4 @@
-# Estándar visual MCCO: Apple + antigravity (kit v1.3)
+# Estándar visual MCCO: Apple + antigravity (kit v1.4)
 
 Las webs del grupo usan el lenguaje de apple.com, tal como lo describe `design-md/apple/DESIGN.md` del repositorio VoltAgent/awesome-design-md (licencia MIT), y le suman antigravity: una nube de puntos que arma un activo y acompaña el scroll, y un campo de guiones que se mueve detrás del texto del hero. El kit fija el estándar. Cada sitio pone su color de acción, sus activos y su contenido. mcco.cl es el piloto y después vienen as-built.cl, condron.cl y 3d-ultra.cl.
 
@@ -66,13 +66,11 @@ El layout del sitio importa `src/styles/theme.css`. Ni `Estandar` ni `Base` carg
 ```astro
 ---
 // src/layouts/Sitio.astro
+import type { ComponentProps } from 'astro/types';
 import Estandar from '@mcco/web-kit/layouts/Estandar.astro';
 import '../styles/theme.css';
-interface Props {
-  title: string;
-  description: string;
-}
-const { title, description } = Astro.props;
+interface Props extends Omit<ComponentProps<typeof Estandar>, 'nav' | 'subnav'> {}
+const props = Astro.props;
 const nav = {
   logo: { src: '/favicon.svg', alt: 'Plantilla MCCO', width: 32, height: 32 },
   enlaces: [{ href: '#claro', texto: 'Bloques' }, { href: '/demo-estandar', texto: 'Estándar' }],
@@ -83,7 +81,7 @@ const subnav = {
   accion: { href: '/#contacto', texto: 'Hablar con un ingeniero', textoCorto: 'Contactar' },
 };
 ---
-<Estandar title={title} description={description} nav={nav} subnav={subnav}>
+<Estandar {...props} nav={nav} subnav={subnav}>
   <link slot="head" rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <slot />
   <footer slot="pie">…</footer>
@@ -91,6 +89,34 @@ const subnav = {
 ```
 
 Es el `Base` del kit con `<body class="std">`, la barra global, la sub-navegación, la página dentro de `<main>` y el pie propio del sitio (slot `pie`) antes del bloque Grupo MCCO, que se quita con `footer={false}`. El slot `head` suma a la cabecera lo del sitio, como el favicon o una precarga. El layout precarga Inter latina para que el H1, que es el LCP, no cambie de letra cuando llega la fuente.
+
+### Idioma y metadatos por página (v1.4.0)
+
+`Base`, `Estandar` y `Post` aceptan estas props opcionales; el layout propio del sitio debe
+propagarlas, como hace `Sitio` en el ejemplo anterior. Sin ellas se conserva el HTML de v1.3.1.
+
+| Prop | Resultado | Si se omite |
+|---|---|---|
+| `lang` | `<html lang>` y `og:locale` (guion convertido a `_`, como antes) | `site.lang` |
+| `ogTitle` | `og:title`, independiente de `<title>` y Twitter | Título SEO |
+| `ogDescription` | `og:description`, independiente de description y Twitter | Descripción SEO |
+| `ogUrl` | `og:url` literal, sin limpiar `.html` ni cambiar canonical | Canonical |
+| `robots` | Texto propio, o `false` para omitir la meta | Regla de `noindex`: `noindex, nofollow` o `index, follow, max-image-preview:large, max-snippet:-1` |
+
+`robots` explícito tiene prioridad sobre `noindex`. `Post` conserva sus títulos y descripción derivados
+de `post.data` y usa `lang` también en el `inLanguage` de BlogPosting. `Head` acepta las mismas props
+para quien compone su propia cabecera; en ese caso el sitio debe fijar también el idioma de `<html>`.
+
+```astro
+<Sitio title="FAQ técnica" description="Descripción SEO existente" lang="en"
+  ogTitle="Technical FAQ" ogDescription="Existing English Open Graph description"
+  ogUrl="https://3d-ultra.cl/en/faq.html" robots={false}>
+  <h1>Technical FAQ</h1>
+</Sitio>
+```
+
+No agregues estas metas ni el canonical mediante el slot `head`: las props sustituyen sus valores
+sin duplicarlas. El slot sigue disponible para etiquetas adicionales, por ejemplo favicon o alternates.
 
 Dentro de `.std`, los tokens de v1.1 que consumen `FooterGrupo` y las piezas de `Revelar` toman los valores del estándar. Se redefinen también sus alias `--mcco-*` en ese ámbito, porque un alias heredado de `:root` ya tiene resuelto su valor. Las páginas fuera de `.std` conservan sus tokens.
 
@@ -399,9 +425,22 @@ No se modifican los componentes ni los runtimes visuales v1.1.
 
 El Worker de la nube se carga desde el mismo origen, así que la CSP del sitio tiene que permitir `'self'` en `worker-src`, o en `script-src` si no declara `worker-src`.
 
-## Contacto: límites y Turnstile
+## Contacto: límites, demora del Worker y Turnstile
 
 `functions/contact.js` recibe el formulario en `/api/contact` y lo envía al Worker `formularios-mcco`.
+El plazo del Worker es de **25 segundos**, incluida la lectura de su JSON. Si vence (`TimeoutError`),
+redirige a `/contacto-error?reason=demora`: el Worker puede seguir procesando y el mensaje puede haber
+llegado. Un rechazo HTTP, `{ ok: false }`, JSON inválido o un error de red siguen usando `reason=correo`.
+Ninguno de esos fallos programa el acuse; este requiere confirmación de éxito del Worker.
+
+El kit no incluye una página de error ni traduce `reason` en `components/`, `pages/` o `lib/`.
+**Cada web con página de error propia debe agregar el caso `demora`**, con este texto seguido del
+correo del sitio (`site.contact.email`, enlazado con `mailto:`):
+
+> Es posible que tu mensaje haya llegado igual. Si no te contactamos, escríbenos a
+
+No se promete un plazo de respuesta ni se afirma que el envío haya fallado.
+
 Antes de parsearlo admite hasta **32 KiB (32 × 1024 bytes)**: comprueba `content-length` y cuenta también
 los bytes leídos, cancelando la lectura al excederlos. Admite hasta **40 entradas** (incluye repetidas,
 campos excluidos y archivos). Un exceso redirige a `/contacto-error?reason=tamano`, sin llamar a
