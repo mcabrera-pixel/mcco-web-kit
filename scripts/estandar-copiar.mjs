@@ -22,10 +22,23 @@ if (process.argv[3] === '--completo') {
     const { manifest, presupuesto } = verificar(origen);
     if (Object.values(presupuesto).some(p => !p.cumple)) throw new Error('Presupuesto JS excedido');
     const raiz = path.resolve(destino);
-    // Validar todo antes de crear el destino: un artefacto incompleto no deja una copia parcial.
-    for (const rel of [...Object.keys(manifest.archivos), 'manifest.json']) {
-      fs.mkdirSync(path.dirname(path.join(raiz, rel)), { recursive: true });
-      fs.copyFileSync(path.join(origen, rel), path.join(raiz, rel));
+    // Armar la distribución en un directorio temporal junto al destino, verificarla y reemplazar el directorio
+    // administrado de una sola vez. Así una actualización retira los recursos de la versión anterior y no deja
+    // artefactos parciales si algo falla. Los archivos del sitio fuera del directorio administrado no se tocan.
+    const padre = path.dirname(raiz);
+    fs.mkdirSync(padre, { recursive: true });
+    const tmp = fs.mkdtempSync(path.join(padre, `.tmp-${path.basename(raiz)}-`));
+    try {
+      for (const rel of [...Object.keys(manifest.archivos), 'manifest.json']) {
+        const destinoRel = path.join(tmp, rel);
+        fs.mkdirSync(path.dirname(destinoRel), { recursive: true });
+        fs.copyFileSync(path.join(origen, rel), destinoRel);
+      }
+      verificar(tmp);
+      fs.rmSync(raiz, { recursive: true, force: true });
+      fs.renameSync(tmp, raiz);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
     }
     console.log(`mcco-estandar-copiar: distribución completa ${manifest.version} en ${raiz}`);
   } catch (e) {

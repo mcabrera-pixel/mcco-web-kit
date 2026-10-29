@@ -12,6 +12,18 @@ const FUENTES = path.join(ESTILOS, 'fuentes');
 let leida;
 const hoja = () => (leida ??= fs.readFileSync(path.join(ESTILOS, 'estandar.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''));
 
+let leidaComponentes;
+const hojaComponentes = () => (leidaComponentes ??= fs.readFileSync(path.join(ESTILOS, 'estandar-componentes.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''));
+
+/** Comparación lexicográfica de especificidades [a, b, c]. */
+function compararEspecificidad(x, y) {
+  for (let i = 0; i < 3; i++) {
+    const d = x[i] - y[i];
+    if (d !== 0) return d;
+  }
+  return 0;
+}
+
 /** true si la hoja declara la propiedad («--accion: …»), no si solo la usa dentro de var(). */
 const declara = (prop) => new RegExp(`(?:^|[{;\\s])${prop}\\s*:`).test(hoja());
 
@@ -119,4 +131,19 @@ test('std-oculto recorta visualmente sin display:none ni visibility:hidden', () 
     /padding\s*:\s*0/, /margin\s*:\s*-1px/, /overflow\s*:\s*hidden/, /clip-path\s*:\s*inset\(50%\)/,
     /white-space\s*:\s*nowrap/, /border\s*:\s*0/]) assert.match(css, patron);
   assert.doesNotMatch(css, /display\s*:\s*none|visibility\s*:\s*hidden/);
+});
+
+// Rompe si sin JS se superponen la imagen normal y la copia de <noscript>: la excepción sin JS debe tener mayor
+// especificidad que la regla que muestra el respaldo.
+test('css: sin JS solo una imagen de respaldo queda visible', () => {
+  const css = hojaComponentes();
+  const mostrar = ":where(.std-nube:not([data-estado='nube']) .std-nube__respaldo), .std-nube__respaldo--sin-js { display: block; }";
+  assert.ok(css.includes(mostrar), 'la regla de respaldo debe envolverse en :where() para bajar especificidad');
+  const ocultar = ".std-nube__respaldo:not(.std-nube__respaldo--sin-js) { display: none; }";
+  assert.ok(css.includes('@media (scripting: none) {') && css.includes(ocultar), 'debe existir la excepción sin JS');
+  // Especificidades: :where(...) aporta 0; .std-nube__respaldo--sin-js aporta (0,1,0).
+  const especMostrar = [0, 1, 0];
+  // .std-nube__respaldo aporta (0,1,0) y :not(.class) aporta 1 pseudo-class + 1 class = (0,2,0).
+  const especOcultar = [0, 2, 0];
+  assert.ok(compararEspecificidad(especOcultar, especMostrar) > 0, 'sin JS la excepción debe tener mayor especificidad que el respaldo');
 });

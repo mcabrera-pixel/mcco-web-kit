@@ -267,7 +267,7 @@
     display: none; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none;
     filter: invert(1) grayscale(1) contrast(1.15); mix-blend-mode: multiply;
   }
-  .std-nube:not([data-estado='nube']) .std-nube__respaldo, .std-nube__respaldo--sin-js { display: block; }
+  :where(.std-nube:not([data-estado='nube']) .std-nube__respaldo), .std-nube__respaldo--sin-js { display: block; }
   @media (prefers-reduced-motion: reduce) {
     .std-nube__respaldo { display: block; }
   }

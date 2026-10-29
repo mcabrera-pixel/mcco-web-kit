@@ -70,9 +70,9 @@
       ]
     },
     "styles/estandar-componentes.css": {
-      "bytes": 20250,
-      "gzip": 5263,
-      "sha256": "19d82cca1dc48ee26ca6bcb8e1584da2df85b4b41cdeff728f75da8a81dd1205",
+      "bytes": 20258,
+      "gzip": 5272,
+      "sha256": "01b24046e2b3a8bf8d8948955c648a1485940710e71522a37eb14e4f3e8597c7",
       "dependencias": []
     },
     "styles/estandar.css": {

@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { verificar } from '../scripts/estandar-verificar.mjs';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(KIT, 'scripts', 'estandar-copiar.mjs');
@@ -186,4 +187,21 @@ test('una opción en lugar del destino sale con código 1 sin copiar nada', () =
   assert.equal(r.status, 1);
   assert.match(r.stderr, /no conozco la opción --help\. Uso: mcco-estandar-copiar <destino>/);
   assert.equal(fs.existsSync('--help'), false);
+});
+
+// Rompe si una actualización sobre un destino existente deja recursos de la versión anterior: el manifiesto y el disco
+// deben coincidir exactamente después de copiar.
+test('copiar: actualizar desde una versión anterior retira los recursos viejos y verifica', () => {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'kit completo '));
+  carpetas.push(raiz);
+  const d = path.join(raiz, 'destino');
+  assert.equal(correr(d, '--completo').status, 0, 'primera copia debe salir bien');
+  verificar(d);
+  // Simular un recurso viejo que ya no está en la nueva distribución.
+  fs.mkdirSync(path.join(d, 'lib/estandar/chunks'), { recursive: true });
+  fs.writeFileSync(path.join(d, 'lib/estandar/chunks/chunk-viejo-de-version-anterior.js'), 'export const viejo = 1;\n');
+  assert.throws(() => verificar(d), /Archivos y manifiesto no coinciden/);
+  assert.equal(correr(d, '--completo').status, 0, 'actualización debe salir bien');
+  assert.equal(fs.existsSync(path.join(d, 'lib/estandar/chunks/chunk-viejo-de-version-anterior.js')), false, 'el recurso viejo debe desaparecer');
+  verificar(d);
 });
