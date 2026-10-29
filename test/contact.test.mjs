@@ -218,3 +218,121 @@ for (const [caso, respuesta] of [
     assert.equal(ctx.pendientes.length, 0);
   });
 }
+
+const TAMANO_MAX = 32 * 1024;
+function solicitudBytes(body, headers = {}) {
+  return new Request('https://mcco.cl/api/contact', {
+    method: 'POST', body, headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers },
+    ...(body instanceof ReadableStream ? { duplex: 'half' } : {}),
+  });
+}
+
+// Rechaza por la cabecera sin consumir el cuerpo ni llamar a servicios.
+test('Content-Length mayor que 32 KiB corta antes de leer', async (t) => {
+  const llamadas = dobleFetch(t, workerOk);
+  const request = solicitudBytes('nombre=Ana', { 'content-length': String(TAMANO_MAX + 1) });
+  const ctx = contexto(request, { ...ENV, TURNSTILE_SECRET: 'secreto-prueba', RESEND_API_KEY: 're_prueba' });
+  const r = await onRequestPost(ctx);
+  assert.equal(r.headers.get('location'), 'https://mcco.cl/contacto-error?reason=tamano');
+  assert.equal(request.bodyUsed, false);
+  assert.deepEqual(llamadas, []);
+  assert.equal(ctx.pendientes.length, 0);
+});
+
+for (const length of [undefined, '1']) {
+  test(`cuerpo leído de 32 KiB + 1 con Content-Length ${length}: sin llamadas externas`, async (t) => {
+    const llamadas = dobleFetch(t, workerOk);
+    const headers = length === undefined ? {} : { 'content-length': length };
+    const r = await onRequestPost(contexto(solicitudBytes('x=' + 'a'.repeat(TAMANO_MAX - 1), headers), ENV));
+    assert.equal(r.headers.get('location'), 'https://mcco.cl/contacto-error?reason=tamano');
+    assert.deepEqual(llamadas, []);
+  });
+}
+
+test('32 KiB exactos se admiten, aunque el valor se recorta a 5000', async (t) => {
+  const llamadas = dobleFetch(t, workerOk);
+  const r = await onRequestPost(contexto(solicitudBytes('x=' + 'a'.repeat(TAMANO_MAX - 2), { 'content-length': String(TAMANO_MAX) }), ENV));
+  assert.equal(r.headers.get('location'), 'https://mcco.cl/gracias');
+  assert.deepEqual(JSON.parse(llamadas[0].init.body).campos, { x: 'a'.repeat(5000) });
+});
+
+test('el límite cuenta bytes UTF-8 y cancela el stream al excederse', async (t) => {
+  const llamadas = dobleFetch(t, workerOk);
+  let cancelado = false, leidos = 0;
+  const trozos = ['x=', 'á'.repeat(8192), 'á'.repeat(8192), 'no debe leerse'];
+  const body = new ReadableStream({
+    pull(c) { c.enqueue(new TextEncoder().encode(trozos[leidos++])); },
+    cancel() { cancelado = true; },
+  }, { highWaterMark: 0 });
+  const r = await onRequestPost(contexto(solicitudBytes(body), ENV));
+  assert.equal(r.headers.get('location'), 'https://mcco.cl/contacto-error?reason=tamano');
+  assert.equal(cancelado, true);
+  assert.equal(leidos, 3);
+  assert.deepEqual(llamadas, []);
+});
+
+for (const repetidos of [false, true]) {
+  for (const cantidad of [40, 41]) {
+    test(`${cantidad} entradas ${repetidos ? 'repetidas' : 'distintas'}: máximo 40`, async (t) => {
+      const llamadas = dobleFetch(t, workerOk);
+      const form = new FormData();
+      for (let i = 0; i < cantidad; i++) form.append(repetidos ? 'tema' : `campo${i}`, 'sí');
+      const r = await onRequestPost(contexto(solicitud(form), ENV));
+      assert.equal(r.headers.get('location'), cantidad === 40 ? 'https://mcco.cl/gracias' : 'https://mcco.cl/contacto-error?reason=tamano');
+      assert.equal(llamadas.length, cantidad === 40 ? 1 : 0);
+    });
+  }
+}
+
+test('el máximo de 40 incluye campos excluidos y archivos', async (t) => {
+  const llamadas = dobleFetch(t, workerOk);
+  const form = new FormData();
+  for (let i = 0; i < 39; i++) form.append(`campo${i}`, 'dato');
+  form.append('access_key', 'no viaja');
+  form.append('archivo', new Blob(['dato']), 'prueba.txt');
+  const r = await onRequestPost(contexto(solicitud(form), ENV));
+  assert.equal(r.headers.get('location'), 'https://mcco.cl/contacto-error?reason=tamano');
+  assert.deepEqual(llamadas, []);
+});
+
+for (const cantidad of [4999, 5000, 5001]) {
+  test(`valor de ${cantidad} caracteres: máximo 5000`, async (t) => {
+    const llamadas = dobleFetch(t, workerOk);
+    const form = new FormData();
+    form.append('mensaje', 'ñ'.repeat(cantidad));
+    const r = await onRequestPost(contexto(solicitud(form), ENV));
+    assert.equal(r.headers.get('location'), 'https://mcco.cl/gracias');
+    assert.deepEqual(JSON.parse(llamadas[0].init.body).campos, { mensaje: 'ñ'.repeat(Math.min(cantidad, 5000)) });
+  });
+}
+
+test('valores repetidos se juntan sin exceder 5000 caracteres', async (t) => {
+  const llamadas = dobleFetch(t, workerOk);
+  const form = new FormData();
+  form.append('tema', 'a'.repeat(3000));
+  form.append('tema', 'b'.repeat(3000));
+  form.append('tema', 'c'.repeat(3000));
+  await onRequestPost(contexto(solicitud(form), ENV));
+  assert.deepEqual(JSON.parse(llamadas[0].init.body).campos, { tema: 'a'.repeat(3000) + ', ' + 'b'.repeat(1998) });
+});
+
+for (const fase of ['fetch', 'JSON']) {
+  test(`Turnstile vence durante ${fase}: timeout de 10000 ms, token rechazado y sin Worker ni acuse`, async (t) => {
+    const ctrl = new AbortController();
+    const plazos = [];
+    t.mock.method(AbortSignal, 'timeout', ms => { plazos.push(ms); return ctrl.signal; });
+    const vencer = () => {
+      ctrl.abort(new DOMException('Venció la prueba', 'TimeoutError'));
+      throw ctrl.signal.reason;
+    };
+    const llamadas = dobleFetch(t, workerOk, fase === 'fetch' ? vencer : () => ({ json: vencer }));
+    const ctx = contexto(solicitud(formulario()), { ...ENV, TURNSTILE_SECRET: 'secreto-prueba', RESEND_API_KEY: 're_prueba' });
+    const r = await onRequestPost(ctx);
+    assert.equal(r.status, 302);
+    assert.equal(r.headers.get('location'), 'https://mcco.cl/contacto-error?reason=turnstile');
+    assert.deepEqual(plazos, [10000]);
+    assert.deepEqual(llamadas.map(l => l.url), [TURNSTILE]);
+    assert.equal(llamadas[0].init.signal, ctrl.signal);
+    assert.equal(ctx.pendientes.length, 0);
+  });
+}

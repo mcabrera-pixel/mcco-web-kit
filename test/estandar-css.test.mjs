@@ -39,7 +39,7 @@ function regla(sel) {
 // Rompe si falta una variable de acción, si cambian los valores fijos (parchment, tinta, sombra única, píldora
 // de 980 px) o si aparece el peso 500, una hoja externa o el desplazamiento suave.
 test('variables de acción y valores fijos del estándar', () => {
-  for (const prop of ['--accion', '--accion-boton', '--accion-foco', '--accion-oscuro']) {
+  for (const prop of ['--accion', '--accion-boton', '--accion-texto', '--accion-foco', '--accion-oscuro']) {
     assert.ok(declara(prop), `no declara ${prop}`);
   }
   for (const valor of ['#f5f5f7', '#1d1d1f', 'rgba(0,0,0,.22) 3px 5px 30px 0', 'border-radius: 980px']) {
@@ -100,7 +100,7 @@ test('el enlace mas conserva el signo Unicode y la variante decorativa', () => {
   assert.deepEqual(contenidos, ['"\\00a0\\203a"', '"\\00a0\\203a" / ""']);
 });
 test('los colores del sitio se declaran en :where(:root) y sobre negro usan variantes claras', () => {
-  for (const prop of ['--accion', '--accion-boton', '--accion-foco', '--accion-oscuro', '--campo-claro', '--campo-oscuro']) {
+  for (const prop of ['--accion', '--accion-boton', '--accion-texto', '--accion-foco', '--accion-oscuro', '--campo-claro', '--campo-oscuro']) {
     assert.match(regla(':where(:root)'), new RegExp(`${prop}\\s*:`));
     assert.doesNotMatch(regla(':root'), new RegExp(`${prop}\\s*:`));
   }

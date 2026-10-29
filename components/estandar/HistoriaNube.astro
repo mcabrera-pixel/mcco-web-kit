@@ -11,9 +11,11 @@
 // como las del hero). El primero debería ser el respaldo de NubeAncla, porque es lo que la nube arma en el hero.
 import '../../styles/estandar.css';
 import '../../styles/estandar-componentes.css';
-import { ROTULOS } from '../../lib/estandar/rotulos.mjs';
+import { rotuloDe } from '../../lib/estandar/rotulos.mjs';
 
 interface Activo {
+  /** Hereda el origen de la nube cuando se omite. */
+  origen?: string;
   src: string;
   /** Nombre corto del activo ("Espesador"), para el nombre accesible de la nube. */
   etiqueta: string;
@@ -26,6 +28,7 @@ interface Paso {
   titulo: string;
 }
 interface Props {
+  origen?: string;
   titulo: string;
   bajada?: string;
   activos: Activo[];
@@ -35,7 +38,11 @@ interface Props {
   rotulo?: string;
   id?: string;
 }
-const { titulo, bajada, activos = [], pasos = [], rotulo = 'Ilustraciones en nube de puntos.', id = 'historia' } = Astro.props;
+const {
+  titulo, bajada, activos = [], pasos = [], origen = 'ilustracion',
+  rotulo = origen === 'ilustracion' ? 'Ilustraciones en nube de puntos.' : rotuloDe(origen), id = 'historia',
+} = Astro.props;
+rotuloDe(origen);
 if (!titulo) throw new Error('HistoriaNube: falta `titulo`.');
 if (!Array.isArray(activos) || activos.length < 1 || activos.length > 4) {
   throw new Error(`HistoriaNube: \`activos\` lleva de 1 a 4 ilustraciones (vienen ${activos?.length ?? 0}).`);
@@ -46,6 +53,7 @@ if (!Array.isArray(pasos) || pasos.length !== activos.length) {
 activos.forEach((a, i) => {
   const faltan = [!a?.src && 'src', !a?.etiqueta && 'etiqueta', typeof a?.alt !== 'string' && 'alt'].filter(Boolean);
   if (faltan.length) throw new Error(`HistoriaNube: al activo ${i + 1} le falta ${faltan.join(', ')}.`);
+  rotuloDe(a.origen ?? origen);
 });
 pasos.forEach((p, i) => {
   if (!p?.rotulo || !p?.titulo) throw new Error(`HistoriaNube: al paso ${i + 1} le falta rotulo o titulo.`);
@@ -61,14 +69,14 @@ const lista = etiquetas.length > 1 ? `${etiquetas.slice(0, -1).join(', ')} y ${e
       {bajada && <p class="std-tagline">{bajada}</p>}
       <div class="std-historia__visual" data-std-visual>
         <div class="std-historia__nube" data-std-nube="historia" role="img"
-          aria-label={`Ilustración animada en nube de puntos: ${lista}.`}></div>
+          aria-label={`${origen === 'ilustracion' ? 'Ilustración animada' : rotuloDe(origen)} en nube de puntos: ${lista}.`}></div>
         <ul class="std-historia__fijas" role="list">
           {activos.map((a) => (
             <li>
               <figure class="std-historia__figura">
                 <img src={a.src} alt={a.alt} width="960" height="540" loading="lazy" decoding="async"
-                  data-origen="ilustracion" data-std-forma />
-                <span class="std-rotulo" data-rotulo>{ROTULOS.ilustracion}</span>
+                  data-origen={a.origen ?? origen} data-std-forma />
+                <span class="std-rotulo" data-rotulo>{rotuloDe(a.origen ?? origen)}</span>
               </figure>
             </li>
           ))}

@@ -11,16 +11,19 @@ Las webs del grupo usan el lenguaje de apple.com, tal como lo describe `design-m
 
 ## Lo que pone cada sitio
 
-El color de acción va en el `:root` de `src/styles/theme.css`, en cuatro variantes, y el sitio puede fijar además los dos tonos del campo. La hoja declara sus valores por defecto con `:where(:root)`, que no pesa, así que el `:root` del sitio gana sin importar el orden de las hojas. Si el sitio no los fija, queda el azul de Apple.
+El color de acción va en el `:root` de `src/styles/theme.css`, en cuatro variantes y el texto sobre el botón, y el sitio puede fijar además los dos tonos del campo. La hoja declara sus valores por defecto con `:where(:root)`, que no pesa, así que el `:root` del sitio gana sin importar el orden de las hojas. Si el sitio no los fija, queda el azul de Apple.
 
 | Variable | Para qué | Por defecto |
 |---|---|---|
 | `--accion` | Texto y enlaces sobre blanco | `#0066cc` |
-| `--accion-boton` | Relleno de la píldora, con texto blanco | `#0071e3` |
+| `--accion-boton` | Relleno de la píldora | `#0071e3` |
+| `--accion-texto` | Texto sobre el relleno de acción | `#fff` |
 | `--accion-foco` | Anillo de foco | `#0071e3` |
 | `--accion-oscuro` | Texto, enlaces y anillo de foco dentro de un bloque negro | `#2997ff` |
 | `--campo-claro` | Un tono del campo antigravity | `var(--accion-oscuro)` |
 | `--campo-oscuro` | El otro tono del campo | `var(--accion)` |
+
+Si el sitio cambia `--accion-texto`, debe medir el contraste de ese texto sobre `--accion-boton`: **≥ 4,5:1**. Por ejemplo, puede combinar amarillo vivo con texto negro. El valor por defecto conserva el texto blanco de v1.3.0; las píldoras fantasma mantienen su color de enlace.
 
 Cada variante que fija el sitio tiene que pasar AA en su uso: 4,5:1 para el texto y el botón y 3:1 para el anillo de foco. El azul de condron.cl (`#5B85AA`), por ejemplo, da 3,9:1 sobre blanco, así que para texto y botones necesita una variante más oscura. La nube toma `--accion-boton` para sus realces sobre blanco y `--accion-oscuro` sobre negro, y `--accion-foco` para las chispas sobre blanco. El campo mezcla `--accion-boton`, `--campo-claro`, `--campo-oscuro` y un neutro (`#48484a`).
 
@@ -150,6 +153,8 @@ El respaldo de la nube se ve sin WebGL2, con movimiento reducido y sin JS. Con `
 
 ### NubeAncla
 
+`origen?: string` vale `'ilustracion'` por defecto y se valida con `rotuloDe` (un origen desconocido falla al construir). Se aplica al respaldo y a su copia de `<noscript>`. Para un render propio usa `<NubeAncla origen="render" respaldo={...} />` y el rótulo visible «Render 3D». `HeroEstandar` también lo propaga mediante `nube={{ respaldo, origen: 'render' }}`; en ese caso pasa `rotulo="Render 3D"` al hero.
+
 Para usar el ancla directamente, pasa `respaldo` y escribe el rótulo de origen junto a ella. Este ejemplo pone también el botón de pausa en un contenedor `.std-hero`, que el runtime marca mientras la nube se mueve. Usa una sola ancla de hero por página.
 
 ```astro
@@ -199,6 +204,8 @@ Cada acción acepta `oculto?: string`, que se agrega dentro del enlace con `.std
     { rotulo: 'Concentradora', titulo: 'Espesador' },
   ]} />
 ```
+
+`origen?: string` define el origen general de la nube (por defecto `'ilustracion'`). Cada activo acepta `{ src, etiqueta, alt, origen? }`: si omite `origen`, hereda el general. Ambos niveles se validan con `rotuloDe`; cada imagen fija lleva su `data-origen` y su chip correspondiente («Render 3D» para `'render'`). Con `origen="render"`, el pie por defecto dice «Render 3D»; se puede personalizar con `rotulo`, especialmente si se mezclan orígenes. Sin las props nuevas se conserva el HTML de v1.3.0.
 
 Una sección negra con título, bajada, la nube, un paso por activo y el botón de pausa. Lleva de uno a cuatro activos, que son ilustraciones en nube de puntos sobre negro de 960 × 540, y el primero debería ser el respaldo del hero, porque es lo que la nube arma arriba. Por defecto, `rotulo` dice `'Ilustraciones en nube de puntos.'` e `id` vale `'historia'`.
 
@@ -391,6 +398,39 @@ El respaldo del hero permanece visible hasta que el runtime confirma la nube: un
 No se modifican los componentes ni los runtimes visuales v1.1.
 
 El Worker de la nube se carga desde el mismo origen, así que la CSP del sitio tiene que permitir `'self'` en `worker-src`, o en `script-src` si no declara `worker-src`.
+
+## Contacto: límites y Turnstile
+
+`functions/contact.js` recibe el formulario en `/api/contact` y lo envía al Worker `formularios-mcco`.
+Antes de parsearlo admite hasta **32 KiB (32 × 1024 bytes)**: comprueba `content-length` y cuenta también
+los bytes leídos, cancelando la lectura al excederlos. Admite hasta **40 entradas** (incluye repetidas,
+campos excluidos y archivos). Un exceso redirige a `/contacto-error?reason=tamano`, sin llamar a
+Turnstile ni al Worker y sin programar el acuse. Cada valor enviado se recorta a **5000 caracteres**;
+el mismo límite se aplica al juntar entradas repetidas con `, `.
+
+Se conserva la lista de campos que no viajan: `access_key`, `cf-turnstile-response`, `website_url` y
+`botcheck`; tampoco se envían archivos. El Worker recorta los valores y escapa el contenido al formar
+el correo. Ese escape sigue siendo responsabilidad del Worker: la función envía texto en JSON y no
+lo convierte a HTML. No se agrega una lista permitida opcional en v1.3.1; los demás nombres de campos
+siguen viajando como antes. Un sitio que necesite restringirlos debe hacerlo en su adaptador antes
+de delegar al kit, además de conservar los controles del Worker.
+
+La clave pública (`contact.turnstile_sitekey`, usada por el formulario del sitio) y el secreto
+(`TURNSTILE_SECRET`, variable del servidor) siguen desacoplados, como en v1.2.0. El servidor no deduce
+su configuración a partir del widget:
+
+| Clave pública | Secreto | Resultado |
+|---|---|---|
+| No | No | Sin widget ni verificación; el formulario puede llegar al Worker. |
+| Sí | No | Se muestra el widget, pero el servidor no exige ni verifica el token; se puede enviar sin él. |
+| No | Sí | El formulario normal no genera token y se rechaza con `reason=turnstile`. |
+| Sí | Sí | Se exige token y `success: true` en Siteverify antes del Worker y del acuse. |
+
+Estos resultados suponen que pasan los límites, el honeypot y la configuración obligatoria del Worker.
+Con secreto, el token ausente, vacío, rechazado o cuya verificación vence a los **10 segundos** termina
+en `reason=turnstile`. Errores de red y JSON inválido conservan `reason=exception`; nunca envían el lead.
+Sin secreto no se consulta Siteverify, haya o no token. El sitio debe configurar ambas claves de forma
+coherente; v1.3.1 documenta las combinaciones sin activar ni desactivar Turnstile automáticamente.
 
 ## Decisiones fuera del DESIGN.md de Apple
 

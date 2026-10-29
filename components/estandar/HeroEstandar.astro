@@ -36,7 +36,7 @@ if (!titulo && !Astro.slots.has('titulo')) throw new Error('HeroEstandar: falta 
   <Acciones acciones={acciones} />
   {nube && (
     <figure class="std-hero__nube">
-      <NubeAncla respaldo={nube.respaldo} />
+      <NubeAncla {...nube} />
       <figcaption class="std-fina std-hero__rotulo" data-rotulo>{rotulo}</figcaption>
     </figure>
   )}

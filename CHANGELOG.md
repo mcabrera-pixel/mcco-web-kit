@@ -3,6 +3,13 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.3.1 · 2026-10-29
+- `NubeAncla` y `HistoriaNube` aceptan `origen`, validado con `rotuloDe`; cada activo de la historia puede sobrescribirlo. Por defecto conservan el HTML de ilustración. `HeroEstandar` propaga el origen de su nube.
+- Contacto limita el cuerpo a 32 KiB antes del parser, admite hasta 40 entradas y recorta cada valor a 5000 caracteres, también al juntar campos repetidos. El exceso redirige con `reason=tamano` sin llamadas externas.
+- Turnstile tiene un plazo de 10 segundos y su vencimiento rechaza el token. Se documentan las cuatro combinaciones de clave pública y secreto sin cambiar la configuración de v1.2.0.
+- `--accion-texto` permite texto negro sobre un botón amarillo; su valor por defecto `#fff` conserva la apariencia anterior. El sitio debe medir al menos 4,5:1 sobre `--accion-boton`.
+- Pruebas de render, límites de contacto y vencimiento con fetch simulado, y contraste y compatibilidad CSS en Chrome. Distribución completa regenerada en `dist/estandar`.
+
 ## v1.3.0 · 2026-10-29
 - `--completo` solo reemplaza una copia administrada (con `manifest.json` y nada fuera de él) y deja la versión anterior en un respaldo hasta que la nueva queda instalada; si el cambio falla, la restaura.
 - El respaldo de la nube se ve cuando falta WebGL2, falla el muestreo o se pierde el contexto, y sin JS queda una sola imagen. Las pruebas evalúan la cascada real.

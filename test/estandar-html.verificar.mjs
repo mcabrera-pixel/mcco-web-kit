@@ -28,6 +28,8 @@ fs.writeFileSync(path.join(salida,'astro-build.log'),build);
 fs.cpSync(path.join(sitio,'media'),path.join(astro,'media'),{recursive:true});
 // Variantes del mismo contrato: nube sola y campo con pausa sin nube.
 const html=fs.readFileSync(path.join(sitio,'index.html'),'utf8');
+// Un 404 real afecta al DOM y al Worker; Network.setBlockedURLs de la página no bloquea al Worker.
+fs.writeFileSync(path.join(sitio,'historia-activo-caido.html'),html.replaceAll('/media/forma2.png','/media/forma-ausente.png'));
 fs.writeFileSync(path.join(sitio,'nube-sola.html'),html.replace(/<section class="std-historia"[\s\S]*?<\/section>/,'').replace(/<div class="std-campo"[^>]*><\/div>/,'').replace(/<script[^>]+campo.js[^>]*><\/script>/,''));
 fs.writeFileSync(path.join(sitio,'campo-solo.html'),html.replace(/<section class="std-historia"[\s\S]*?<\/section>/,'').replace(/<figure class="std-hero__nube">[\s\S]*?<\/figure>/,'').replace(/<script[^>]+nube.js[^>]*><\/script>/,''));
 if (!process.env.CHROME) throw new Error('Falta CHROME: ruta al ejecutable de Chrome/Chromium. Se usa CDP, sin Playwright.');
@@ -82,6 +84,33 @@ try {
       } finally {await a.cerrar();}
     });
   }
+  await caso('color del texto de acción', '', async p => {
+    const a = await comparador.pagina();
+    try {
+      for (const [nombre, q] of [['HTML', p], ['Astro', a]]) {
+        await reducir(q); await q.ir('/index.html');
+        const medir = `(() => {
+          const botones = [...document.querySelectorAll('.std-pildora:not(.std-pildora--fantasma)')];
+          return botones.map(e => { const s = getComputedStyle(e); return {html:e.outerHTML,color:s.color,fondo:s.backgroundColor}; });
+        })()`;
+        const original = await q.ev(medir);
+        ok(`${nombre}: blanco sobre azul por defecto (v1.3.0)`, original.length > 0 && original.every(b => b.color === 'rgb(255, 255, 255)' && b.fondo === 'rgb(0, 113, 227)'));
+        const fantasmas = await q.ev(`[...document.querySelectorAll('.std-pildora--fantasma')].map(e => getComputedStyle(e).color)`);
+        await q.ev(`document.documentElement.style.setProperty('--accion-boton','#ffdf00');document.documentElement.style.setProperty('--accion-texto','#000')`);
+        // La transición preexistente del fondo tarda 0,2 s.
+        await dormir(250);
+        const cambiado = await q.ev(medir);
+        ok(`${nombre}: amarillo con texto negro, sin cambiar HTML`, cambiado.every((b,i) => b.html === original[i].html && b.color === 'rgb(0, 0, 0)' && b.fondo === 'rgb(255, 223, 0)'));
+        ok(`${nombre}: fantasma conserva el color de enlace`, JSON.stringify(fantasmas) === JSON.stringify(await q.ev(`[...document.querySelectorAll('.std-pildora--fantasma')].map(e => getComputedStyle(e).color)`)));
+        const contraste = await q.ev(`(() => {
+          const canales = [255,223,0].map(v => {const s=v/255;return s<=.04045?s/12.92:((s+.055)/1.055)**2.4});
+          return (canales[0]*.2126+canales[1]*.7152+canales[2]*.0722+.05)/.05;
+        })()`);
+        ok(`${nombre}: contraste de texto ≥ 4,5:1`, contraste >= 4.5, {contraste});
+        ok(`${nombre}: puente v1.1 hereda el texto de acción`, await q.ev(`getComputedStyle(document.body).getPropertyValue('--color-on-accent').trim()==='#000'`));
+      }
+    } finally { await a.cerrar(); }
+  });
   await caso('menú y teclado','',async p=>{
     await medidas(p,390,844);await reducir(p);await p.ir('/index.html');
     await p.ev('document.querySelector("[data-std-menu]").focus()');
@@ -133,9 +162,10 @@ try {
     ok('muestreo fallido conserva imagen DOM y contenido',await p.ev(visible('.std-nube__respaldo'))&&await p.ev('document.querySelector(".std-nube__respaldo").naturalWidth>0'));
   });
   await caso('activo de historia caído','',async p=>{
-    await p.send('Network.setBlockedURLs',{urls:['*/media/forma2.png']});await p.ir('/index.html');await listo(p);await dormir(500);
+    await p.ir('/historia-activo-caido.html');await listo(p);
+    await p.hasta('document.querySelector("img[src*=forma-ausente]").complete && document.querySelector("img[src*=forma-ausente]").naturalWidth===0');
     ok('segundo activo caído conserva historia y texto alternativo',await p.ev(visible('.std-historia__fijas'))&&await p.ev('[...document.querySelectorAll("[data-std-forma]")].every(i=>i.alt.length>0) && document.querySelectorAll("[data-std-paso]").length===2'));
-  },['net::ERR_BLOCKED_BY_CLIENT','net::ERR_FAILED','Failed to fetch']);
+  },['404']);
   await caso('pausa compartida','',async p=>{
     await p.ir('/index.html');await listo(p);
     await p.ev('document.querySelector("[data-std-pausa]").click()');await dormir(200);

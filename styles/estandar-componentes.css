@@ -1,5 +1,8 @@
 /* Fuente única de los componentes Astro y del contrato HTML público. Selectores acotados a .std-*. */
 
+/* Acciones llenas de los componentes (la variante fantasma conserva su color de enlace). */
+:where(.std-pildora:not(.std-pildora--fantasma)) { color: var(--accion-texto, #fff); }
+
 /* Bloque */
 .std-bloque {
     --std-bloque-pad: 22px;

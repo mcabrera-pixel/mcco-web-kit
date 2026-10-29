@@ -1,4 +1,4 @@
-// Render real de Astro: compatibilidad de Acciones y seguridad del HTML JSON-LD.
+// Render real de Astro: compatibilidad de acciones y nubes, orígenes y seguridad del HTML JSON-LD.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -18,6 +18,14 @@ before(() => {
   fs.writeFileSync(path.join(dir, 'site.yaml'), 'key: prueba\nname: Prueba\ndomain: https://prueba.invalid\ndescription: Sitio de pruebas del kit\nrole: corporativa\ncloudflare:\n  project: prueba\n');
   fs.writeFileSync(path.join(dir, 'src/pages/index.astro'), `---
 import Acciones from '${kit}/components/estandar/Acciones.astro';
+import NubeAncla from '${kit}/components/estandar/NubeAncla.astro';
+import HistoriaNube from '${kit}/components/estandar/HistoriaNube.astro';
+import HeroEstandar from '${kit}/components/estandar/HeroEstandar.astro';
+const respaldo = {src:'/media/forma.png',width:960,height:540,alt:'Forma de prueba'};
+const activos = [{src:respaldo.src,etiqueta:'Forma',alt:respaldo.alt}];
+const pasos = [{rotulo:'Paso',titulo:'Forma de prueba'}];
+const invalido = process.env.KIT_ORIGEN_INVALIDO;
+
 import Faq from '${kit}/components/Faq.astro';
 import Head from '${kit}/components/Head.astro';
 import SchemaOrg from '${kit}/components/SchemaOrg.astro';
@@ -25,6 +33,13 @@ const texto = ${JSON.stringify(texto)};
 ---
 <html lang="es"><head><Head title="Prueba" description="Prueba de componentes del kit" jsonld={[{'@type': 'Thing', name: texto}]} /><SchemaOrg extra={{description: texto}} /></head><body class="std">
 <h1>Prueba</h1>
+<div id="ancla-default"><NubeAncla respaldo={respaldo} origen={invalido === 'ancla' ? 'inventado' : undefined} /></div>
+<div id="ancla-render"><NubeAncla respaldo={respaldo} origen="render" /></div>
+<div id="historia-default"><HistoriaNube titulo="Historia de prueba" activos={activos} pasos={pasos} origen={invalido === 'historia' ? 'inventado' : undefined} /></div>
+<div id="historia-render"><HistoriaNube titulo="Historia de prueba" origen="render" activos={activos} pasos={pasos} /></div>
+<div id="historia-mixta"><HistoriaNube titulo="Historia de prueba" origen="render" activos={[...activos, {...activos[0], origen: invalido === 'activo' ? 'inventado' : 'ilustracion'}]} pasos={[...pasos, ...pasos]} /></div>
+<div id="historia-excepcion"><HistoriaNube titulo="Historia de prueba" activos={[{...activos[0], origen:'render'}]} pasos={pasos} /></div>
+<div id="hero-render"><HeroEstandar titulo="Render propio" acciones={[]} nube={{respaldo,origen:'render'}} rotulo="Render 3D" /></div>
 <div id="sin"><Acciones acciones={[{href: '/destino', texto: 'Más información'}]} /></div>
 <div id="con"><Acciones acciones={['llena','fantasma','mas'].map(variante => ({href:'/destino', texto:'Más información', variante, oculto:' sobre Estructuras mineras'}))} /></div>
 <div id="escape"><Acciones acciones={[{href:'/destino', texto:'Más información', oculto:texto}]} /></div>
@@ -77,3 +92,48 @@ test('mcco-check R5 lee los tres JSON-LD construidos por Astro', () => {
   const resultado = JSON.parse(check.stdout);
   assert.deepEqual(resultado.findings.filter(f => f.rule.startsWith('R5-')), []);
 });
+
+// Fixtures capturadas del render de 47ce01f (v1.3.0), con los mismos datos de entrada.
+for (const [id, selector, fixture] of [
+  ['ancla-default', '.std-nube', 'nube-v1.3.0.html'],
+  ['historia-default', '.std-historia', 'historia-v1.3.0.html'],
+]) {
+  test(`${id}: conserva exactamente el HTML de v1.3.0`, () => {
+    assert.equal(dom.querySelector(`#${id} ${selector}`).outerHTML,
+      fs.readFileSync(path.join(kit, 'test/fixtures', fixture), 'utf8').trimEnd());
+  });
+}
+test('NubeAncla propaga render al respaldo y a noscript, también a través del hero', () => {
+  for (const id of ['ancla-render', 'hero-render']) {
+    // Parsear noscript como HTML también verifica la copia sin JavaScript.
+    const bloque = parse(dom.querySelector(`#${id}`).innerHTML, { blockTextElements: { script: true } });
+    const imagenes = bloque.querySelectorAll('img');
+    assert.equal(imagenes.length, 2);
+    for (const img of imagenes) assert.equal(img.getAttribute('data-origen'), 'render');
+  }
+  assert.equal(dom.querySelector('#hero-render [data-rotulo]').textContent, 'Render 3D');
+});
+test('HistoriaNube hereda el origen general y admite excepciones por activo con su rótulo', () => {
+  for (const [id, origenes, rotulos] of [
+    ['historia-render', ['render'], ['Render 3D']],
+    ['historia-mixta', ['render', 'ilustracion'], ['Render 3D', 'Ilustración']],
+    ['historia-excepcion', ['render'], ['Render 3D']],
+  ]) {
+    const bloque = dom.querySelector(`#${id}`);
+    assert.deepEqual(bloque.querySelectorAll('[data-std-forma]').map(e => e.getAttribute('data-origen')), origenes);
+    assert.deepEqual(bloque.querySelectorAll('.std-rotulo').map(e => e.textContent), rotulos);
+  }
+  assert.equal(dom.querySelector('#historia-render .std-historia__pie [data-rotulo]').textContent, 'Render 3D');
+  assert.equal(dom.querySelector('#historia-render [data-std-nube]').getAttribute('aria-label'), 'Render 3D en nube de puntos: Forma.');
+});
+for (const caso of ['ancla', 'historia', 'activo']) {
+  test(`origen inválido en ${caso} falla al renderizar`, () => {
+    const astro = fileURLToPath(new URL('bin/astro.mjs', import.meta.resolve('astro/package.json')));
+    const build = spawnSync(process.execPath, [astro, 'build'], {
+      cwd: dir, encoding: 'utf8', timeout: 60000,
+      env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1', KIT_ORIGEN_INVALIDO: caso },
+    });
+    assert.notEqual(build.status, 0);
+    assert.match(build.stdout + build.stderr, /rotuloDe: el origen "inventado" no existe/);
+  });
+}

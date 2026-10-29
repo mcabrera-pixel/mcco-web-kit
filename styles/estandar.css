@@ -1,7 +1,7 @@
 /* Estándar visual de las webs MCCO: Apple + antigravity. Lenguaje de apple.com según design-md/apple/DESIGN.md
    (VoltAgent/awesome-design-md, MIT), con las reglas de MCCO.
    Uso: <body class="std">. Cada sitio fija en el :root de su theme.css el color de acción (--accion, --accion-boton,
-   --accion-foco, --accion-oscuro) y, si quiere, los tonos del campo (--campo-claro, --campo-oscuro). El resto lo
+   --accion-texto, --accion-foco, --accion-oscuro) y, si quiere, los tonos del campo (--campo-claro, --campo-oscuro). El resto lo
    fija el kit con las variables --std-*. Los bloques negros llevan data-std-oscuro: dentro, las piezas usan su
    variante clara. */
 
@@ -30,7 +30,8 @@
    hojas. Por defecto, el azul de Apple, con contraste AA. */
 :where(:root) {
   --accion: #0066cc;                    /* texto y enlaces sobre blanco */
-  --accion-boton: #0071e3;              /* relleno de la píldora, con texto blanco */
+  --accion-boton: #0071e3;              /* relleno de la píldora */
+  --accion-texto: #fff;                /* texto sobre el relleno de acción */
   --accion-foco: #0071e3;               /* anillo de foco */
   --accion-oscuro: #2997ff;             /* texto y enlaces sobre negro */
   --campo-claro: var(--accion-oscuro);  /* tonos del campo antigravity */
@@ -68,7 +69,7 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
   --color-text: var(--std-tinta);
   --color-muted: var(--std-gris);
   --color-border: var(--std-linea);
-  --color-on-accent: var(--std-blanco);
+  --color-on-accent: var(--accion-texto);
   --font-body: var(--std-fuente);
   --font-display: var(--std-fuente-display);
   --space: 22px;
@@ -117,7 +118,7 @@ html { scroll-padding-top: calc(var(--std-subnav) + 12px); }
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 44px; padding: 11px 22px;
   border: 1px solid var(--accion-boton); border-radius: 980px;
-  background: var(--accion-boton); color: var(--std-blanco);
+  background: var(--accion-boton); color: var(--accion-texto);
   font: 400 17px/1 var(--std-fuente); letter-spacing: -.022em;
   text-decoration: none; white-space: nowrap; cursor: pointer;
   transition: transform .12s ease, background-color .2s;
