@@ -3,7 +3,9 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
-## v1.3.0 · 2026-10-28
+## v1.3.0 · 2026-10-29
+- `--completo` solo reemplaza una copia administrada (con `manifest.json` y nada fuera de él) y deja la versión anterior en un respaldo hasta que la nueva queda instalada; si el cambio falla, la restaura.
+- El respaldo de la nube se ve cuando falta WebGL2, falla el muestreo o se pierde el contexto, y sin JS queda una sola imagen. Las pruebas evalúan la cascada real.
 - Distribución completa sin Astro en `dist/estandar/`, versionada y empaquetada: CSS compartido, Inter y licencia, módulos ESM minificados, Worker y respaldo dinámico. esbuild 0.28.2 es la única dependencia de desarrollo nueva; Astro pasa a peer opcional para los consumidores HTML.
 - `mcco-estandar-copiar <destino> --completo` valida versión, SHA-256, recursos obligatorios y grafos usando Node nativo. El modo base conserva sus archivos y bytes de v1.2.
 - `build:estandar`, `check:estandar` y `verificar`, con límites de 12 000/5000 B gzip y comunes contados por presupuesto. Nube: 9140 B; campo: 4935 B; página: 14 105 B.
