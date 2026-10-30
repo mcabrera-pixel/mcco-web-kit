@@ -1,5 +1,7 @@
 HTML completo generado desde cfaf658e1f09ced2bff7cbc5a449c7c482114c67 (v1.3.1).
 Astro 7.4.1, build.inlineStylesheets = 'never', formato directory por defecto.
+Zona horaria de captura: UTC. El build de prueba fija TZ=UTC para conservar
+la fecha renderizada de Post aunque el proceso padre use otra zona horaria.
 Entradas: variantes «default» de test/metadatos-html.test.mjs, sin props nuevas.
 Las carpetas components, layouts, lib, styles y data del commit original se copian
 bajo kit/ dentro de la raíz Astro de prueba, para que los IDs de estilos no dependan

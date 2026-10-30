@@ -51,7 +51,7 @@ const subnav = { titulo:'Prueba', enlaces:[], accion:{href:'/contacto',texto:'Co
     }
   }
   const astro = fileURLToPath(new URL('bin/astro.mjs', import.meta.resolve('astro/package.json')));
-  const build = spawnSync(process.execPath, [astro, 'build'], { cwd: dir, encoding: 'utf8', timeout: 60000, env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' } });
+  const build = spawnSync(process.execPath, [astro, 'build'], { cwd: dir, encoding: 'utf8', timeout: 60000, env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1', TZ: 'UTC' } });
   assert.equal(build.status, 0, build.stdout + build.stderr);
   for (const archivo of fs.readdirSync(path.join(dir, 'src/pages'))) {
     const nombre = archivo.replace('.astro', '');
