@@ -5,6 +5,16 @@ import { fileURLToPath } from 'node:url';
 import { build, version as esbuild } from 'esbuild';
 import { KIT, ENTRADAS, listar, sha256, gzip, dependencias, grafo, verificar } from './estandar-verificar.mjs';
 
+// GLSL compacto con los mismos tokens: sin comentarios ni espacios, salvo el que separa dos palabras (o números) y el
+// que separa dos operadores (a - -b no puede volverse a--b). Cada directiva, como la línea obligatoria #version,
+// conserva su propia línea.
+const PALABRA = /[\w.]/, OPERADOR = /[-+*/%<>=!&|^]/;
+export function glsl(fuente) {
+  return fuente.replace(/\/\/[^\n]*/g, '').split('\n').map(s => s.trim().replace(/\s+/g, ' ')).filter(Boolean)
+    .map(s => (s[0] === '#' ? `${s}\n` : `${s} `)).join('')
+    .replace(/ +/g, (m, i, t) => [PALABRA, OPERADOR].some(c => c.test(t[i - 1] ?? '') && c.test(t[i + m.length] ?? '')) ? ' ' : '');
+}
+
 export async function construir(salida = path.join(KIT, 'dist/estandar')) {
   fs.rmSync(salida, { recursive: true, force: true });
   fs.mkdirSync(salida, { recursive: true });
@@ -12,12 +22,12 @@ export async function construir(salida = path.join(KIT, 'dist/estandar')) {
     absWorkingDir: KIT,
     entryPoints: Object.fromEntries(Object.values(ENTRADAS).map(rel => [rel.slice(0, -3), rel])),
     outdir: salida, bundle: true, splitting: true, format: 'esm', platform: 'browser', target: 'es2022',
-    // esbuild no minifica el contenido GLSL de las plantillas. Se retiran comentarios y espacios, conservando
-    // la línea obligatoria #version. El programa y sus constantes siguen viniendo de los runtimes de Astro.
+    // esbuild no minifica el contenido GLSL de las plantillas: lo compacta glsl(), sin cambiar el programa. Sus
+    // instrucciones y constantes siguen viniendo de los runtimes de Astro.
     plugins: [{ name: 'glsl-estandar', setup(build) {
       build.onLoad({ filter: /lib[\\/]estandar[\\/](nube|campo)\.js$/ }, args => ({
         loader: 'js', contents: fs.readFileSync(args.path, 'utf8').replace(/const (VS|FS) = `([^`]+)`;/g,
-          (_, nombre, glsl) => `const ${nombre} = \`${glsl.replace(/\/\/[^\n]*/g, '').split('\n').map(s => s.trim()).filter(Boolean).join('\n')}\`;`),
+          (_, nombre, fuente) => `const ${nombre} = \`${glsl(fuente)}\`;`),
       }));
     } }],
     minify: true, charset: 'utf8', legalComments: 'none', chunkNames: 'lib/estandar/chunks/[name]-[hash]',

@@ -337,7 +337,7 @@ La nube usa un solo lienzo fijo. Después del primer pintado, los puntos suben d
 
 La nube arranca después de la carga, en tiempo ocioso y con un ancla cerca de la vista, y se detiene con la pestaña oculta o fuera de pantalla. Las formas se muestrean en un Worker con OffscreenCanvas. Si falta esa API o falla el Worker, el hilo principal procesa una forma por vez, con lotes de hasta 256 elementos y un presupuesto de 8 ms entre pausas. La ordenación estable conserva el resultado de rc.1 para cada semilla. El cierre cancela los pedidos pendientes y el respaldo activo entre lotes; el Worker se cierra cuando llega la última forma. `window.__mccoNube.state` deja ver el estado para verificar.
 
-El campo queda detrás del texto de su contenedor y sus guiones pasan entre las letras sin recuadros blancos, también cuando falla la primera forma y se muestra el respaldo de la nube. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
+El campo queda detrás del texto de su contenedor, sin recuadros blancos, también cuando falla la primera forma y se muestra el respaldo de la nube. Desde v1.4.1 el texto queda despejado: en la caja que ocupa el texto del hero (la unión de las líneas del H1 y de `.std-hero__bajada` y de las píldoras de `.std-acciones`) no se dibuja ningún guion, y el campo se desvanece de forma suave hacia afuera, de 8 a 56 px del borde de esa caja. Fuera de ella el campo sigue igual, también sobre la nube. La caja se mide con esas clases, sin marcado nuevo, y se vuelve a medir al cambiar el tamaño, al cargar una fuente y cuando el contenido cambia de alto. Sin ese texto en el contenedor, el campo lo ocupa todo, como antes. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
 
 El centro del campo persigue al mouse con unos 1,4 s de retraso, sin cursor pasea despacio, los anillos giran a 0,012 rad/s y el scroll no los mueve. Sobre la nube los guiones bajan a un tercio. Con movimiento reducido no se crea, y sin WebGL2 no queda nada porque es decorativo. `window.__mccoCampo.state` deja ver su estado.
 
@@ -361,7 +361,7 @@ Los límites y las mediciones de JS de esta tabla corresponden al build optimiza
 | Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB; el que sirve de respaldo del hero no pasa de 150 KB, el tope de héroes del contrato de cada sitio | |
 | Videos | 8 MB, H.264 con `faststart`, poster WebP, `muted`, `playsinline`, `preload="none"`, en R2 | |
 
-El JS se midió con zlib nivel 9 sobre el build de Astro 7.3.8 de la demo de `mcco-web-template`, sumando cada archivo comprimido por separado. Se cuentan las dos entradas de la nube y todos sus módulos alcanzables, incluido el respaldo dinámico aunque funcione el Worker. `node test/estandar-presupuesto.mjs <dist>` reproduce la medición y comprueba límites conservadores de 12 000 y 5000 bytes. El margen del campo es de 40 bytes: cualquier cambio en las utilidades compartidas requiere volver a medir ambos presupuestos.
+El JS se midió con zlib nivel 9 sobre el build de Astro 7.3.8 de la demo de `mcco-web-template`, sumando cada archivo comprimido por separado. Se cuentan las dos entradas de la nube y todos sus módulos alcanzables, incluido el respaldo dinámico aunque funcione el Worker. `node test/estandar-presupuesto.mjs <dist>` reproduce la medición y comprueba límites conservadores de 12 000 y 5000 bytes. En v1.4.1 el campo, con su zona despejada, mide 4901 B en el build de Astro del contrato (`test/fixtures/estandar-astro`); cualquier cambio en las utilidades compartidas requiere volver a medir ambos presupuestos.
 
 ## Regla de imágenes y rótulos de origen
 
@@ -407,16 +407,16 @@ node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar --co
 ```
 
 Contrato HTML, marcado completo de cada pieza y variantes independientes: [ESTANDAR-HTML.md](ESTANDAR-HTML.md).
-El modo completo cumple los límites conservadores: nube **9140 B gzip / 12 000 B**, campo **4935 B / 5000 B**,
-con pausa pública y comunes en cada presupuesto aislado. Total JS de página **14 105 B**, contando cada recurso
+El modo completo cumple los límites conservadores: nube **9022 B gzip / 12 000 B**, campo **4973 B / 5000 B**,
+con pausa pública y comunes en cada presupuesto aislado. Total JS de página **14 025 B**, contando cada recurso
 una vez. `npm run check:estandar` reconstruye el grafo (también imports dinámicos y URL del Worker), comprime cada
 respuesta con `gzipSync` nivel 9 y falla si hay corrupción o se excede un límite. Menú **457 B**, subnav **341 B**,
 video **1351 B** con su común. La medición vigente completa está en `dist/estandar/manifest.json` y en la salida
 del verificador; estos valores no reemplazan la medición de la página del sitio con sus adaptadores.
 
-El empaquetado usa esbuild **0.28.2**, división de módulos comunes y entradas estables. Retira comentarios de GLSL
-sin cambiar sus instrucciones. `pausa.js` reexporta el único estado de pausa compartido por nube y campo; ambos
-usan una sola instancia de `comun.js`. El mismo `nube-worker.js` es Worker ESM y respaldo importado dinámicamente.
+El empaquetado usa esbuild **0.28.2**, división de módulos comunes y entradas estables. Compacta el GLSL (sin
+comentarios ni espacios que no separen dos palabras o dos operadores) sin cambiar sus tokens. `pausa.js` reexporta
+el único estado de pausa compartido por nube y campo; ambos usan una sola instancia de `comun.js`. El mismo `nube-worker.js` es Worker ESM y respaldo importado dinámicamente.
 La distribución no incluye fechas ni rutas absolutas y dos builds limpios deben producir los mismos bytes.
 
 Astro sigue usando los runtimes fuente y recibe las mismas hojas a través de cada componente o del layout.
