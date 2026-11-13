@@ -33,7 +33,7 @@
     "test": "node --test \"test/*.test.mjs\"",
     "build:estandar": "node scripts/estandar-build.mjs",
     "check:estandar": "node scripts/estandar-verificar.mjs",
-    "verificar": "npm test && npm run build:estandar && npm run check:estandar && node test/estandar-html.verificar.mjs"
+    "verificar": "npm test && npm run build:estandar && npm run check:estandar && node test/estandar-html.verificar.mjs && node test/estandar-campo-texto.verificar.mjs"
   },
   "files": [
     "config", "content", "layouts", "components", "pages", "data", "endpoints",
