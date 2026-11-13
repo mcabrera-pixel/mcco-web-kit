@@ -35,6 +35,10 @@ const CERCA = 16, MEDIA = [48, 112], LEJOS = 64;
 const MIN_PINTADOS = 100, MIN_FRACCION = 0.003;
 // Un recorte duro en el borde deja la franja pegada con casi la misma alfa media que la media; el desvanecimiento no.
 const BORDE_SUAVE = 0.35;
+// Rampa (8-20 px de la caja): tiene que haber guiones y todos tenues, con alfa máxima bajo la mitad de la de la zona
+// lejana. Un corte duro a d ≤ ~25 px deja ahí guiones con alfa plena; uno más lejos la deja vacía; uno más cerca que
+// 16 px lo atrapa BORDE_SUAVE. Con la rampa smoothstep(8, 56) la razón queda cerca de 0,3.
+const RAMPA = [8, 20], TENUE = 0.5;
 
 // Antes de la carga: lienzos WebGL2 con preserveDrawingBuffer (lectura estable) y la medición, solo para la prueba.
 const antes = `
@@ -73,7 +77,7 @@ window.__campoTexto = () => {
   // Las franjas usan el centro de cada píxel y su distancia a la caja unión; fuera de la nube y del borde inferior
   // difuminado del hero (70 px), que atenúan el campo por su cuenta.
   const franja = (desde, hasta) => {
-    let pixeles = 0, pintados = 0, suma = 0;
+    let pixeles = 0, pintados = 0, suma = 0, alfaMax = 0;
     for (let y = 0; y < c.height; y++) {
       const cy = (y + .5) / sy;
       if (cy > z.height - 70) break;
@@ -83,10 +87,10 @@ window.__campoTexto = () => {
         const d = Math.hypot(Math.max(union.x0 - cx, 0, cx - union.x1), Math.max(union.y0 - cy, 0, cy - union.y1));
         if (d <= desde || d > hasta) continue;
         const a = datos[(y * c.width + x) * 4 + 3]; pixeles++;
-        if (a > 0) { pintados++; suma += a; }
+        if (a > 0) { pintados++; suma += a; alfaMax = Math.max(alfaMax, a); }
       }
     }
-    return { pixeles, pintados, fraccion: pixeles ? pintados / pixeles : 0, alfaMedia: pixeles ? suma / pixeles / 255 : 0 };
+    return { pixeles, pintados, fraccion: pixeles ? pintados / pixeles : 0, alfaMedia: pixeles ? suma / pixeles / 255 : 0, alfaMax };
   };
   const centro = window.__mccoCampo.state.center;
   return {
@@ -94,6 +98,7 @@ window.__campoTexto = () => {
     centroEnTexto: centro[0] >= union.x0 && centro[0] <= union.x1 && centro[1] >= union.y0 && centro[1] <= union.y1,
     bajo: Object.fromEntries(Object.entries(cajas).map(([n, b]) => [n, bajo(b)])),
     cerca: franja(0, ${CERCA}), media: franja(${MEDIA[0]}, ${MEDIA[1]}), lejos: franja(${LEJOS}, Infinity),
+    rampa: franja(${RAMPA[0]}, ${RAMPA[1]}),
   };
 };`;
 
@@ -112,6 +117,8 @@ function evaluar(nombre, m, { centro = true } = {}) {
   ok(`${nombre}: hay campo lejos del texto`, conCampo(m), { ...m.lejos, minimo: MIN_PINTADOS, fraccionMinima: MIN_FRACCION });
   ok(`${nombre}: borde suave`, m.media.alfaMedia > 0 && m.cerca.alfaMedia < BORDE_SUAVE * m.media.alfaMedia,
     { cerca: m.cerca, media: m.media, razon: m.media.alfaMedia ? m.cerca.alfaMedia / m.media.alfaMedia : null, maximo: BORDE_SUAVE });
+  ok(`${nombre}: rampa sin corte duro (${RAMPA.join('-')} px)`, m.rampa.pintados > 0 && m.lejos.alfaMax > 0 && m.rampa.alfaMax < TENUE * m.lejos.alfaMax,
+    { rampa: m.rampa, alfaMaxLejos: m.lejos.alfaMax, razon: m.lejos.alfaMax ? m.rampa.alfaMax / m.lejos.alfaMax : null, maximo: TENUE });
 }
 // Lleva el mouse al centro de la bajada y espera a que el centro del campo llegue (persigue con unos 1,4 s de retraso);
 // después fija el cuadro con la pausa común, que dibuja el campo completo y se detiene.
