@@ -5,9 +5,12 @@
 // - bajo la caja del texto del H1, de la bajada y de las acciones el lienzo no tiene ningún píxel con alfa > 0;
 // - en el hero lejos del texto (y fuera de la nube) sí hay guiones;
 // - el borde es suave: la franja pegada al texto tiene mucho menos alfa media que una franja algo más afuera;
-// - tras alargar la bajada y tras cambiar el tamaño de la ventana se cumple lo mismo sobre las cajas nuevas.
-// La caja de cada pieza es la de su texto (un Range sobre su contenido: líneas del H1 y de la bajada, píldoras de las
-// acciones). La del elemento también se registra en la evidencia: el H1 y la bajada son bloques del ancho del hero.
+// - tras alargar la bajada y tras cambiar el tamaño de la ventana se cumple lo mismo sobre las cajas nuevas;
+// - con texto .std-oculto (solo para lectores de pantalla) en las acciones, la zona despejada no crece hacia donde ese
+//   texto no se ve: a la derecha del texto visible sigue habiendo campo (variante oculto.html, en 1366 px).
+// La caja de cada pieza es la de su texto: un Range sobre el contenido del H1 y de la bajada (sus líneas) y la unión
+// de las píldoras de las acciones. La del elemento también se registra en la evidencia: el H1 y la bajada son bloques
+// del ancho del hero.
 // Para leer el lienzo WebGL sin depender del compositor se fuerza preserveDrawingBuffer con un script previo a la carga.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,6 +27,13 @@ fs.mkdirSync(salida, { recursive: true });
 fs.cpSync(path.join(KIT, 'test/fixtures/estandar-html'), sitio, { recursive: true });
 const copia = spawnSync(process.execPath, [path.join(KIT, 'scripts/estandar-copiar.mjs'), path.join(sitio, 'estandar'), '--completo'], { encoding: 'utf8', timeout: 120000 });
 assert.equal(copia.status, 0, copia.stdout + copia.stderr);
+// Variante con la prop `oculto` de Acciones en el hero: un span .std-oculto largo en cada píldora.
+const contrato = fs.readFileSync(path.join(sitio, 'index.html'), 'utf8');
+const acciones = '<a class="std-pildora" href="#galeria">Ver piezas</a><a class="std-pildora std-pildora--fantasma" href="#pie">Contacto</a>';
+assert.ok(contrato.includes(acciones));
+fs.writeFileSync(path.join(sitio, 'oculto.html'), contrato.replace(acciones,
+  '<a class="std-pildora" href="#galeria">Ver piezas<span class="std-oculto"> del contrato del estándar, con todas sus piezas y variantes</span></a>' +
+  '<a class="std-pildora std-pildora--fantasma" href="#pie">Contacto<span class="std-oculto"> con el equipo comercial del grupo y de sus marcas, en Chile y en el extranjero</span></a>'));
 if (!process.env.CHROME) throw new Error('Falta CHROME: ruta al ejecutable de Chrome/Chromium. Se usa CDP, sin Playwright.');
 const headers = { 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self'; worker-src 'self'; connect-src 'self'", 'X-Content-Type-Options': 'nosniff' };
 const opciones = { headers, temporales: salida, chromeArgs: process.env.ESTANDAR_SWIFTSHADER === '1' ? ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] : [] };
@@ -53,15 +63,16 @@ window.__campoTexto = () => {
   const datos = g.getImageData(0, 0, c.width, c.height).data;
   const rel = r => ({ x0: r.left - z.left, y0: r.top - z.top, x1: r.right - z.left, y1: r.bottom - z.top });
   const piezas = { h1: 'h1', bajada: '.std-hero__bajada', acciones: '.std-acciones' };
-  const cajas = {}, elementos = {};
+  const unir = v => ({ x0: Math.min(...v.map(b => b.x0)), y0: Math.min(...v.map(b => b.y0)), x1: Math.max(...v.map(b => b.x1)), y1: Math.max(...v.map(b => b.y1)) });
+  const cajas = {}, elementos = {}, rangos = {};
   for (const [n, s] of Object.entries(piezas)) {
     const e = hero.querySelector(s), r = document.createRange();
     r.selectNodeContents(e);
-    cajas[n] = rel(r.getBoundingClientRect());
+    rangos[n] = rel(r.getBoundingClientRect());
     elementos[n] = rel(e.getBoundingClientRect());
+    cajas[n] = n === 'acciones' ? unir([...e.children].map(a => rel(a.getBoundingClientRect()))) : rangos[n];
   }
-  const v = Object.values(cajas);
-  const union = { x0: Math.min(...v.map(b => b.x0)), y0: Math.min(...v.map(b => b.y0)), x1: Math.max(...v.map(b => b.x1)), y1: Math.max(...v.map(b => b.y1)) };
+  const union = unir(Object.values(cajas));
   const ancla = hero.querySelector('[data-std-nube="hero"]');
   const nube = ancla ? rel(ancla.getBoundingClientRect()) : null;
   // Bajo una caja cuenta todo píxel del lienzo que la toque, aunque sea en parte.
@@ -76,7 +87,7 @@ window.__campoTexto = () => {
   };
   // Las franjas usan el centro de cada píxel y su distancia a la caja unión; fuera de la nube y del borde inferior
   // difuminado del hero (70 px), que atenúan el campo por su cuenta.
-  const franja = (desde, hasta) => {
+  const zona = dentro => {
     let pixeles = 0, pintados = 0, suma = 0, alfaMax = 0;
     for (let y = 0; y < c.height; y++) {
       const cy = (y + .5) / sy;
@@ -85,20 +96,23 @@ window.__campoTexto = () => {
         const cx = (x + .5) / sx;
         if (nube && cx >= nube.x0 && cx <= nube.x1 && cy >= nube.y0 && cy <= nube.y1) continue;
         const d = Math.hypot(Math.max(union.x0 - cx, 0, cx - union.x1), Math.max(union.y0 - cy, 0, cy - union.y1));
-        if (d <= desde || d > hasta) continue;
+        if (!dentro(cx, cy, d)) continue;
         const a = datos[(y * c.width + x) * 4 + 3]; pixeles++;
         if (a > 0) { pintados++; suma += a; alfaMax = Math.max(alfaMax, a); }
       }
     }
     return { pixeles, pintados, fraccion: pixeles ? pintados / pixeles : 0, alfaMedia: pixeles ? suma / pixeles / 255 : 0, alfaMax };
   };
+  const franja = (desde, hasta) => zona((cx, cy, d) => d > desde && d <= hasta);
   const centro = window.__mccoCampo.state.center;
   return {
-    lienzo: [c.width, c.height], escala: [sx, sy], centro, cajas, elementos, union, nube,
+    lienzo: [c.width, c.height], escala: [sx, sy], centro, cajas, elementos, rangos, union, nube,
     centroEnTexto: centro[0] >= union.x0 && centro[0] <= union.x1 && centro[1] >= union.y0 && centro[1] <= union.y1,
     bajo: Object.fromEntries(Object.entries(cajas).map(([n, b]) => [n, bajo(b)])),
     cerca: franja(0, ${CERCA}), media: franja(${MEDIA[0]}, ${MEDIA[1]}), lejos: franja(${LEJOS}, Infinity),
     rampa: franja(${RAMPA[0]}, ${RAMPA[1]}),
+    // A la derecha del texto visible, a la altura del texto y lejos de él.
+    derecha: zona((cx, cy) => cx > union.x1 + ${LEJOS} && cy >= union.y0 && cy <= union.y1),
   };
 };`;
 
@@ -140,10 +154,26 @@ async function medirTras(p) {
 
 try {
   browser = await navegador(sitio, KIT, opciones);
-  for (const [w, h, escala, otra] of [[1366, 650, 1, [1024, 600]], [390, 844, 2, [360, 740]]]) {
+  for (const [w, h, escala, otra] of [[1366, 650, 1, [1024, 600]], [390, 844, 2, [360, 740]], [1366, 650, 1, null]]) {
     const p = await browser.pagina(antes);
     const evidencia = {};
     try {
+      if (!otra) {
+        // Texto .std-oculto en las acciones: se lee con lector de pantalla pero no se ve, así que no despeja campo.
+        await p.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: escala, mobile: false });
+        await p.ir('/oculto.html');
+        await p.ev('document.fonts.ready');
+        await p.hasta('window.__mccoCampo?.state.puntos>0 && window.__mccoNube?.state.frames>2', 30000);
+        await centrarYPausar(p);
+        const m = evidencia.oculto = await p.ev('__campoTexto()');
+        ok(`${w}x${h} oculto: el Range de las acciones sí incluye el texto oculto`, m.rangos.acciones.x1 > m.union.x1 + 200, { rango: m.rangos.acciones, union: m.union });
+        evaluar(`${w}x${h} oculto`, m);
+        ok(`${w}x${h} oculto: hay campo a la derecha del texto visible`, m.derecha.pintados >= MIN_PINTADOS && m.derecha.fraccion >= MIN_FRACCION,
+          { ...m.derecha, minimo: MIN_PINTADOS, fraccionMinima: MIN_FRACCION });
+        await p.captura(path.join(salida, `hero-${w}-oculto.png`));
+        ok(`${w}x${h} oculto: excepciones`, p.errores.length === 0, p.errores);
+        continue;
+      }
       await p.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: escala, mobile: false });
       await p.ir('/index.html');
       await p.ev('document.fonts.ready');
@@ -178,7 +208,7 @@ try {
     } catch (e) {
       ok(`${w}x${h}`, false, e.message);
     } finally {
-      fs.writeFileSync(path.join(salida, `medidas-${w}.json`), JSON.stringify(evidencia, null, 2) + '\n');
+      fs.writeFileSync(path.join(salida, `medidas-${w}${otra ? '' : '-oculto'}.json`), JSON.stringify(evidencia, null, 2) + '\n');
       await p.cerrar();
     }
   }
