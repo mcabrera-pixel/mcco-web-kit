@@ -3,11 +3,14 @@
 // class="std">, la barra global, la sub-navegación fija, el <main> con la página y el pie propio del sitio (slot
 // "pie") antes de FooterGrupo. El slot "head" agrega lo propio del sitio a la cabecera (favicon, precargas).
 // Precarga Inter latina para que el H1, que es el LCP, no cambie de letra (ni se mueva) cuando llega la fuente.
+// El primer hijo del <body> es el enlace «Saltar al contenido» (v1.4.2), en el idioma de la página, al <main>. Su id
+// lleva prefijo del kit: hay sitios con su propio id="contenido" dentro de la página.
 import type { ComponentProps } from 'astro/types';
 import Base from './Base.astro';
 import NavGlobal from '../components/estandar/NavGlobal.astro';
 import SubNav from '../components/estandar/SubNav.astro';
 import { loadSite } from '../lib/site.mjs';
+import { esEspanol } from '../lib/idioma.mjs';
 import interLatin from '../styles/fuentes/inter-latin-wght-normal.woff2?url';
 import '../styles/estandar.css';
 import '../styles/estandar-componentes.css';
@@ -28,8 +31,9 @@ const { lang = loadSite().lang } = base;
 <Base {...base} bodyClass={['std', bodyClass].filter(Boolean).join(' ')}>
   <link slot="head" rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
   <slot name="head" slot="head" />
+  <a class="std-saltar" href="#std-contenido">{esEspanol(lang) ? 'Saltar al contenido' : 'Skip to content'}</a>
   <NavGlobal {...nav} lang={nav?.lang ?? lang} />
   <SubNav {...subnav} lang={subnav?.lang ?? lang} />
-  <main><slot /></main>
+  <main id="std-contenido"><slot /></main>
   <slot name="pie" />
 </Base>

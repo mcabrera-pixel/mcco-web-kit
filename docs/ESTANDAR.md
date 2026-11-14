@@ -90,6 +90,42 @@ const subnav = {
 
 Es el `Base` del kit con `<body class="std">`, la barra global, la sub-navegación, la página dentro de `<main>` y el pie propio del sitio (slot `pie`) antes del bloque Grupo MCCO, que se quita con `footer={false}`. El slot `head` suma a la cabecera lo del sitio, como el favicon o una precarga. El layout precarga Inter latina para que el H1, que es el LCP, no cambie de letra cuando llega la fuente.
 
+### Enlace «Saltar al contenido» (v1.4.2)
+
+`Estandar` y `Post` emiten como primer hijo del `<body>`, y por lo tanto como primer elemento enfocable, un enlace
+al `<main>` del layout, que lleva el id que el enlace apunta. El texto sigue el idioma de la página con la misma regla
+de las demás piezas (`esEspanol` de `lib/idioma.mjs`): «Saltar al contenido» si el subtag primario es `es` o no hay
+`lang`, «Skip to content» con cualquier otro.
+
+| Layout | Marcado | Estilo |
+|---|---|---|
+| `Estandar` | `<a class="std-saltar" href="#std-contenido">` antes de `NavGlobal`; `<main id="std-contenido">` | `.std-saltar` en `styles/estandar.css` (entra en `dist/estandar`) |
+| `Post` | `<a class="mcco-saltar" href="#mcco-contenido">` antes del slot `nav`; `<main id="mcco-contenido" class="mcco-post">` | `<style>` del layout: `Post` no carga la hoja del estándar |
+| `Base` | No emite enlace: no tiene `<main>` y el enlace quedaría roto | El sitio que usa `Base` directo pone el suyo |
+
+Los id llevan prefijo del kit porque hay sitios con su propio `id="contenido"` dentro de la página (la portada de
+cuplai): un id repetido rompería su HTML. `Post` usa el prefijo `mcco-` de su plantilla (`mcco-post`) para no
+depender de clases del estándar.
+
+Sin foco, el enlace queda fuera de la vista (`position: fixed` y `transform` hacia arriba, sin `display: none`, así
+sigue en el orden de tabulación y en el árbol de accesibilidad). Con foco aparece arriba a la izquierda (8 px), sobre
+la barra global (`z-index` 12) y la sub-navegación (11) con `z-index` 13, como píldora de 44 px de alto con tinta
+sobre blanco (16:1, AA con cualquier color de acción) y el anillo de foco del estándar. `.mcco-saltar` tiene el mismo
+comportamiento con colores fijos (`#1d1d1f` sobre `#fff`) y `z-index` 1000, porque la barra del slot `nav` es del
+sitio. Al activarlo, el navegador lleva la lectura y el siguiente Tab al `<main>`.
+
+Es aditivo: ninguna web tiene que cambiar su código para subir a v1.4.2. Dos casos conocidos:
+
+- **as-built** arma su propio HTML con la distribución, sin el layout, así que no recibe el enlace del kit. Ya cumple:
+  su `<a class="skip" href="#contenido">Ir al contenido</a>` es el primer hijo del body y apunta a su
+  `<main id="contenido">`. Puede pasar a la clase del kit cambiando `class="skip"` por `class="std-saltar"` (el
+  `href` y su id pueden quedar como están) y quitar entonces su regla local `.std .skip` y `.std .skip:focus` de
+  `public/css/sitio-estandar.css`. No es obligatorio.
+- **cuplai** usa `Estandar` y pone su propio `<a class="skip-link" href="#contenido">` en el slot por defecto de
+  `src/layouts/Sitio.astro` (queda dentro del `<main>`, después de las dos barras). Con v1.4.2 tendría dos enlaces de
+  salto, el del kit primero: debe quitar el suyo y la regla `.skip-link` de `src/styles/theme.css`. Su
+  `<div id="contenido">` de la portada puede quedar, porque el del kit apunta a `#std-contenido`.
+
 ### Idioma y metadatos por página (v1.4.0)
 
 `Base`, `Estandar` y `Post` aceptan estas props opcionales; el layout propio del sitio debe

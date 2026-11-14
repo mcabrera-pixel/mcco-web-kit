@@ -1,6 +1,8 @@
 ---
 // Layout de artículo (blog/guía): cabecera, cápsula GEO, contenido, fuentes, FAQ, relacionados, CTA,
 // JSON-LD BlogPosting + BreadcrumbList (+ FAQPage vía <Faq>). Recibe la entrada de la colección.
+// El primer hijo del <body> es el enlace «Saltar al contenido» (v1.4.2), en el idioma de la página, al <main>. Post no
+// carga la hoja del estándar: su clase y su id son del kit general (mcco-) y su estilo va en el <style> de abajo.
 import type { ComponentProps } from 'astro/types';
 import Base from './Base.astro';
 import AiCapsule from '../components/AiCapsule.astro';
@@ -8,6 +10,7 @@ import Faq from '../components/Faq.astro';
 import Cta from '../components/Cta.astro';
 import { loadSite } from '../lib/site.mjs';
 import { canonicalFor } from '../lib/routes.mjs';
+import { esEspanol } from '../lib/idioma.mjs';
 
 interface Props extends Pick<ComponentProps<typeof Base>, 'lang' | 'ogTitle' | 'ogDescription' | 'ogUrl' | 'robots'> { post: any; section?: string; sectionTitle?: string; wordCount?: number }
 const site = loadSite();
@@ -52,8 +55,9 @@ const fecha = d.date.toLocaleDateString('es-CL', { year: 'numeric', month: 'long
 <Base title={d.seo_title ?? d.title} description={d.description} type="article" ogImage={hero}
       published={published} modified={modified} jsonld={[blogPosting, breadcrumb]}
       lang={lang} ogTitle={ogTitle} ogDescription={ogDescription} ogUrl={ogUrl} robots={robots}>
+  <a class="mcco-saltar" href="#mcco-contenido">{esEspanol(lang) ? 'Saltar al contenido' : 'Skip to content'}</a>
   <slot name="nav" />
-  <main class="mcco-post" data-mcco="post">
+  <main id="mcco-contenido" class="mcco-post" data-mcco="post">
     <article>
       <header class="mcco-post__header">
         <nav aria-label="Ruta" class="mcco-post__crumbs">
@@ -88,6 +92,16 @@ const fecha = d.date.toLocaleDateString('es-CL', { year: 'numeric', month: 'long
   <slot name="footer" />
 </Base>
 <style>
+  /* Enlace de salto: el mismo comportamiento que .std-saltar del estándar, con colores fijos (AA en cualquier tema).
+     Fuera de la vista hasta recibir foco; con foco, arriba a la izquierda, sobre la barra del sitio, con 44 px de alto. */
+  .mcco-saltar {
+    position: fixed; top: 8px; left: 8px; z-index: 1000; box-sizing: border-box;
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px;
+    border: 1px solid #1d1d1f; border-radius: 980px; background: #fff; color: #1d1d1f;
+    font: 400 17px/1 var(--mcco-font-body); text-decoration: none;
+    transform: translateY(calc(-100% - 16px));
+  }
+  .mcco-saltar:focus { transform: none; outline: 2px solid #1d1d1f; outline-offset: 2px; }
   .mcco-post { max-width: 760px; margin: 0 auto; padding: calc(var(--mcco-space) * 2) var(--mcco-space); font-family: var(--mcco-font-body); color: var(--mcco-color-text); }
   .mcco-post__crumbs { font-size: 0.8125rem; color: var(--mcco-color-muted); margin-bottom: 0.75rem; }
   .mcco-post__crumbs a { color: inherit; }

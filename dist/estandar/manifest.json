@@ -76,9 +76,9 @@
       "dependencias": []
     },
     "styles/estandar.css": {
-      "bytes": 9611,
-      "gzip": 3633,
-      "sha256": "4c78a2b8cc5b7b2f2799f868448320ddaf64815c9b6003faa67f69480acf5fc3",
+      "bytes": 10401,
+      "gzip": 3883,
+      "sha256": "4c699dbcd3a7bb2bc5569ba4c0974eebfdfb6bb88b9c578eb41aa19913f30565",
       "dependencias": [
         "styles/fuentes/inter-latin-ext-wght-normal.woff2",
         "styles/fuentes/inter-latin-wght-normal.woff2"

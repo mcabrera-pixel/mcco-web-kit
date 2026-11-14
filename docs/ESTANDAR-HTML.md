@@ -28,7 +28,8 @@ fixtures, reemplazables por medios autorizados del sitio. La fixture ejecutable 
   <script type="module" src="/estandar/lib/visual/video.js"></script>
 </head>
 <body class="std">
-  <!-- NavGlobal, SubNav, main y footer: ver ejemplo completo -->
+  <a class="std-saltar" href="#std-contenido">Saltar al contenido</a>
+  <!-- NavGlobal, SubNav, <main id="std-contenido"> y footer: ver ejemplo completo -->
 </body>
 </html>
 ```
@@ -46,10 +47,34 @@ por elemento (`--formas`, `--w`, `--h`, `--logo`) pueden ir en una hoja local si
 Autorizar por separado los orígenes reales de imágenes/video del sitio. Servir `.js` como JavaScript, `.css` como
 CSS, `.woff2` como fuente y `.mp4` como video. No abrir el documento como `file://`.
 
+## Enlace «Saltar al contenido»
+
+Recomendado, no obligatorio (v1.4.2): una página sin él sigue funcionando igual. Va como primer hijo del `<body>`,
+antes de la barra global, para que sea el primer elemento enfocable, y apunta al id del `<main>`:
+
+```html
+<body class="std">
+  <a class="std-saltar" href="#std-contenido">Saltar al contenido</a>
+  <header class="std-gnav" data-std-gnav>…</header>
+  <div class="std-subnav">…</div>
+  <main id="std-contenido">…</main>
+  <footer>…</footer>
+</body>
+```
+
+El texto va en el idioma de la página: «Skip to content» en una página con `lang="en"`. `estandar.css` trae la regla
+`.std-saltar`: fuera de la vista sin foco y, con foco, píldora de 44 px arriba a la izquierda, sobre la barra global
+y la sub-navegación, con tinta sobre blanco. No necesita JavaScript. El id puede ser otro si la página ya tiene el
+suyo, siempre que el `href` apunte a él y sea único: `std-contenido` es el que usa el layout `Estandar`, con prefijo
+del kit para no chocar con un `id="contenido"` del sitio. Una web que ya tiene su propio enlace de salto (por ejemplo
+`<a class="skip" href="#contenido">` con su CSS) cumple igual; para usar la regla del kit basta cambiar su clase por
+`std-saltar` y quitar su CSS local. No poner dos enlaces de salto.
+
 ## Piezas y atributos
 
 | Pieza | Contrato público mínimo (estructura completa en el ejemplo) | Runtime |
 |---|---|---|
+| Enlace de salto | `a.std-saltar[href="#<id del main>"]`, primer hijo del body; recomendado | ninguno |
 | NavGlobal | `header.std-gnav[data-std-gnav] > nav.std-gnav__in`; logo, botón `[data-std-menu]` con `aria-expanded="false"` y `aria-controls` igual al ID de `ul.std-gnav__enlaces` | `menu.js` |
 | SubNav | `.std-subnav > .std-subnav__in`, título y `nav.std-subnav__nav`, enlaces y acción `.std-subnav__accion`; hija directa de body para sticky | `subnav.js` |
 | HeroEstandar | `section.std-hero`, H1 `.std-h1`, bajada `.std-lead.std-hero__bajada`, acciones, campo/nube opcionales y pausa | nube/campo según uso |
