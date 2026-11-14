@@ -33,6 +33,18 @@ const subnav = { titulo: 'Prueba', enlaces: [], accion: { href: '/contacto', tex
 </Layout>`;
 const paginas = {};
 for (const layout of ['Estandar', 'Post', 'Base']) for (const lang of Object.keys(idiomas)) paginas[`${layout}-${lang}`.toLowerCase()] = pagina(layout, lang);
+// Estandar con lo que un sitio le pasa al layout: algo en el slot head, clases propias del body y sin el bloque Grupo.
+// Nada de eso puede adelantarse al enlace.
+paginas['estandar-variantes'] = `---
+import Layout from '${dir}/kit/layouts/Estandar.astro';
+const nav = { logo: { src: '/logo.svg', alt: 'Prueba', width: 32, height: 32 }, enlaces: [{ href: '/', texto: 'Inicio' }] };
+const subnav = { titulo: 'Prueba', enlaces: [], accion: { href: '/contacto', texto: 'Contactar' } };
+---
+<Layout title="Título" description="Descripción" lang="es-CL" nav={nav} subnav={subnav} bodyClass="sitio" footer={false}>
+  <link slot="head" rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <h1>Prueba</h1><p><a href="/otra/">Enlace del contenido</a></p>
+  <footer slot="pie"><a href="/privacidad/">Privacidad</a></footer>
+</Layout>`;
 
 const html = new Map();
 const css = new Map();
@@ -107,17 +119,42 @@ for (const [layout, { clase, id }] of Object.entries(layouts)) {
 
 // La hoja que aplica cada layout trae el estilo de su enlace: fuera de la vista y visible con foco. Post no carga la
 // hoja del estándar, así que su regla viene en su propia hoja y no depende de std-saltar.
+// Declaraciones de las reglas cuyo selector es exactamente `.clase` (con o sin el atributo de ámbito de Astro) más
+// `sufijo`, en el CSS minificado que enlaza la página. Las reglas dentro de @media también cuentan.
+function declaraciones(hojas, clase, sufijo = '') {
+  const selector = new RegExp(`^\\.${clase}(\\[data-astro-cid-[\\w-]+\\])?${sufijo}$`);
+  return [...hojas.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, sel]) => sel.split(',').some((x) => selector.test(x.trim())))
+    .map(([, , cuerpo]) => cuerpo).join(';');
+}
 for (const [layout, { clase }] of Object.entries(layouts)) {
-  test(`${layout}: la hoja de la página posiciona .${clase} y lo muestra con foco`, () => {
+  test(`${layout}: la hoja de la página saca .${clase} de la vista y lo muestra con foco`, () => {
     const hojas = css.get(`${layout}-es`.toLowerCase());
-    assert.match(hojas, new RegExp(`\\.${clase}(\\[[^\\]]+\\])?\\{[^}]*position:fixed`), `sin regla .${clase} con position:fixed`);
-    assert.match(hojas, new RegExp(`\\.${clase}(\\[[^\\]]+\\])?:focus\\b`), `sin regla .${clase}:focus`);
+    const base = declaraciones(hojas, clase);
+    assert.match(base, /position:fixed/, `.${clase} sin position:fixed`);
+    assert.match(base, /min-height:44px/, `.${clase} sin 44 px de alto`);
+    // Sin foco sube más que su propio alto: queda sobre el borde de la vista sin depender de cuánto mide.
+    assert.match(base, /transform:translateY\(calc\(-100% - \d+px\)\)/, `.${clase} sin foco no sale de la vista`);
+    assert.doesNotMatch(base, /display:none|visibility:hidden/, `.${clase} no puede salir del orden de tabulación`);
+    assert.match(declaraciones(hojas, clase, ':focus'), /transform:none/, `.${clase}:focus no lo devuelve a la vista`);
   });
 }
 test('Post: no carga la hoja del estándar ni usa std-saltar', () => {
   const d = dom('Post', 'es');
   assert.equal(d.querySelectorAll('.std-saltar').length, 0);
   assert.doesNotMatch(css.get('post-es'), /\.std-saltar|\.std-pildora/);
+});
+
+test('Estandar con slot head, bodyClass y footer={false}: el enlace sigue primero', () => {
+  const d = parse(html.get('estandar-variantes'));
+  const body = d.querySelector('body');
+  assert.equal(body.getAttribute('class'), 'std sitio');
+  assert.ok(d.querySelector('head link[rel="icon"][href="/favicon.svg"]'), 'el slot head llega a <head>');
+  assert.equal(d.querySelectorAll('.mcco-grupo').length, 0, 'footer={false} quita el bloque Grupo');
+  const primero = body.childNodes.find((n) => n.nodeType === 1);
+  assert.equal(primero?.outerHTML, '<a class="std-saltar" href="#std-contenido">Saltar al contenido</a>');
+  assert.equal(enfocables(body)[0], primero);
+  assert.equal(d.querySelector('main').getAttribute('id'), 'std-contenido');
 });
 
 for (const lang of Object.keys(idiomas)) {
