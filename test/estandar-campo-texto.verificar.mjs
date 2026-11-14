@@ -16,7 +16,8 @@
 // - con texto del sitio dentro de elementos en línea que envuelven un bloque (variante nota.html: una nota enlazada
 //   <a class="nota"><p>…</p></a> y un elemento propio <x-nota><div>…</div></x-nota> después de las acciones, cuyo
 //   primer rectángulo es un fragmento vacío de 0 × 0 px y no un recorte de 1 px), tampoco hay guiones bajo su texto,
-//   en 1366 × 650 y 390 × 844. Va en una página aparte para no cambiar la geometría de cifras.html.
+//   en 1366 × 650 y 390 × 844. Va en una página aparte para no cambiar la geometría de cifras.html. Lleva también un
+//   campo de formulario (<input> con placeholder), cuyo texto no es un nodo: no hay guiones bajo su caja.
 // La caja de cada pieza es la de su texto: un Range sobre el contenido del H1 y de la bajada (sus líneas) y la unión
 // de las píldoras de las acciones. La del elemento también se registra en la evidencia: el H1 y la bajada son bloques
 // del ancho del hero. La del antetítulo, la de cada cifra y la de cada nota se miden aparte, sobre sus nodos de texto
@@ -54,6 +55,7 @@ const cifrasCss = `<style>
 .std-hero .nota, .std-hero x-nota { font-size: 14px; line-height: 1.47; color: var(--std-gris); }
 .std-hero .nota p { margin: 32px 0 0; }
 .std-hero x-nota div { margin: 8px 0 0; }
+.std-hero .correo { margin: 8px 0 0; font: 14px/1.47 inherit; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width: 640px) {
   .std-hero .proof-row { gap: 14px; margin-top: 28px; }
@@ -74,7 +76,8 @@ fs.writeFileSync(path.join(sitio, 'cifras.html'), contrato.replace('</head>', ci
 fs.writeFileSync(path.join(sitio, 'nota.html'), contrato.replace('</head>', cifrasCss + '</head>')
   .replace(acciones + '</div>', acciones + '</div>' +
     '<a class="nota" href="#pie"><p>Nota enlazada: plazos y condiciones del servicio</p></a>' +
-    '<x-nota><div>Aviso de un elemento propio del sitio</div></x-nota>'));
+    '<x-nota><div>Aviso de un elemento propio del sitio</div></x-nota>' +
+    '<input class="correo" type="email" placeholder="Tu correo" aria-label="Correo">'));
 if (!process.env.CHROME) throw new Error('Falta CHROME: ruta al ejecutable de Chrome/Chromium. Se usa CDP, sin Playwright.');
 const headers = { 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self'; worker-src 'self'; connect-src 'self'", 'X-Content-Type-Options': 'nosniff' };
 const opciones = { headers, temporales: salida, chromeArgs: process.env.ESTANDAR_SWIFTSHADER === '1' ? ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] : [] };
@@ -95,7 +98,7 @@ const RAMPA = [8, 20], TENUE = 0.5;
 const antes = `
 const get = HTMLCanvasElement.prototype.getContext;
 HTMLCanvasElement.prototype.getContext = function (t, o, ...a) { return get.call(this, t, t === 'webgl2' ? { ...o, preserveDrawingBuffer: true } : o, ...a); };
-window.__campoTexto = (extra = {}) => {
+window.__campoTexto = (extra = {}, enteros = {}) => {
   const host = document.querySelector('[data-std-campo]'), hero = host.closest('.std-hero'), c = host.querySelector('canvas');
   if (!c) return null;
   const z = host.getBoundingClientRect(), sx = c.width / z.width, sy = c.height / z.height;
@@ -129,6 +132,12 @@ window.__campoTexto = (extra = {}) => {
     const v = [...hero.querySelectorAll(s)];
     if (!v.length) throw new Error('Falta la pieza ' + n + ': ' + s);
     v.forEach((e, i) => { const k = v.length > 1 ? n + (i + 1) : n; cajas[k] = textoDe(e); elementos[k] = rel(e.getBoundingClientRect()); });
+  }
+  // Piezas que cuentan con su caja completa, como los campos de formulario (su texto no es un nodo).
+  for (const [n, s] of Object.entries(enteros)) {
+    const e = hero.querySelector(s);
+    if (!e) throw new Error('Falta la pieza ' + n + ': ' + s);
+    cajas[n] = elementos[n] = rel(e.getBoundingClientRect());
   }
   const union = unir(Object.values(cajas));
   const ancla = hero.querySelector('[data-std-nube="hero"]');
@@ -230,10 +239,10 @@ try {
           return { s, display: getComputedStyle(e).display, primero: [r.width, r.height], caja: [b.width, b.height] }; })`);
         ok(`${w}x${h} nota: la nota y el elemento propio son en línea y envuelven un bloque`,
           envoltorios.every(e => e.display === 'inline' && e.primero[0] < 2 && e.primero[1] < 2 && e.caja[0] > 100 && e.caja[1] > 10), envoltorios);
-        const m = evidencia.nota = await p.ev(`__campoTexto({ nota: '.nota', elementoPropio: 'x-nota' })`);
-        ok(`${w}x${h} nota: la nota y el elemento propio están bajo las acciones`,
-          m.cajas.nota.y0 >= m.cajas.acciones.y1 && m.cajas.elementoPropio.y0 >= m.cajas.nota.y1,
-          { acciones: m.cajas.acciones, nota: m.cajas.nota, elementoPropio: m.cajas.elementoPropio });
+        const m = evidencia.nota = await p.ev(`__campoTexto({ nota: '.nota', elementoPropio: 'x-nota' }, { formulario: '.correo' })`);
+        ok(`${w}x${h} nota: la nota, el elemento propio y el campo de formulario están bajo las acciones`,
+          m.cajas.nota.y0 >= m.cajas.acciones.y1 && m.cajas.elementoPropio.y0 >= m.cajas.nota.y1 && m.cajas.formulario.y0 >= m.cajas.elementoPropio.y1,
+          { acciones: m.cajas.acciones, nota: m.cajas.nota, elementoPropio: m.cajas.elementoPropio, formulario: m.cajas.formulario });
         evaluar(`${w}x${h} nota`, m);
         await p.captura(path.join(salida, `hero-nota-${w}.png`));
         ok(`${w}x${h} nota: excepciones`, p.errores.length === 0, p.errores);
