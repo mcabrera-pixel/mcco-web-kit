@@ -3,8 +3,9 @@
 // activo. La imagen fija de respaldo es una ilustración en nube de puntos sobre negro, que sobre blanco se muestra
 // invertida por CSS. Con JS no se pinta mientras la nube arranca (nube.js pone data-estado="espera"), así el LCP es el
 // texto del hero (el archivo suele descargarse igual: la nube muestrea esa misma imagen). Se ve si el módulo de la nube
-// no carga, si la nube no arranca en 3 s, sin WebGL2, si el muestreo falla o se pierde el contexto (nube.js pone data-
-// estado="fijo"), con movimiento reducido y sin JS (copia en <noscript>). Debería ser el primer activo de la historia,
+// no carga, si ya se había pintado, si la nube no llega en un plazo acotado (4 s tras load, 10 s como tope), sin WebGL2,
+// si el muestreo falla o se pierde el contexto (nube.js pone data-estado="fijo"), con movimiento reducido y sin JS
+// (copia en <noscript>). Debería ser el primer activo de la historia,
 // que es lo que la nube arma aquí. El nombre accesible va en el ancla, así se lee igual con la nube o con la imagen. El
 // rótulo de origen lo pone quien la usa (HeroEstandar). El alto cabe en la primera pantalla: se ajusta a lo que queda
 // bajo el texto.

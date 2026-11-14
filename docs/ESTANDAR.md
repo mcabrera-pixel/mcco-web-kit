@@ -88,7 +88,7 @@ const subnav = {
 </Estandar>
 ```
 
-Es el `Base` del kit con `<body class="std">`, la barra global, la sub-navegación, la página dentro de `<main>` y el pie propio del sitio (slot `pie`) antes del bloque Grupo MCCO, que se quita con `footer={false}`. El slot `head` suma a la cabecera lo del sitio, como el favicon o una precarga. El layout precarga Inter latina para que el H1, que es el LCP, no cambie de letra cuando llega la fuente.
+Es el `Base` del kit con `<body class="std">`, la barra global, la sub-navegación, la página dentro de `<main>` y el pie propio del sitio (slot `pie`) antes del bloque Grupo MCCO, que se quita con `footer={false}`. El slot `head` suma a la cabecera lo del sitio, como el favicon o una precarga. El layout precarga Inter latina para que el texto del hero (en general el H1), que es el LCP, no cambie de letra cuando llega la fuente.
 
 ### Idioma y metadatos por página (v1.4.0)
 
@@ -196,14 +196,14 @@ Una sección a todo el ancho, sin redondeo, con el texto centrado y 80 px de air
 
 | Prop | Por defecto | Para qué |
 |---|---|---|
-| `titulo` o slot `titulo` | (obligatorio) | El H1, que es el LCP. El slot sirve para cortes de línea o énfasis |
+| `titulo` o slot `titulo` | (obligatorio) | El H1, en general el LCP (en celular puede serlo la bajada). El slot sirve para cortes de línea o énfasis |
 | `bajada` | | Bajada de 28 px |
 | `acciones` | (obligatorio) | Las de `Acciones` |
 | `nube` | | `{ respaldo: { src, width, height, alt } }`, la imagen fija del primer activo |
 | `rotulo` | `'Ilustración en nube de puntos.'` | Rótulo de origen bajo la nube |
 | `campo` | `false` | El campo antigravity detrás del texto |
 
-El respaldo de la nube se ve sin WebGL2, con movimiento reducido y sin JS. Desde v1.4.1, con JS y WebGL2 no se pinta mientras la nube arranca (`data-estado="espera"`), así el LCP es el texto del hero; si falla WebGL2, el muestreo o el contexto, aparece al pasar a `data-estado="fijo"`, después de la carga, y si la nube no arranca en 3 s vuelve a verse. Con `nube` o `campo` el hero lleva su propio botón «Pausar movimiento» (WCAG 2.2.2), arriba a la derecha y antes del H1 en el orden del foco. Se ve mientras algo se mueve en el hero.
+El respaldo de la nube se ve sin WebGL2, con movimiento reducido y sin JS. Desde v1.4.1, con JS y la API WebGL2 no se pinta mientras la nube arranca (`data-estado="espera"`), así el LCP es el texto del hero. Vuelve a verse al pasar a `data-estado="fijo"` (sin contexto WebGL2, muestreo fallido o contexto perdido, después de la carga), con movimiento reducido, si ya se había pintado antes de que llegara el módulo, y si la nube no llega a «nube» 4 s después de `load` o 10 s después de evaluarse el módulo. En esos casos aparece más tarde que en v1.4.0. Con `nube` o `campo` el hero lleva su propio botón «Pausar movimiento» (WCAG 2.2.2), arriba a la derecha y antes del H1 en el orden del foco. Se ve mientras algo se mueve en el hero.
 
 ### NubeAncla
 
@@ -389,7 +389,7 @@ Los límites y las mediciones de JS de esta tabla corresponden al build optimiza
 | Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB; el que sirve de respaldo del hero no pasa de 150 KB, el tope de héroes del contrato de cada sitio | |
 | Videos | 8 MB, H.264 con `faststart`, poster WebP, `muted`, `playsinline`, `preload="none"`, en R2 | |
 
-El JS se midió con zlib nivel 9 sobre el build de Astro 7.3.8 de la demo de `mcco-web-template`, sumando cada archivo comprimido por separado. Se cuentan las dos entradas de la nube y todos sus módulos alcanzables, incluido el respaldo dinámico aunque funcione el Worker. `node test/estandar-presupuesto.mjs <dist>` reproduce la medición y comprueba límites conservadores de 12 000 y 5000 bytes. En v1.4.1 el campo, con su zona despejada, mide 4915 B en el build de Astro del contrato (`test/fixtures/estandar-astro`); cualquier cambio en las utilidades compartidas requiere volver a medir ambos presupuestos.
+El JS se midió con zlib nivel 9 sobre el build de Astro 7.3.8 de la demo de `mcco-web-template`, sumando cada archivo comprimido por separado. Se cuentan las dos entradas de la nube y todos sus módulos alcanzables, incluido el respaldo dinámico aunque funcione el Worker. `node test/estandar-presupuesto.mjs <dist>` reproduce la medición y comprueba límites conservadores de 12 000 y 5000 bytes. En v1.4.1 el campo, con su zona despejada, mide 4915 B en el build de Astro del contrato (`test/fixtures/estandar-astro`) y la nube, con la espera del respaldo, 11 922 B; cualquier cambio en las utilidades compartidas requiere volver a medir ambos presupuestos.
 
 ## Regla de imágenes y rótulos de origen
 
