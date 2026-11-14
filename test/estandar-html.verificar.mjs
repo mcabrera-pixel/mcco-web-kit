@@ -186,6 +186,23 @@ try {
     catch { ok('carga detenida: el respaldo vuelve a verse',false,await p.ev('({estado:document.querySelector("[data-std-nube=hero]").dataset.estado,listo:document.readyState})')); }
     await p.send('Fetch.disable');
   });
+  // Una nube que arranca y se cuelga (el Worker nunca responde, con OffscreenCanvas presente para que no use el hilo
+  // principal) no deja el respaldo oculto: el plazo lo suelta aunque la nube ya haya arrancado.
+  await caso('nube colgada','window.Worker=class{postMessage(){}terminate(){}}',async p=>{
+    await p.ir('/index.html');
+    try { await p.hasta(`${visible('.std-nube__respaldo')} && document.querySelector("[data-std-nube=hero]").dataset.estado!=="espera"`,15000); ok('nube colgada: el respaldo vuelve a verse',true); }
+    catch { ok('nube colgada: el respaldo vuelve a verse',false,await p.ev('({estado:document.querySelector("[data-std-nube=hero]").dataset.estado,nube:__mccoNube.state})')); }
+  });
+  // Carga lenta (el logo retenido 5 s): la nube arranca después de load y el respaldo no llega a pintarse, así el LCP
+  // no es el respaldo pintado tarde.
+  await caso('carga lenta','',async p=>{
+    await p.send('Fetch.enable',{patterns:[{urlPattern:'*/media/logo.svg'}]});
+    await p.send('Page.navigate',{url:browser.base+'/index.html'});
+    await dormir(5000);await p.send('Fetch.disable');
+    await p.hasta('document.readyState==="complete" && window.__mccoNube?.state.frames>2',30000);
+    const entradas=await p.ev(lcp);
+    ok('carga lenta: respaldo sin pintar',entradas.length>0&&entradas.every(e=>!e.respaldo),entradas);
+  });
   // El respaldo oculto durante la espera vuelve a verse si se pide movimiento reducido, antes o después de arrancar.
   await caso('reducido durante la espera','',async p=>{
     await p.send('Fetch.enable',{patterns:[{urlPattern:'*/media/logo.svg'}]});
