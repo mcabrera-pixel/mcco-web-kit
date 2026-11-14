@@ -316,10 +316,9 @@ function* reglasDisplay(css) {
 
 function resolver(caso, sujeto) {
   const css = hojaComponentes();
-  const mediaValidas = caso === 'sin-js' ? [null, 'scripting: none']
-    : caso === 'reducido-espera' ? [null, 'prefers-reduced-motion: reduce'] : [null];
+  const mediaValidas = caso === 'sin-js' ? [null, 'scripting: none'] : [null];
   // Estado del ancla en cada caso: sin atributo es el módulo de la nube bloqueado (nunca se evaluó).
-  const estados = { 'js-nube': 'nube', 'js-espera': 'espera', 'reducido-espera': 'espera', 'js-bloqueado': undefined };
+  const estados = { 'js-nube': 'nube', 'js-bloqueado': undefined };
   const estado = caso in estados ? estados[caso] : 'fijo';
   const padre = { clases: new Set(['std-nube']), attrs: estado === undefined ? {} : { 'data-estado': estado } };
   const el = { clases: new Set(['std-nube__respaldo']), attrs: {} };
@@ -353,16 +352,10 @@ test('css: con JS y sin WebGL la imagen de respaldo se ve', () => {
   assert.equal(resolver('js-nube', '.std-nube__respaldo'), 'none', 'con data-estado="nube" no debe verse el respaldo');
 });
 
-// v1.4.1: nube.js pone data-estado="espera" al evaluarse; mientras la nube arranca el respaldo no se pinta, así no
-// queda como LCP. Si el módulo no se descarga el ancla no tiene estado y el respaldo se ve; con movimiento reducido,
-// también.
-test('css: mientras la nube arranca el respaldo no se pinta', () => {
-  assert.equal(resolver('js-espera', '.std-nube__respaldo'), 'none', 'con data-estado="espera" no debe verse el respaldo');
-});
-
-test('css: con el módulo de la nube bloqueado o movimiento reducido el respaldo se ve', () => {
+// Si el módulo de la nube no se descarga, el ancla queda sin data-estado y el respaldo se ve. (v1.4.1: la espera mientras
+// la nube arranca la pone nube.js en el estilo del <img>, no en esta hoja; se prueba en Chrome.)
+test('css: con el módulo de la nube bloqueado el respaldo se ve', () => {
   assert.equal(resolver('js-bloqueado', '.std-nube__respaldo'), 'block', 'sin data-estado debe verse el respaldo');
-  assert.equal(resolver('reducido-espera', '.std-nube__respaldo'), 'block', 'con movimiento reducido debe verse el respaldo');
 });
 
 // Sin JS solo la copia de <noscript> permanece visible: la excepción @media (scripting: none) oculta la imagen normal

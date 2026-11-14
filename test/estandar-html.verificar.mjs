@@ -186,6 +186,20 @@ try {
     catch { ok('carga detenida: el respaldo vuelve a verse',false,await p.ev('({estado:document.querySelector("[data-std-nube=hero]").dataset.estado,listo:document.readyState})')); }
     await p.send('Fetch.disable');
   });
+  // El respaldo oculto durante la espera vuelve a verse si se pide movimiento reducido, antes o después de arrancar.
+  await caso('reducido durante la espera','',async p=>{
+    await p.send('Fetch.enable',{patterns:[{urlPattern:'*/media/logo.svg'}]});
+    await p.send('Page.navigate',{url:browser.base+'/index.html'});
+    await p.hasta('document.readyState==="interactive"');await reducir(p);
+    try { await p.hasta(visible('.std-nube__respaldo'),1500); ok('reducido durante la espera: respaldo visible',true); }
+    catch { ok('reducido durante la espera: respaldo visible',false,await p.ev('document.querySelector("[data-std-nube=hero]").dataset.estado')); }
+    await p.send('Fetch.disable');
+  });
+  await caso('reducido tras arrancar','',async p=>{
+    await p.ir('/index.html');await p.hasta('window.__mccoNube?.state.frames>2',30000);await reducir(p);
+    try { await p.hasta(visible('.std-nube__respaldo'),1500); ok('reducido tras arrancar: respaldo visible',true); }
+    catch { ok('reducido tras arrancar: respaldo visible',false); }
+  });
   await caso('activo de historia caído','',async p=>{
     await p.ir('/historia-activo-caido.html');await listo(p);
     await p.hasta('document.querySelector("img[src*=forma-ausente]").complete && document.querySelector("img[src*=forma-ausente]").naturalWidth===0');
