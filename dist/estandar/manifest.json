@@ -38,9 +38,9 @@
       "dependencias": []
     },
     "lib/estandar/nube.js": {
-      "bytes": 13331,
-      "gzip": 6012,
-      "sha256": "eceb0ad88ed8814c804cf5f234b1b993578d39461c4d7a3278ddaf271ce60fce",
+      "bytes": 13638,
+      "gzip": 6143,
+      "sha256": "8a37447c9fee1db19ccc8689dd0b4f2577c734c8d69a92d8a0240a597240c5f3",
       "dependencias": [
         "lib/estandar/chunks/chunk-HUFLIRKM.js",
         "lib/estandar/chunks/chunk-YKE6NFK2.js",

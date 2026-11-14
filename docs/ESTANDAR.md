@@ -203,7 +203,7 @@ Una sección a todo el ancho, sin redondeo, con el texto centrado y 80 px de air
 | `rotulo` | `'Ilustración en nube de puntos.'` | Rótulo de origen bajo la nube |
 | `campo` | `false` | El campo antigravity detrás del texto |
 
-El respaldo de la nube se ve sin WebGL2, con movimiento reducido y sin JS. Con `nube` o `campo` el hero lleva su propio botón «Pausar movimiento» (WCAG 2.2.2), arriba a la derecha y antes del H1 en el orden del foco. Se ve mientras algo se mueve en el hero.
+El respaldo de la nube se ve sin WebGL2, con movimiento reducido y sin JS. Desde v1.4.1, con JS y WebGL2 no se pinta mientras la nube arranca (`data-estado="espera"`), así el LCP es el texto del hero; si falla WebGL2, el muestreo o el contexto, aparece al pasar a `data-estado="fijo"`, después de la carga, y si la nube no arranca en 3 s vuelve a verse. Con `nube` o `campo` el hero lleva su propio botón «Pausar movimiento» (WCAG 2.2.2), arriba a la derecha y antes del H1 en el orden del foco. Se ve mientras algo se mueve en el hero.
 
 ### NubeAncla
 
@@ -384,7 +384,7 @@ Los límites y las mediciones de JS de esta tabla corresponden al build optimiza
 | JS de la nube, gzip | 12 KB | 11 658 B, incluidos Worker, respaldo del hilo principal, entradas, `pausa.js` y utilidades compartidas |
 | JS del campo, gzip | 5 KB | 4960 B, incluidas `pausa.js` y utilidades compartidas |
 | Lighthouse móvil | 85 en rendimiento, 95 en accesibilidad | Se mide en la portada de mcco.cl |
-| LCP | El H1 | |
+| LCP | El texto del hero | En celular la bajada puede tener más área que el H1 y ser el LCP; se pinta en el mismo cuadro |
 | CLS | Menos de 0,1 | |
 | Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB; el que sirve de respaldo del hero no pasa de 150 KB, el tope de héroes del contrato de cada sitio | |
 | Videos | 8 MB, H.264 con `faststart`, poster WebP, `muted`, `playsinline`, `preload="none"`, en R2 | |
@@ -448,7 +448,7 @@ el único estado de pausa compartido por nube y campo; ambos usan una sola insta
 La distribución no incluye fechas ni rutas absolutas y dos builds limpios deben producir los mismos bytes.
 
 Astro sigue usando los runtimes fuente y recibe las mismas hojas a través de cada componente o del layout.
-El respaldo del hero permanece visible hasta que el runtime confirma la nube: un módulo bloqueado no lo oculta.
+El respaldo del hero se oculta solo cuando el runtime de la nube se evalúa (`data-estado="espera"`) o confirma la nube: un módulo bloqueado no lo oculta.
 No se modifican los componentes ni los runtimes visuales v1.1.
 
 El Worker de la nube se carga desde el mismo origen, así que la CSP del sitio tiene que permitir `'self'` en `worker-src`, o en `script-src` si no declara `worker-src`.
