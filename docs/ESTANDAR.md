@@ -192,8 +192,9 @@ cambia. Una página en inglés pone `lang="en"` en `<html>` y escribe ella misma
 `aria-label="MCCO Group"` y `lang="es"` en el contenedor del texto en español. `menu.js` y `subnav.js` no escriben
 textos, así que no hay nada más que ajustar.
 
-Quedan fuera de v1.4.1 otros textos fijos del kit que siguen en español también en una página en otro idioma, sin
-`lang="es"`, así que se leen con el idioma de la página. Una página en inglés que use estas piezas los tiene así:
+Quedan fuera de v1.4.1 y de v1.4.2 (pendientes para v1.4.3) otros textos fijos del kit que siguen en español también
+en una página en otro idioma, sin `lang="es"`, así que se leen con el idioma de la página. Una página en inglés que
+use estas piezas los tiene así:
 
 - El botón de pausa del movimiento, «Pausar movimiento» y «Reanudar movimiento»: lo escribe `lib/estandar/pausa.js`
   y lo traen `HeroEstandar` y `HistoriaNube` (en el sistema v1.1, `HeroParticulas` y `lib/visual/hero.js`).
@@ -205,6 +206,24 @@ Quedan fuera de v1.4.1 otros textos fijos del kit que siguen en español tambié
 - El botón de video, «Pausar video» y «Reproducir video», de `Galeria` y `VideoBanda` (`lib/visual/video.js`).
 - `Cta` («Escríbenos») y los textos de la plantilla de `Post` (la ruta «Inicio», «Por», «min de lectura», «Fuentes» y
   «Servicios relacionados», entre otros).
+
+No entraron en v1.4.2 porque cada camino toca algo que esta versión no cambia:
+
+- Los componentes que la página pone en el slot (`HeroEstandar`, `HistoriaNube`, `Producto`, `Galeria`,
+  `VideoBanda`, `ProcesoScroll`, `Cta`) no reciben el idioma. Una prop `lang` en cada uno obliga a la web a pasarla en
+  cada uso, y un idioma compartido en el render (`Astro.locals` fijado por `Base`) es un contrato interno nuevo que
+  depende del orden en que Astro evalúa el layout y el slot, y hay que probarlo con un render real.
+- `pausa.js` y `video.js` reescriben el texto del botón en el cliente: aunque el HTML saliera en inglés, el primer
+  clic lo devolvería al español. `pausa.js` cuenta en el presupuesto del campo, que quedó con 11 B de margen.
+- `mcco-check` (R11) acepta un `figcaption` sin `data-rotulo` solo si dice «ilustraci»: traducir los rótulos obliga
+  a cambiar esa regla del grupo.
+- `Post` y `Cta` mezclan textos del kit con datos de `site.yaml` (autor, SLA, «Inicio» del BreadcrumbList).
+
+La propuesta para v1.4.3 parte por lo que no cambia textos: marcar con `lang="es"` lo que el kit deja en español en una
+página que no está en español, como el bloque Grupo. Después, probar el idioma en el render (con una prop `lang`
+opcional como respaldo), que `pausa.js` y `video.js` elijan su texto según el `lang` más cercano (midiendo los bytes
+del campo), que R11 acepte el rótulo en inglés, y una prop `textos` opcional en `Post` y `Cta`. En español el HTML
+no cambia.
 
 Dentro de `.std`, los tokens de v1.1 que consumen `FooterGrupo` y las piezas de `Revelar` toman los valores del estándar. Se redefinen también sus alias `--mcco-*` en ese ámbito, porque un alias heredado de `:root` ya tiene resuelto su valor. Las páginas fuera de `.std` conservan sus tokens.
 
@@ -425,7 +444,22 @@ La nube usa un solo lienzo fijo. Después del primer pintado, los puntos suben d
 
 La nube arranca después de la carga, en tiempo ocioso y con un ancla cerca de la vista, y se detiene con la pestaña oculta o fuera de pantalla. Las formas se muestrean en un Worker con OffscreenCanvas. Si falta esa API o falla el Worker, el hilo principal procesa una forma por vez, con lotes de hasta 256 elementos y un presupuesto de 8 ms entre pausas. La ordenación estable conserva el resultado de rc.1 para cada semilla. El cierre cancela los pedidos pendientes y el respaldo activo entre lotes; el Worker se cierra cuando llega la última forma. `window.__mccoNube.state` deja ver el estado para verificar.
 
-El campo va en una capa bajo el contenido de su contenedor, sin recuadros blancos, también cuando falla la primera forma y se muestra el respaldo de la nube. Desde v1.4.1 el texto queda despejado: en la caja que ocupa el texto del hero (la unión de las líneas del H1 y de `.std-hero__bajada` y de las píldoras de `.std-acciones`; el texto `.std-oculto` de una píldora no cuenta, porque no se ve) no se dibuja ningún guion, y el campo se desvanece de forma suave hacia afuera, de 8 a 56 px del borde de esa caja. Fuera de ella el campo sigue igual, también sobre la nube. La caja se mide con esas clases, sin marcado nuevo, y se vuelve a medir al cambiar el tamaño, al cargar una fuente y cuando el contenido cambia de alto. Sin ese texto en el contenedor, el campo lo ocupa todo, como antes. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
+El campo va en una capa bajo el contenido de su contenedor, sin recuadros blancos, también cuando falla la primera forma y se muestra el respaldo de la nube. El texto queda despejado: en la caja que ocupa todo el texto visible del hero no se dibuja ningún guion, y el campo se desvanece de forma suave hacia afuera, de 8 a 56 px del borde de esa caja. Fuera de ella el campo sigue igual, también sobre la nube. Sin texto en el contenedor, el campo lo ocupa todo. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
+
+Desde v1.4.2 la caja cubre todo el texto del hero, no solo el H1, la bajada y las acciones (lo que medía v1.4.1). `campo.js` la deduce del DOM, sin marcado ni clases nuevas, como la unión de:
+
+- las líneas de cada nodo de texto con contenido: el H1, la bajada y lo que el sitio agregue, como un antetítulo, una fila de cifras o una nota. Cuentan las líneas y no el bloque que las contiene, así un `<p>` o un `<dl>` de ancho completo no borra el campo de lado a lado;
+- la caja completa de cada píldora de `.std-acciones` y de los campos `input`, `select` y `textarea`, cuyo texto no es un nodo.
+
+Si el texto está en dos zonas, la caja es una sola y las contiene a las dos. No cuentan la capa del campo, el botón de pausa (`[data-std-pausa]`), la figura que contiene la nube (o el ancla, si no hay `figure`) y los rótulos `[data-rotulo]`, sobre los que el campo sigue pasando; tampoco el texto dentro de un elemento cuya caja mide menos de 2 × 2 px, que es el recorte de 1 px de `.std-oculto` y `.sr-only`, ni lo que no se pinta (`display: none`, `<noscript>` con JS). La caja se rehace cuando cambia de tamaño cualquier elemento del hero (un `ResizeObserver` los sigue a todos), al cargar una fuente y al cambiar la ventana o el DPR.
+
+Límites de la regla:
+
+- El texto con `visibility: hidden` u `opacity: 0` cuenta, porque tiene caja, y también el texto llevado fuera de la vista (`left: -9999px`), que estira la caja. Un `.sr-only` que oculta solo con `clip-path`, sin medir 1 px, también cuenta. Para ocultar texto en el hero, usar el recorte de 1 px o `display: none`.
+- Un elemento que el sitio agregue al hero después del arranque no queda observado: la caja lo incluye recién con el siguiente cambio de tamaño de la ventana o de un elemento observado, de fuente o de alto del hero.
+- Un cambio de texto que no altera el tamaño de ningún elemento, o que mueve el texto con `transform`, no rehace la caja.
+- `img` y `svg` sin texto no cuentan, por ejemplo un logo dentro del H1.
+- Como el observador sigue todo el hero, una animación de tamaño dentro de él hace recalcular la caja en cada cuadro. Nada del kit lo hace; si el sitio anima algo en el hero, conviene que use `transform`.
 
 El centro del campo persigue al mouse con unos 1,4 s de retraso, sin cursor pasea despacio, los anillos giran a 0,012 rad/s y el scroll no los mueve. Sobre la nube los guiones bajan a un tercio. Con movimiento reducido no se crea, y sin WebGL2 no queda nada porque es decorativo. `window.__mccoCampo.state` deja ver su estado.
 
@@ -444,12 +478,12 @@ Los límites y las mediciones de JS de esta tabla corresponden al build optimiza
 | JS de la nube, gzip | 12 KB | 11 658 B, incluidos Worker, respaldo del hilo principal, entradas, `pausa.js` y utilidades compartidas |
 | JS del campo, gzip | 5 KB | 4960 B, incluidas `pausa.js` y utilidades compartidas |
 | Lighthouse móvil | 85 en rendimiento, 95 en accesibilidad | Se mide en la portada de mcco.cl |
-| LCP | El H1 | Con la nube funcionando, hoy el respaldo del hero se pinta antes de que la nube arranque y puede quedar como LCP; en celular la bajada puede tener más área que el H1. Pendiente para v1.4.2 |
+| LCP | El H1 | Con la nube funcionando, hoy el respaldo del hero se pinta antes de que la nube arranque y puede quedar como LCP; en celular la bajada puede tener más área que el H1. Pendiente: no entró en v1.4.2 |
 | CLS | Menos de 0,1 | |
 | Imágenes | Menos de 400 KB (R12). Activos de la nube, de 100 a 200 KB; el que sirve de respaldo del hero no pasa de 150 KB, el tope de héroes del contrato de cada sitio | |
 | Videos | 8 MB, H.264 con `faststart`, poster WebP, `muted`, `playsinline`, `preload="none"`, en R2 | |
 
-El JS se midió con zlib nivel 9 sobre el build de Astro 7.3.8 de la demo de `mcco-web-template`, sumando cada archivo comprimido por separado. Se cuentan las dos entradas de la nube y todos sus módulos alcanzables, incluido el respaldo dinámico aunque funcione el Worker. `node test/estandar-presupuesto.mjs <dist>` reproduce la medición y comprueba límites conservadores de 12 000 y 5000 bytes. En v1.4.1 el campo, con su zona despejada, mide 4915 B en el build de Astro del contrato (`test/fixtures/estandar-astro`); cualquier cambio en las utilidades compartidas requiere volver a medir ambos presupuestos.
+El JS se midió con zlib nivel 9 sobre el build de Astro 7.3.8 de la demo de `mcco-web-template`, sumando cada archivo comprimido por separado. Se cuentan las dos entradas de la nube y todos sus módulos alcanzables, incluido el respaldo dinámico aunque funcione el Worker. `node test/estandar-presupuesto.mjs <dist>` reproduce la medición y comprueba límites conservadores de 12 000 y 5000 bytes. En v1.4.2 el campo, con la caja de todo el texto del hero, mide 4918 B en el build de Astro del contrato (`test/fixtures/estandar-astro`) y la nube 11 676 B. El límite del campo sigue en 5000 B: para que la regla nueva cupiera se compactó el GLSL, con nombres cortos de uniformes y variables que explica una leyenda en el comentario de `campo.js`. Cualquier cambio en el campo o en las utilidades compartidas requiere volver a medir ambos presupuestos.
 
 ## Regla de imágenes y rótulos de origen
 
@@ -495,12 +529,17 @@ node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar --co
 ```
 
 Contrato HTML, marcado completo de cada pieza y variantes independientes: [ESTANDAR-HTML.md](ESTANDAR-HTML.md).
-El modo completo cumple los límites conservadores: nube **9022 B gzip / 12 000 B**, campo **4988 B / 5000 B**,
-con pausa pública y comunes en cada presupuesto aislado. Total JS de página **14 040 B**, contando cada recurso
-una vez. `npm run check:estandar` reconstruye el grafo (también imports dinámicos y URL del Worker), comprime cada
+El modo completo cumple los límites conservadores (medición de v1.4.2): nube **9022 B gzip / 12 000 B**, campo
+**4989 B / 5000 B** (11 B de margen, sin subir el límite), con pausa pública y comunes en cada presupuesto aislado.
+Total JS de página **14 041 B**, contando cada recurso una vez. `npm run check:estandar` reconstruye el grafo (también imports dinámicos y URL del Worker), comprime cada
 respuesta con `gzipSync` nivel 9 y falla si hay corrupción o se excede un límite. Menú **457 B**, subnav **341 B**,
 video **1351 B** con su común. La medición vigente completa está en `dist/estandar/manifest.json` y en la salida
 del verificador; estos valores no reemplazan la medición de la página del sitio con sus adaptadores.
+
+Para subir de versión, una web sin Astro fija la tag y el SHA nuevos del kit, acepta la versión nueva del manifiesto
+si su build la comprueba (as-built lo hace en `build-estandar` y `check-estandar`) y vuelve a copiar con
+`--completo`. De v1.4.1 a v1.4.2 se mantienen archivos, entradas y formato del manifiesto; cambian `campo.js` (el
+texto despejado) y `estandar.css` (la regla `.std-saltar`), y el HTML del sitio no cambia.
 
 El empaquetado usa esbuild **0.28.2**, división de módulos comunes y entradas estables. Compacta el GLSL (sin
 comentarios ni espacios que no separen dos palabras o dos operadores) sin cambiar sus tokens. `pausa.js` reexporta

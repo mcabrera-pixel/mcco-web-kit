@@ -1,4 +1,4 @@
-# Contrato HTML del estándar v1.3
+# Contrato HTML del estándar (desde v1.3, al día con v1.4.2)
 
 `mcco-estandar-copiar public/estandar --completo` copia el artefacto ya construido. El destino solo necesita Node
 para copiar y un servidor estático para servirlo. No hay runtime de Astro ni dependencia de esbuild en la web.
@@ -140,6 +140,14 @@ Una sola nube por documento. Sin historia, muestrea la imagen del hero y conserv
 
 Un campo por documento, solo en el hero para esta adopción. El botón se muestra cuando el campo funciona y
 siempre conserva la posibilidad de reanudar. No lleva `aria-pressed`; su texto dice la acción.
+
+El campo no dibuja guiones sobre el texto del hero (v1.4.2): `campo.js` despeja la caja que ocupa todo el texto
+visible del hero, incluido lo que la página agregue, como un antetítulo o una fila de cifras, y las píldoras y
+campos de formulario con su caja. No hay que marcar ese texto: no hay clases ni atributos nuevos. Quedan fuera el
+botón de pausa, la figura de la nube con su rótulo `[data-rotulo]` y el texto en un recorte de 1 px (`.std-oculto`,
+`.sr-only`). Para ocultar texto en el hero se usa ese recorte o `display: none`: con `visibility: hidden` u
+`opacity: 0` el texto sigue contando. La regla completa y sus límites están en
+[ESTANDAR.md](ESTANDAR.md#nube-campo-y-pausa).
 
 Para integrar un diálogo del sitio, importar la misma API que usa el runtime:
 
