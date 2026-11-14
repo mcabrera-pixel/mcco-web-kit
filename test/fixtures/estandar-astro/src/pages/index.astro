@@ -17,9 +17,10 @@ const items = [{tipo:'imagen' as const,...respaldo,origen:'esquema' as const,pie
   {tipo:'video' as const,src:'/media/prueba.mp4',poster:respaldo.src,width:960,height:540,alt:'Video de faena de la demo del kit',origen:'real' as const}];
 ---
 <!doctype html><html lang="es"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Contrato HTML del estándar</title><link rel="icon" href="/media/logo.svg" /></head><body class="std">
+<a class="std-saltar" href="#std-contenido">Saltar al contenido</a>
 <NavGlobal logo={{src:'/media/logo.svg',alt:'Prueba',width:32,height:32}} enlaces={[{href:'#historia',texto:'Historia'},{href:'#galeria',texto:'Galería'}]} />
 <SubNav titulo="Estándar" enlaces={[{href:'#historia',texto:'Historia'}]} accion={{href:'#pie',texto:'Contactar al equipo',textoCorto:'Contactar'}} />
-<main>
+<main id="std-contenido">
 <HeroEstandar titulo="Contrato del estándar." bajada="Todas las piezas, con HTML y Astro." acciones={acciones} nube={{respaldo}} campo />
 <HistoriaNube titulo="Dos formas." bajada="Activos sintéticos para verificar el runtime." activos={activos} pasos={pasos} />
 <GrillaProductos aria-label="Productos"><Producto titulo="Producto de prueba" tono="parchment" bajada="Contenido legible." acciones={acciones} foto={{...respaldo,origen:'esquema'}} /></GrillaProductos>

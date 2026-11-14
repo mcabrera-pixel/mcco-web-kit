@@ -1,4 +1,5 @@
-// Render Astro de la API pública de los tres layouts y comparación literal con cfaf658 (v1.3.1).
+// Render Astro de la API pública de los tres layouts y comparación literal con cfaf658 (v1.3.1), salvo el enlace
+// «Saltar al contenido» de v1.4.2 (ver SALTO).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -60,9 +61,34 @@ const subnav = { titulo:'Prueba', enlaces:[], accion:{href:'/contacto',texto:'Co
 });
 after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
+// v1.4.2 agrega a Estandar y Post el enlace «Saltar al contenido» (primer hijo del body) y el id de su <main>, y la
+// regla del enlace a su hoja, cuyo nombre lleva el hash del contenido. Para comparar con v1.3.1 se quitan solo esas
+// piezas, cada una exacta y una sola vez, y se iguala solo el hash de la hoja propia del layout; si falta alguna, la
+// prueba falla. El resto del HTML se compara literal, y Base (sin <main>, sin enlace) se compara tal cual.
+const SALTO = {
+  Estandar: { body: '<body class="std">', enlace: '<a class="std-saltar" href="#std-contenido">Saltar al contenido</a>', main: '<main id="std-contenido"', hoja: 'Estandar' },
+  Post: { body: '<body class>', enlace: '<a class="mcco-saltar" href="#mcco-contenido" data-astro-cid-k2xyfjsh>Saltar al contenido</a>', main: '<main id="mcco-contenido"', hoja: 'Post' },
+};
+const unaVez = (texto, trozo, layout) => {
+  assert.equal(texto.split(trozo).length - 1, 1, `${layout}: «${trozo}» debe aparecer una vez`);
+  return texto;
+};
+const hashHoja = (texto, hoja) => texto.replace(new RegExp(`href="/_astro/${hoja}\\.[\\w-]{8}\\.css"`), `href="/_astro/${hoja}.HASH.css"`);
+function sinSalto(texto, layout) {
+  const s = SALTO[layout];
+  if (!s) return texto;
+  unaVez(texto, s.body + s.enlace, layout);
+  unaVez(texto, s.main, layout);
+  return hashHoja(texto.replace(s.body + s.enlace, s.body).replace(s.main, '<main'), s.hoja);
+}
+const referenciaV131 = (layout) => {
+  const texto = fs.readFileSync(path.join(kit, 'test/fixtures/metadatos-v1.3.1', `${layout}.html`), 'utf8');
+  return SALTO[layout] ? hashHoja(texto, SALTO[layout].hoja) : texto;
+};
+
 for (const layout of layouts) {
-  test(`${layout}: sin props nuevas conserva el HTML completo de v1.3.1`, () => {
-    assert.equal(html.get(clave(layout, 'default')), fs.readFileSync(path.join(kit, 'test/fixtures/metadatos-v1.3.1', `${layout}.html`), 'utf8'));
+  test(`${layout}: sin props nuevas conserva el HTML completo de v1.3.1 (salvo el enlace de salto de v1.4.2)`, () => {
+    assert.equal(sinSalto(html.get(clave(layout, 'default')), layout), referenciaV131(layout));
     const d = dom(layout, 'default');
     assert.equal(d.querySelector('html').getAttribute('lang'), 'es-CL');
     assert.equal(meta(d, 'og:locale'), 'es_CL');

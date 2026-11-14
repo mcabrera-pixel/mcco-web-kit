@@ -94,6 +94,21 @@ test('foco claro sobre negro y píldora chica de 44 px de ancho mínimo', () => 
   assert.match(regla('.std-pildora--chica'), /min-width\s*:\s*44px/);
 });
 
+// Rompe si el enlace «Saltar al contenido» (v1.4.2) queda en la vista sin foco, debajo de la barra global (z-index 12)
+// o de la sub-navegación (11), sin sus 44 px de área táctil o sin colores fijos con contraste AA. El comportamiento en el
+// navegador lo prueba estandar-html.verificar.mjs.
+test('enlace de salto: fuera de la vista sin foco, sobre la barra con foco, 44 px', () => {
+  const css = regla('.std-saltar');
+  assert.match(css, /position\s*:\s*fixed/);
+  assert.match(css, /min-height\s*:\s*44px/);
+  assert.match(css, /transform\s*:\s*translateY\(/, 'sin foco sale de la vista hacia arriba');
+  const z = Number(css.match(/z-index\s*:\s*(\d+)/)?.[1]);
+  assert.ok(z > 12, `z-index ${z} no queda sobre la barra global`);
+  assert.match(css, /background\s*:\s*var\(--std-blanco\)/);
+  assert.match(css, /color\s*:\s*var\(--std-tinta\)/);
+  assert.match(regla('.std-saltar:focus'), /transform\s*:\s*none/);
+});
+
 // Estas reglas ya existían en rc.1: se fija su contenido exacto y su baja especificidad.
 test('el enlace mas conserva el signo Unicode y la variante decorativa', () => {
   const contenidos = [...regla('.std-mas::after').matchAll(/content\s*:\s*([^;]+)/g)].map(m => m[1]);

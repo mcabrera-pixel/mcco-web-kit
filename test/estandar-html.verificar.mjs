@@ -128,6 +128,40 @@ try {
     await p.ev('scrollTo(0,0)');await p.hasta('!document.querySelector(".std-subnav").classList.contains("is-oscura")');
     ok('subnav clara al inicio',true);
   });
+  // Enlace «Saltar al contenido» (v1.4.2): sin foco queda fuera de la vista; el primer Tab lo enfoca y aparece arriba,
+  // sobre la barra global, con 44 px de alto y contraste AA; Enter lleva al <main> y el Tab siguiente sigue dentro de él.
+  // En la copia HTML y en la fixture Astro, en móvil y escritorio. Con la página desplazada y sin foco, Chrome empieza
+  // el Tab en el primer enfocable de la vista y no en el enlace: ese caso lo enfoca por script y comprueba que el
+  // enlace aparece igual arriba de la vista, sobre la sub-navegación fija.
+  const tecla=async(p,key,code,vk)=>{for(const type of ['keyDown','keyUp'])await p.send('Input.dispatchKeyEvent',{type,key,code,windowsVirtualKeyCode:vk,...(type==='keyDown'&&key==='Enter'?{text:'\r',unmodifiedText:'\r'}:{})});};
+  const saltar=`(()=>{const e=document.querySelector('.std-saltar'),r=e.getBoundingClientRect(),s=getComputedStyle(e),g=document.querySelector('.std-gnav').getBoundingClientRect();
+    const x=document.elementFromPoint(Math.max(0,r.left+r.width/2),Math.max(0,r.top+r.height/2));
+    const lum=c=>{const [R,G,B]=c.match(/[\\d.]+/g).map(Number).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return .2126*R+.7152*G+.0722*B};
+    const [a,b]=[lum(s.color),lum(s.backgroundColor)].sort((m,n)=>n-m);
+    return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,alto:r.height,activo:document.activeElement===e,encima:!!x&&(x===e||e.contains(x)),
+      sobreBarra:r.top<g.bottom&&r.bottom>g.top,contraste:(a+.05)/(b+.05),primero:e===document.body.firstElementChild,href:e.getAttribute('href')}})()`;
+  await caso('saltar al contenido','',async p=>{
+    const a=await comparador.pagina();
+    try {
+      for(const [nombre,q] of [['HTML',p],['Astro',a]]) for(const [w,h,desplazar] of [[390,844,false],[1366,650,false],[1366,650,true]]) {
+        const etiqueta=`${nombre} ${w}x${h}${desplazar?' desplazada':''}`;
+        await medidas(q,w,h);await reducir(q);await q.ir('/index.html');await q.ev('document.fonts.ready');
+        if(desplazar){await q.ev('document.querySelector("#galeria").scrollIntoView()');await dormir(120);}
+        const antes=await q.ev(saltar);
+        ok(`${etiqueta}: sin foco el enlace está fuera de la vista`,antes.primero&&antes.href==='#std-contenido'&&!antes.activo&&(antes.bottom<=0||antes.top>=h||antes.right<=0||antes.left>=w),antes);
+        if(desplazar) await q.ev('document.querySelector(".std-saltar").focus()');else await tecla(q,'Tab','Tab',9);
+        await dormir(50);
+        const foco=await q.ev(saltar);
+        ok(`${etiqueta}: ${desplazar?'con foco por script':'el primer Tab lo enfoca'}, visible arriba y sobre la barra`,foco.activo&&foco.top>=0&&foco.bottom<=Math.min(h,120)&&foco.left>=0&&foco.right<=w&&foco.alto>=44&&foco.encima&&(desplazar||foco.sobreBarra),foco);
+        ok(`${etiqueta}: contraste AA del enlace`,foco.contraste>=4.5,{contraste:foco.contraste});
+        await tecla(q,'Enter','Enter',13);await q.hasta('location.hash==="#std-contenido"');
+        await tecla(q,'Tab','Tab',9);await dormir(50);
+        ok(`${etiqueta}: Enter lleva al <main> y el Tab siguiente sigue dentro`,await q.ev('document.querySelector("main#std-contenido").contains(document.activeElement)'),await q.ev('document.activeElement.outerHTML.slice(0,120)'));
+        const despues=await q.ev(saltar);
+        ok(`${etiqueta}: sin foco vuelve a salir de la vista`,!despues.activo&&(despues.bottom<=0||despues.top>=h),despues);
+      }
+    } finally {await a.cerrar();}
+  });
   for(const [nombre,patron] of [['menú bloqueado','*lib/estandar/menu.js'],['nube bloqueada','*lib/estandar/nube.js']]) await caso(nombre,'',async p=>{
     await medidas(p,390,844);await p.send('Network.setBlockedURLs',{urls:[patron]});await p.ir('/index.html');
     if(nombre.startsWith('menú')) ok(nombre,await p.ev(visible('.std-gnav__enlaces'))&&!await p.ev(visible('.std-gnav__menu')));
