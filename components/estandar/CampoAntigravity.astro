@@ -2,9 +2,10 @@
 // Campo antigravity del hero: guiones cortos en anillos concéntricos alrededor de un centro que persigue al mouse con
 // unos 1,4 s de retraso, orientados hacia afuera y con el color según el ángulo (--accion-boton, --campo-claro,
 // --campo-oscuro y un neutro). lib/estandar/campo.js convierte esta capa en un lienzo WebGL2 que ocupa todo el hero
-// bajo su contenido: la capa va en z-index 0 y el contenido del hero en z-index 1. Donde está el texto del contenedor
-// (las líneas de su h1 y de .std-hero__bajada y las píldoras de .std-acciones) no dibuja guiones y se desvanece suave
-// en el borde de esa caja; sin ese texto ocupa todo el contenedor. HeroEstandar la pone como primer hijo con `campo`,
+// bajo su contenido: la capa va en z-index 0 y el contenido del hero en z-index 1. Donde está el texto visible del
+// contenedor (las líneas de cada texto, como el h1, .std-hero__bajada, un antetítulo o una fila de cifras, y las
+// píldoras de .std-acciones; no el botón de pausa, la figura de la nube con su rótulo ni el texto solo para lectores
+// de pantalla) no dibuja guiones y se desvanece suave en el borde de esa caja; sin texto ocupa todo el contenedor. HeroEstandar la pone como primer hijo con `campo`,
 // junto con su botón de pausa. Fuera de él necesita un contenedor con position: relative, y la página pone
 // su propio botón [data-std-pausa] para pausar el movimiento (WCAG 2.2.2): pausa.js le da su texto y su clic, y
 // campo.js marca el contenedor con data-std-movimiento mientras el campo se mueve. Es decorativa (aria-hidden y sin

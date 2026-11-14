@@ -5,9 +5,9 @@
   "compresion": "gzip nivel 9; bytes por respuesta",
   "archivos": {
     "lib/estandar/campo.js": {
-      "bytes": 7340,
-      "gzip": 3689,
-      "sha256": "525d498d04d4fd560ba5343756ba366fd3eac4c61102bbcb749e555ae77bfc98",
+      "bytes": 7095,
+      "gzip": 3671,
+      "sha256": "081fef4a2cd88a14eb7079529c5c8e06b6a9649311905fa8f9e3cece9efb17a3",
       "dependencias": [
         "lib/estandar/chunks/chunk-HUFLIRKM.js",
         "lib/estandar/chunks/chunk-YKE6NFK2.js"
