@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Campo despejado detrás del texto del hero (v1.4.1). Página de contrato sin Astro (test/fixtures/estandar-html),
+// Campo despejado detrás del texto del hero (v1.4.1; antetítulo y cifras, v1.4.2). Página de contrato sin Astro (test/fixtures/estandar-html),
 // copiada con estandar-copiar --completo y servida con los mismos encabezados CSP que estandar-html.verificar.mjs.
 // En 1366 × 650 y 390 × 844 px, con el centro del campo sobre la bajada y un cuadro fijado con la pausa común:
 // - bajo la caja del texto del H1, de la bajada y de las acciones el lienzo no tiene ningún píxel con alfa > 0;
@@ -7,10 +7,16 @@
 // - el borde es suave: la franja pegada al texto tiene mucho menos alfa media que una franja algo más afuera;
 // - tras alargar la bajada y tras cambiar el tamaño de la ventana se cumple lo mismo sobre las cajas nuevas;
 // - con texto .std-oculto (solo para lectores de pantalla) en las acciones, la zona despejada no crece hacia donde ese
-//   texto no se ve: a la derecha del texto visible sigue habiendo campo (variante oculto.html, en 1366 px).
+//   texto no se ve: a la derecha del texto visible sigue habiendo campo (variante oculto.html, en 1366 px);
+// - con texto propio del sitio, con clases que el kit no conoce (variante cifras.html, como la portada de as-built: un
+//   antetítulo .eyebrow antes del H1 y una fila de cifras <dl class="proof-row"> después de las acciones, con su CSS en
+//   línea), tampoco hay guiones bajo el texto del antetítulo ni bajo el de cada cifra, en 1366 × 650 y 390 × 844. La
+//   última cifra lleva además un texto .sr-only (recorte de 1 px, como as-built) largo y sin cortes de línea, que no
+//   se ve y no agranda la zona: en 1366 px sigue habiendo campo a la derecha del texto visible.
 // La caja de cada pieza es la de su texto: un Range sobre el contenido del H1 y de la bajada (sus líneas) y la unión
 // de las píldoras de las acciones. La del elemento también se registra en la evidencia: el H1 y la bajada son bloques
-// del ancho del hero.
+// del ancho del hero. La del antetítulo y la de cada cifra se miden aparte, sobre sus nodos de texto (un Range por
+// nodo, sin los que están en blanco ni los de .sr-only).
 // Para leer el lienzo WebGL sin depender del compositor se fuerza preserveDrawingBuffer con un script previo a la carga.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,6 +40,29 @@ assert.ok(contrato.includes(acciones));
 fs.writeFileSync(path.join(sitio, 'oculto.html'), contrato.replace(acciones,
   '<a class="std-pildora" href="#galeria">Ver piezas<span class="std-oculto"> del contrato del estándar, con todas sus piezas y variantes</span></a>' +
   '<a class="std-pildora std-pildora--fantasma" href="#pie">Contacto<span class="std-oculto"> con el equipo comercial del grupo y de sus marcas, en Chile y en el extranjero</span></a>'));
+// Variante con texto propio del sitio en el hero, como la portada de as-built: antetítulo antes del H1 y fila de cifras
+// después de las acciones, con clases que el kit no conoce y su CSS en línea (el de portada.css de as-built).
+const cifrasCss = `<style>
+.std-hero .eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--std-gris); margin: 0 0 16px; }
+.std-hero .proof-row { display: flex; justify-content: center; gap: 40px; max-width: 780px; margin: 32px auto 0; padding-top: 24px; border-top: 1px solid var(--std-linea); }
+.std-hero .proof-row dt { font-size: 24px; line-height: 1.2; color: var(--std-tinta); }
+.std-hero .proof-row dd { margin: 6px 0 0; font-size: 14px; line-height: 1.47; color: var(--std-gris); max-width: 220px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media (max-width: 640px) {
+  .std-hero .proof-row { gap: 14px; margin-top: 28px; }
+  .std-hero .proof-row > div { flex: 1; }
+  .std-hero .proof-row dt { font-size: 21px; }
+  .std-hero .proof-row dd { font-size: 12px; }
+}
+</style>`;
+const h1 = '<h1 class="std-h1" id="std-hero-titulo">';
+assert.ok(contrato.includes(h1) && contrato.includes('</head>'));
+fs.writeFileSync(path.join(sitio, 'cifras.html'), contrato.replace('</head>', cifrasCss + '</head>')
+  .replace(h1, '<p class="eyebrow">Escaneo láser para minería e industria</p>' + h1)
+  .replace(acciones + '</div>', acciones + '</div><dl class="proof-row">' +
+    '<div><dt>±<span>2</span> mm</dt><dd>precisión de levantamiento</dd></div>' +
+    '<div><dt>FARO</dt><dd>escáner con certificado de calibración</dd></div>' +
+    '<div><dt>UF <span>45</span></dt><dd>desde, control dimensional<span class="sr-only"> en plantas de procesos, chancadores, molinos y estructuras de faenas mineras e industriales de todo Chile</span></dd></div></dl>'));
 if (!process.env.CHROME) throw new Error('Falta CHROME: ruta al ejecutable de Chrome/Chromium. Se usa CDP, sin Playwright.');
 const headers = { 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self'; worker-src 'self'; connect-src 'self'", 'X-Content-Type-Options': 'nosniff' };
 const opciones = { headers, temporales: salida, chromeArgs: process.env.ESTANDAR_SWIFTSHADER === '1' ? ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] : [] };
@@ -54,7 +83,7 @@ const RAMPA = [8, 20], TENUE = 0.5;
 const antes = `
 const get = HTMLCanvasElement.prototype.getContext;
 HTMLCanvasElement.prototype.getContext = function (t, o, ...a) { return get.call(this, t, t === 'webgl2' ? { ...o, preserveDrawingBuffer: true } : o, ...a); };
-window.__campoTexto = () => {
+window.__campoTexto = (extra = {}) => {
   const host = document.querySelector('[data-std-campo]'), hero = host.closest('.std-hero'), c = host.querySelector('canvas');
   if (!c) return null;
   const z = host.getBoundingClientRect(), sx = c.width / z.width, sy = c.height / z.height;
@@ -71,6 +100,23 @@ window.__campoTexto = () => {
     rangos[n] = rel(r.getBoundingClientRect());
     elementos[n] = rel(e.getBoundingClientRect());
     cajas[n] = n === 'acciones' ? unir([...e.children].map(a => rel(a.getBoundingClientRect()))) : rangos[n];
+  }
+  // Piezas propias del sitio (nombre: selector; si hay varias, nombre1, nombre2…): la unión de las cajas de sus nodos
+  // de texto visibles, un Range por nodo, sin los que están en blanco ni los que están dentro de .sr-only.
+  const textoDe = e => {
+    const w = document.createTreeWalker(e, NodeFilter.SHOW_TEXT), r = document.createRange(), v = [];
+    for (let t; (t = w.nextNode());) {
+      if (!t.data.trim() || t.parentElement.closest('.sr-only')) continue;
+      r.selectNodeContents(t);
+      const b = r.getBoundingClientRect();
+      if (b.width) v.push(rel(b));
+    }
+    return unir(v);
+  };
+  for (const [n, s] of Object.entries(extra)) {
+    const v = [...hero.querySelectorAll(s)];
+    if (!v.length) throw new Error('Falta la pieza ' + n + ': ' + s);
+    v.forEach((e, i) => { const k = v.length > 1 ? n + (i + 1) : n; cajas[k] = textoDe(e); elementos[k] = rel(e.getBoundingClientRect()); });
   }
   const union = unir(Object.values(cajas));
   const ancla = hero.querySelector('[data-std-nube="hero"]');
@@ -154,10 +200,35 @@ async function medirTras(p) {
 
 try {
   browser = await navegador(sitio, KIT, opciones);
-  for (const [w, h, escala, otra] of [[1366, 650, 1, [1024, 600]], [390, 844, 2, [360, 740]], [1366, 650, 1, null]]) {
+  for (const [w, h, escala, otra] of [[1366, 650, 1, [1024, 600]], [390, 844, 2, [360, 740]], [1366, 650, 1, null],
+    [1366, 650, 1, 'cifras'], [390, 844, 2, 'cifras']]) {
     const p = await browser.pagina(antes);
     const evidencia = {};
     try {
+      if (otra === 'cifras') {
+        // Antetítulo y fila de cifras con clases propias del sitio: su texto también queda despejado.
+        await p.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: escala, mobile: false });
+        await p.ir('/cifras.html');
+        await p.ev('document.fonts.ready');
+        await p.hasta('window.__mccoCampo?.state.puntos>0 && window.__mccoNube?.state.frames>2', 30000);
+        await centrarYPausar(p);
+        const m = evidencia.cifras = await p.ev(`__campoTexto({ antetitulo: '.eyebrow', cifra: '.proof-row > div' })`);
+        ok(`${w}x${h} cifras: el antetítulo está sobre el H1 y las cifras bajo las acciones`,
+          m.cajas.antetitulo.y1 <= m.cajas.h1.y0 && ['cifra1', 'cifra2', 'cifra3'].every(k => m.cajas[k]?.y0 >= m.cajas.acciones.y1),
+          { antetitulo: m.cajas.antetitulo, h1: m.cajas.h1, acciones: m.cajas.acciones, cifras: [m.cajas.cifra1, m.cajas.cifra2, m.cajas.cifra3] });
+        // El antetítulo es un bloque del ancho del hero; lo que se despeja es su texto.
+        ok(`${w}x${h} cifras: el bloque del antetítulo es más ancho que su texto`,
+          m.elementos.antetitulo.x1 - m.elementos.antetitulo.x0 > m.cajas.antetitulo.x1 - m.cajas.antetitulo.x0 + 40,
+          { bloque: m.elementos.antetitulo, texto: m.cajas.antetitulo });
+        evaluar(`${w}x${h} cifras`, m);
+        if (w > 900) ok(`${w}x${h} cifras: hay campo a la derecha del texto visible (el .sr-only no cuenta)`,
+          m.derecha.pintados >= MIN_PINTADOS && m.derecha.fraccion >= MIN_FRACCION, { ...m.derecha, minimo: MIN_PINTADOS, fraccionMinima: MIN_FRACCION });
+        await p.captura(path.join(salida, `hero-cifras-${w}.png`));
+        ok(`${w}x${h} cifras: excepciones`, p.errores.length === 0, p.errores);
+        const fallos = p.red.filter(r => r.status >= 400 || r.fallo), logs = p.consola.filter(r => r.level === 'error');
+        ok(`${w}x${h} cifras: recursos, MIME y CSP`, fallos.length === 0 && logs.length === 0, { fallos, logs });
+        continue;
+      }
       if (!otra) {
         // Texto .std-oculto en las acciones: se lee con lector de pantalla pero no se ve, así que no despeja campo.
         await p.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: escala, mobile: false });
@@ -208,7 +279,7 @@ try {
     } catch (e) {
       ok(`${w}x${h}`, false, e.message);
     } finally {
-      fs.writeFileSync(path.join(salida, `medidas-${w}${otra ? '' : '-oculto'}.json`), JSON.stringify(evidencia, null, 2) + '\n');
+      fs.writeFileSync(path.join(salida, `medidas-${w}${typeof otra === 'string' ? '-' + otra : otra ? '' : '-oculto'}.json`), JSON.stringify(evidencia, null, 2) + '\n');
       await p.cerrar();
     }
   }
