@@ -1,6 +1,6 @@
 # Estándar visual MCCO: Apple + antigravity (kit v1.4)
 
-Las webs del grupo usan el lenguaje de apple.com, tal como lo describe `design-md/apple/DESIGN.md` del repositorio VoltAgent/awesome-design-md (licencia MIT), y le suman antigravity: una nube de puntos que arma un activo y acompaña el scroll, y un campo de guiones que se mueve detrás del texto del hero. El kit fija el estándar. Cada sitio pone su color de acción, sus activos y su contenido. mcco.cl es el piloto y después vienen as-built.cl, condron.cl y 3d-ultra.cl.
+Las webs del grupo usan el lenguaje de apple.com, tal como lo describe `design-md/apple/DESIGN.md` del repositorio VoltAgent/awesome-design-md (licencia MIT), y le suman antigravity: una nube de puntos que arma un activo y acompaña el scroll, y un campo de guiones que se mueve en el hero, alrededor de su texto. El kit fija el estándar. Cada sitio pone su color de acción, sus activos y su contenido. mcco.cl es el piloto y después vienen as-built.cl, condron.cl y 3d-ultra.cl.
 
 - Hoja: `styles/estandar.css`, con Inter autoalojada en `styles/fuentes/` y su licencia en `OFL-Inter.txt`.
 - Componentes Astro: `layouts/Estandar.astro` y `components/estandar/*.astro`. El JS va en `lib/estandar/`.
@@ -132,6 +132,10 @@ en inglés:
 | `SubNav`, el `nav` | `Secciones` | `Sections` |
 | `FooterGrupo`, la `section` | `Grupo MCCO` | `MCCO Group` |
 
+El kit solo trae estas etiquetas en español y en inglés. Con un idioma que no es ni `es` ni `en` (por ejemplo `pt-BR`)
+salen en inglés, sin un `lang` propio, así que quedan marcadas con el idioma de la página: eso solo es correcto en
+inglés. Hoy ninguna web MCCO tiene páginas en otro idioma; agregar uno requiere sus propias etiquetas en el kit.
+
 El texto visible de `FooterGrupo` (la pertenencia al grupo, razón social, RUT, dirección y las bajadas de las marcas)
 son datos del grupo en español y no se traducen: en otro idioma quedan bajo `<div class="mcco-grupo__inner"
 lang="es">`, para que el lector de pantalla los lea con voz española. Los textos visibles de la barra y la
@@ -143,8 +147,21 @@ En el contrato HTML sin Astro ([ESTANDAR-HTML.md](ESTANDAR-HTML.md)) el marcado 
 cambia. Una página en inglés pone `lang="en"` en `<html>` y escribe ella misma esos cuatro `aria-label` en inglés
 (`Main`, `<nombre del sitio>, home`, `Menu` y `Sections`), junto con sus enlaces. Si copia el bloque Grupo, usa
 `aria-label="MCCO Group"` y `lang="es"` en el contenedor del texto en español. `menu.js` y `subnav.js` no escriben
-textos, así que no hay nada más que ajustar. Siguen en español, fuera de este cambio, los textos que escribe el
-runtime de pausa («Pausar movimiento», «Reanudar movimiento») y los rótulos de origen de las imágenes.
+textos, así que no hay nada más que ajustar.
+
+Quedan fuera de v1.4.1 otros textos fijos del kit que siguen en español también en una página en otro idioma, sin
+`lang="es"`, así que se leen con el idioma de la página. Una página en inglés que use estas piezas los tiene así:
+
+- El botón de pausa del movimiento, «Pausar movimiento» y «Reanudar movimiento»: lo escribe `lib/estandar/pausa.js`
+  y lo traen `HeroEstandar` y `HistoriaNube` (en el sistema v1.1, `HeroParticulas` y `lib/visual/hero.js`).
+- El `aria-label` de la nube de `HistoriaNube`, «Ilustración animada en nube de puntos: …» (o con el rótulo de su
+  origen).
+- Los rótulos de origen de `lib/estandar/rotulos.mjs` («Ilustración», «Render 3D», «Captura de simulación»…), que
+  escriben `HistoriaNube`, `Producto` y `Galeria`, y los `rotulo` por defecto de `HeroEstandar` y `HistoriaNube`
+  («Ilustración en nube de puntos.», «Ilustraciones en nube de puntos.»). Esos dos aceptan un `rotulo` propio.
+- El botón de video, «Pausar video» y «Reproducir video», de `Galeria` y `VideoBanda` (`lib/visual/video.js`).
+- `Cta` («Escríbenos») y los textos de la plantilla de `Post` (la ruta «Inicio», «Por», «min de lectura», «Fuentes» y
+  «Servicios relacionados», entre otros).
 
 Dentro de `.std`, los tokens de v1.1 que consumen `FooterGrupo` y las piezas de `Revelar` toman los valores del estándar. Se redefinen también sus alias `--mcco-*` en ese ámbito, porque un alias heredado de `:root` ya tiene resuelto su valor. Las páginas fuera de `.std` conservan sus tokens.
 
@@ -201,9 +218,9 @@ Una sección a todo el ancho, sin redondeo, con el texto centrado y 80 px de air
 | `acciones` | (obligatorio) | Las de `Acciones` |
 | `nube` | | `{ respaldo: { src, width, height, alt } }`, la imagen fija del primer activo |
 | `rotulo` | `'Ilustración en nube de puntos.'` | Rótulo de origen bajo la nube |
-| `campo` | `false` | El campo antigravity detrás del texto |
+| `campo` | `false` | El campo antigravity alrededor del texto |
 
-El respaldo de la nube se ve sin WebGL2, con movimiento reducido y sin JS. Desde v1.4.1, con JS y la API WebGL2 no se pinta mientras la nube arranca (`data-estado="espera"`), así el LCP es el texto del hero. Vuelve a verse al pasar a `data-estado="fijo"` (sin contexto WebGL2, muestreo fallido o contexto perdido, después de la carga), con movimiento reducido, si ya se había pintado antes de que llegara el módulo, y si la nube no llega a «nube» 4 s después de `load` o 10 s después de evaluarse el módulo. En esos casos aparece más tarde que en v1.4.0. Con `nube` o `campo` el hero lleva su propio botón «Pausar movimiento» (WCAG 2.2.2), arriba a la derecha y antes del H1 en el orden del foco. Se ve mientras algo se mueve en el hero.
+El respaldo de la nube se ve sin la API WebGL2, con movimiento reducido, sin JS y si el módulo de la nube no carga. Desde v1.4.1, con JS y la API WebGL2 no se pinta mientras la nube arranca (`data-estado="espera"`), así el LCP es el texto del hero. Vuelve a verse al pasar a `data-estado="fijo"` (sin contexto WebGL2, muestreo fallido o contexto perdido, después de la carga), con movimiento reducido, si ya se había pintado antes de que llegara el módulo, y si la nube no llega a «nube» 4 s después de `load` o 10 s después de evaluarse el módulo. En esos casos aparece más tarde que en v1.4.0. Con `nube` o `campo` el hero lleva su propio botón «Pausar movimiento» (WCAG 2.2.2), arriba a la derecha y antes del H1 en el orden del foco. Se ve mientras algo se mueve en el hero.
 
 ### NubeAncla
 
@@ -365,7 +382,7 @@ La nube usa un solo lienzo fijo. Después del primer pintado, los puntos suben d
 
 La nube arranca después de la carga, en tiempo ocioso y con un ancla cerca de la vista, y se detiene con la pestaña oculta o fuera de pantalla. Las formas se muestrean en un Worker con OffscreenCanvas. Si falta esa API o falla el Worker, el hilo principal procesa una forma por vez, con lotes de hasta 256 elementos y un presupuesto de 8 ms entre pausas. La ordenación estable conserva el resultado de rc.1 para cada semilla. El cierre cancela los pedidos pendientes y el respaldo activo entre lotes; el Worker se cierra cuando llega la última forma. `window.__mccoNube.state` deja ver el estado para verificar.
 
-El campo queda detrás del texto de su contenedor, sin recuadros blancos, también cuando falla la primera forma y se muestra el respaldo de la nube. Desde v1.4.1 el texto queda despejado: en la caja que ocupa el texto del hero (la unión de las líneas del H1 y de `.std-hero__bajada` y de las píldoras de `.std-acciones`; el texto `.std-oculto` de una píldora no cuenta, porque no se ve) no se dibuja ningún guion, y el campo se desvanece de forma suave hacia afuera, de 8 a 56 px del borde de esa caja. Fuera de ella el campo sigue igual, también sobre la nube. La caja se mide con esas clases, sin marcado nuevo, y se vuelve a medir al cambiar el tamaño, al cargar una fuente y cuando el contenido cambia de alto. Sin ese texto en el contenedor, el campo lo ocupa todo, como antes. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
+El campo va en una capa bajo el contenido de su contenedor, sin recuadros blancos, también cuando falla la primera forma y se muestra el respaldo de la nube. Desde v1.4.1 el texto queda despejado: en la caja que ocupa el texto del hero (la unión de las líneas del H1 y de `.std-hero__bajada` y de las píldoras de `.std-acciones`; el texto `.std-oculto` de una píldora no cuenta, porque no se ve) no se dibuja ningún guion, y el campo se desvanece de forma suave hacia afuera, de 8 a 56 px del borde de esa caja. Fuera de ella el campo sigue igual, también sobre la nube. La caja se mide con esas clases, sin marcado nuevo, y se vuelve a medir al cambiar el tamaño, al cargar una fuente y cuando el contenido cambia de alto. Sin ese texto en el contenedor, el campo lo ocupa todo, como antes. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
 
 El centro del campo persigue al mouse con unos 1,4 s de retraso, sin cursor pasea despacio, los anillos giran a 0,012 rad/s y el scroll no los mueve. Sobre la nube los guiones bajan a un tercio. Con movimiento reducido no se crea, y sin WebGL2 no queda nada porque es decorativo. `window.__mccoCampo.state` deja ver su estado.
 
@@ -435,8 +452,8 @@ node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar --co
 ```
 
 Contrato HTML, marcado completo de cada pieza y variantes independientes: [ESTANDAR-HTML.md](ESTANDAR-HTML.md).
-El modo completo cumple los límites conservadores: nube **9022 B gzip / 12 000 B**, campo **4988 B / 5000 B**,
-con pausa pública y comunes en cada presupuesto aislado. Total JS de página **14 040 B**, contando cada recurso
+El modo completo cumple los límites conservadores: nube **9279 B gzip / 12 000 B**, campo **4988 B / 5000 B**,
+con pausa pública y comunes en cada presupuesto aislado. Total JS de página **14 297 B**, contando cada recurso
 una vez. `npm run check:estandar` reconstruye el grafo (también imports dinámicos y URL del Worker), comprime cada
 respuesta con `gzipSync` nivel 9 y falla si hay corrupción o se excede un límite. Menú **457 B**, subnav **341 B**,
 video **1351 B** con su común. La medición vigente completa está en `dist/estandar/manifest.json` y en la salida
@@ -448,7 +465,7 @@ el único estado de pausa compartido por nube y campo; ambos usan una sola insta
 La distribución no incluye fechas ni rutas absolutas y dos builds limpios deben producir los mismos bytes.
 
 Astro sigue usando los runtimes fuente y recibe las mismas hojas a través de cada componente o del layout.
-El respaldo del hero se oculta solo cuando el runtime de la nube se evalúa (`data-estado="espera"`) o confirma la nube: un módulo bloqueado no lo oculta.
+El respaldo del hero solo lo oculta el runtime de la nube: mientras la nube arranca (`data-estado="espera"`, con un plazo) y con la nube confirmada. Un módulo bloqueado no lo oculta.
 No se modifican los componentes ni los runtimes visuales v1.1.
 
 El Worker de la nube se carga desde el mismo origen, así que la CSP del sitio tiene que permitir `'self'` en `worker-src`, o en `script-src` si no declara `worker-src`.

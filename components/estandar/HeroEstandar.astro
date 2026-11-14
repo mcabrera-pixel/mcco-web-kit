@@ -1,12 +1,13 @@
 ---
 // Hero del estándar: blanco, H1 de 56 px (el LCP), bajada, acciones y, con `nube`, el lugar donde la nube antigravity
 // arma el primer activo (NubeAncla) con su rótulo de origen debajo. Para cortes de línea o énfasis en el título se usa
-// el slot "titulo". Con `campo`, el campo antigravity (CampoAntigravity) ocupa todo el hero detrás del texto: la capa
-// va en z-index 0 y el contenido en z-index 1, sin fondos. El texto queda despejado: en la caja que ocupan el H1, la
-// bajada y las acciones no se dibuja ningún guion y el campo se desvanece suave en su borde (campo.js la mide con estas
-// mismas clases y la sigue al cambiar el tamaño, la fuente o el alto del contenido). La píldora fantasma lleva fondo
-// blanco para leerse sobre el campo cercano. Con nube o campo, el hero lleva su propio botón para pausar el movimiento
-// (WCAG 2.2.2): pausa la nube y el campo con la pausa común (lib/estandar/pausa.js), a la par con el de la historia.
+// el slot "titulo". Con `campo`, el campo antigravity (CampoAntigravity) ocupa todo el hero en una capa bajo el
+// contenido: la capa va en z-index 0 y el contenido en z-index 1, sin fondos. El texto queda despejado: en la caja que
+// ocupan las líneas del H1 y de la bajada y las píldoras de las acciones no se dibuja ningún guion y el campo se
+// desvanece suave en su borde (campo.js la mide con estas mismas clases y la sigue al cambiar el tamaño, la fuente o
+// el alto del contenido). La píldora fantasma lleva fondo blanco para leerse sobre el campo cercano. Con nube o campo,
+// el hero lleva su propio botón para pausar el movimiento (WCAG 2.2.2): pausa la nube y el campo con la pausa común
+// (lib/estandar/pausa.js), a la par con el de la historia.
 import '../../styles/estandar.css';
 import '../../styles/estandar-componentes.css';
 import Acciones from './Acciones.astro';
@@ -23,7 +24,7 @@ interface Props {
   nube?: ComponentProps<typeof NubeAncla>;
   /** Rótulo de origen bajo la nube. */
   rotulo?: string;
-  /** Campo antigravity detrás del texto: guiones en anillos que siguen al mouse con retraso. */
+  /** Campo antigravity alrededor del texto: guiones en anillos que siguen al mouse con retraso. */
   campo?: boolean;
 }
 const { titulo, bajada, acciones, nube, rotulo = 'Ilustración en nube de puntos.', campo = false } = Astro.props;

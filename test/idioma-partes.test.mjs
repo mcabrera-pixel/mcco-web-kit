@@ -26,7 +26,9 @@ const subnavEn = { titulo: 'Test Co', enlaces: [{ href: '#questions', texto: 'Qu
   accion: { href: '/en/contact/', texto: 'Talk to an engineer', textoCorto: 'Contact' } };
 const textosDeLaPagina = new Set(['Test Co', 'Home', 'Technical FAQ', 'Questions', 'Talk to an engineer', 'Contact']);
 
-// «esu» (yupik central) empieza con «es» pero su subtag primario no es «es»: usa las etiquetas en inglés.
+// «esu» (yupik central) empieza con «es» pero su subtag primario no es «es»: usa las etiquetas en inglés. El kit solo
+// tiene etiquetas en español y en inglés: en pt-BR y esu son inglés bajo el lang de la página, un límite documentado
+// en docs/ESTANDAR.md (solo es correcto en inglés).
 const noEspanol = ['en', 'en-US', 'pt-BR', 'esu'];
 const espanol = ['es', 'ES-cl', 'es-419'];
 const paginas = {};
@@ -86,12 +88,12 @@ const limpio = (t) => t.replace(/\s+/g, ' ').trim();
 
 for (const lang of noEspanol) {
   const pagina = `en-${lang.toLowerCase()}`;
-  test(`lang=${lang}: los cinco aria-label del kit salen en inglés y en el idioma de la página`, () => {
+  test(`lang=${lang}: los cinco aria-label del kit salen en inglés, sin lang propio (heredan el de la página)`, () => {
     const d = dom(pagina);
     assert.equal(d.querySelector('html').getAttribute('lang'), lang);
     const etiquetas = Object.values(piezas).flatMap(s => conEtiqueta(d.querySelector(s)));
     assert.deepEqual(etiquetas.map(e => e.getAttribute('aria-label')), ['Main', 'Test Co, home', 'Menu', 'Sections', 'MCCO Group']);
-    for (const e of etiquetas) assert.equal(idiomaDe(e), lang, `aria-label «${e.getAttribute('aria-label')}» bajo otro idioma`);
+    for (const e of etiquetas) assert.equal(idiomaDe(e), lang, `aria-label «${e.getAttribute('aria-label')}» bajo un lang distinto del de la página`);
   });
   test(`lang=${lang}: el texto del kit en español queda bajo lang="es" y el de la página no`, () => {
     const d = dom(pagina);

@@ -51,7 +51,7 @@ Los archivos `src/pages/{sitemap.xml,robots.txt,llms.txt,llms-full.txt}.ts`, `sr
 
 ## Estándar visual (v1.3)
 
-El lenguaje de apple.com, según el `DESIGN.md` de Apple del repositorio awesome-design-md, más antigravity: una nube de puntos que arma los activos del sitio y acompaña el scroll, y un campo de guiones detrás del texto del hero. El kit fija la hoja, los componentes y el JS, y cada sitio pone su color de acción, sus activos y su contenido. Sin dependencias en tiempo de ejecución.
+El lenguaje de apple.com, según el `DESIGN.md` de Apple del repositorio awesome-design-md, más antigravity: una nube de puntos que arma los activos del sitio y acompaña el scroll, y un campo de guiones alrededor del texto del hero. El kit fija la hoja, los componentes y el JS, y cada sitio pone su color de acción, sus activos y su contenido. Sin dependencias en tiempo de ejecución.
 
 ```astro
 import Estandar from '@mcco/web-kit/layouts/Estandar.astro';
