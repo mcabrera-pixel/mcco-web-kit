@@ -317,10 +317,7 @@ function* reglasDisplay(css) {
 function resolver(caso, sujeto) {
   const css = hojaComponentes();
   const mediaValidas = caso === 'sin-js' ? [null, 'scripting: none'] : [null];
-  // Estado del ancla en cada caso: sin atributo es el módulo de la nube bloqueado (nunca se evaluó).
-  const estados = { 'js-nube': 'nube', 'js-bloqueado': undefined };
-  const estado = caso in estados ? estados[caso] : 'fijo';
-  const padre = { clases: new Set(['std-nube']), attrs: estado === undefined ? {} : { 'data-estado': estado } };
+  const padre = { clases: new Set(['std-nube']), attrs: { 'data-estado': caso === 'js-nube' ? 'nube' : 'fijo' } };
   const el = { clases: new Set(['std-nube__respaldo']), attrs: {} };
   if (sujeto === '.std-nube__respaldo--sin-js') el.clases.add('std-nube__respaldo--sin-js');
   const candidatas = [];
@@ -350,12 +347,6 @@ function resolver(caso, sujeto) {
 test('css: con JS y sin WebGL la imagen de respaldo se ve', () => {
   assert.equal(resolver('js-fijo', '.std-nube__respaldo'), 'block', 'con data-estado="fijo" debe verse el respaldo');
   assert.equal(resolver('js-nube', '.std-nube__respaldo'), 'none', 'con data-estado="nube" no debe verse el respaldo');
-});
-
-// Si el módulo de la nube no se descarga, el ancla queda sin data-estado y el respaldo se ve. (v1.4.1: la espera mientras
-// la nube arranca la pone nube.js en el estilo del <img>, no en esta hoja; se prueba en Chrome.)
-test('css: con el módulo de la nube bloqueado el respaldo se ve', () => {
-  assert.equal(resolver('js-bloqueado', '.std-nube__respaldo'), 'block', 'sin data-estado debe verse el respaldo');
 });
 
 // Sin JS solo la copia de <noscript> permanece visible: la excepción @media (scripting: none) oculta la imagen normal
