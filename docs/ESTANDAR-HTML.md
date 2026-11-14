@@ -68,7 +68,8 @@ y la sub-navegación, con tinta sobre blanco. No necesita JavaScript. El id pued
 suyo, siempre que el `href` apunte a él y sea único: `std-contenido` es el que usa el layout `Estandar`, con prefijo
 del kit para no chocar con un `id="contenido"` del sitio. Una web que ya tiene su propio enlace de salto (por ejemplo
 `<a class="skip" href="#contenido">` con su CSS) cumple igual; para usar la regla del kit basta cambiar su clase por
-`std-saltar` y quitar su CSS local. No poner dos enlaces de salto.
+`std-saltar`, usar el texto del kit («Saltar al contenido») y quitar su CSS local. Conviene no tener dos enlaces de
+salto.
 
 ## Piezas y atributos
 

@@ -114,17 +114,24 @@ sobre blanco (16:1, AA con cualquier color de acción) y el anillo de foco del e
 comportamiento con colores fijos (`#1d1d1f` sobre `#fff`) y `z-index` 1000, porque la barra del slot `nav` es del
 sitio. Al activarlo, el navegador lleva la lectura y el siguiente Tab al `<main>`.
 
-Es aditivo: ninguna web tiene que cambiar su código para subir a v1.4.2. Dos casos conocidos:
+Es aditivo: ninguna web tiene que cambiar su código para subir a v1.4.2. Una web que ya pone su propio enlace de salto
+dentro de `Estandar` (en el slot por defecto, que queda dentro del `<main>` después de las dos barras) pasa a tener dos
+paradas seguidas al tabular, primero la del kit. No rompe nada: su enlace sigue funcionando y el del kit apunta a
+`#std-contenido`, así que tampoco hay id repetido. Aun así conviene quitar el propio, con su CSS, al subir. Casos
+conocidos a noviembre de 2026 (revisados en los worktrees de las webs; las que usan `Post` no ponen nada en su slot
+`nav` y las que usan solo `Base` no reciben enlace del kit):
 
-- **as-built** arma su propio HTML con la distribución, sin el layout, así que no recibe el enlace del kit. Ya cumple:
-  su `<a class="skip" href="#contenido">Ir al contenido</a>` es el primer hijo del body y apunta a su
-  `<main id="contenido">`. Puede pasar a la clase del kit cambiando `class="skip"` por `class="std-saltar"` (el
-  `href` y su id pueden quedar como están) y quitar entonces su regla local `.std .skip` y `.std .skip:focus` de
-  `public/css/sitio-estandar.css`. No es obligatorio.
-- **cuplai** usa `Estandar` y pone su propio `<a class="skip-link" href="#contenido">` en el slot por defecto de
-  `src/layouts/Sitio.astro` (queda dentro del `<main>`, después de las dos barras). Con v1.4.2 tendría dos enlaces de
-  salto, el del kit primero: debe quitar el suyo y la regla `.skip-link` de `src/styles/theme.css`. Su
-  `<div id="contenido">` de la portada puede quedar, porque el del kit apunta a `#std-contenido`.
+- **as-built** arma su propio HTML con la distribución, sin el layout, así que no recibe el enlace del kit y no cambia
+  nada. Ya cumple: su `<a class="skip" href="#contenido">Ir al contenido</a>` es el primer hijo del body y apunta a su
+  `<main id="contenido">`. Si quiere usar la regla del kit, cambia `class="skip"` por `class="std-saltar"` (el `href`
+  y su id pueden quedar como están), usa también el texto del kit, «Saltar al contenido», y quita su regla local
+  `.std .skip` y `.std .skip:focus` de `public/css/sitio-estandar.css`. No es obligatorio.
+- **cuplai** (`Estandar`) pone `<a class="skip-link" href="#contenido">Saltar al contenido</a>` en el slot por defecto
+  de `src/layouts/Sitio.astro`, con la regla `.skip-link` en `src/styles/theme.css`: conviene quitar los dos. Su
+  `<div id="contenido">` de la portada puede quedar.
+- **monitorai** (`Estandar`) pone `<a class="skip" href="#contenido">Saltar al contenido</a>` en el slot por defecto
+  de `src/components/Layout.astro`, con las reglas `.skip` y `.skip:focus` en `src/styles/theme.css`: conviene quitar
+  el enlace y las dos reglas. Su `<div id="contenido">` alrededor del slot puede quedar.
 
 ### Idioma y metadatos por página (v1.4.0)
 
