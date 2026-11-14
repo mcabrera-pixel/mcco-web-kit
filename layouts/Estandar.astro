@@ -7,6 +7,7 @@ import type { ComponentProps } from 'astro/types';
 import Base from './Base.astro';
 import NavGlobal from '../components/estandar/NavGlobal.astro';
 import SubNav from '../components/estandar/SubNav.astro';
+import { loadSite } from '../lib/site.mjs';
 import interLatin from '../styles/fuentes/inter-latin-wght-normal.woff2?url';
 import '../styles/estandar.css';
 import '../styles/estandar-componentes.css';
@@ -20,12 +21,15 @@ interface Props extends ComponentProps<typeof Base> {
   subnav: ComponentProps<typeof SubNav>;
 }
 const { nav, subnav, bodyClass, ...base } = Astro.props;
+// El idioma de la página (el mismo que Base pone en <html>) llega a la barra y a la sub-navegación, salvo que la
+// web ya fije uno en nav o subnav.
+const { lang = loadSite().lang } = base;
 ---
 <Base {...base} bodyClass={['std', bodyClass].filter(Boolean).join(' ')}>
   <link slot="head" rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
   <slot name="head" slot="head" />
-  <NavGlobal {...nav} />
-  <SubNav {...subnav} />
+  <NavGlobal {...nav} lang={nav?.lang ?? lang} />
+  <SubNav {...subnav} lang={subnav?.lang ?? lang} />
   <main><slot /></main>
   <slot name="pie" />
 </Base>

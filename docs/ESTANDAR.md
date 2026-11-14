@@ -118,6 +118,34 @@ para quien compone su propia cabecera; en ese caso el sitio debe fijar también 
 No agregues estas metas ni el canonical mediante el slot `head`: las props sustituyen sus valores
 sin duplicarlas. El slot sigue disponible para etiquetas adicionales, por ejemplo favicon o alternates.
 
+Desde v1.4.1 el mismo `lang` llega también a las piezas del kit (WCAG 3.1.2, idioma de las partes): `Base` se lo
+pasa a `FooterGrupo` y `Estandar` a `NavGlobal` y `SubNav`. Si la web ya pone `lang` en `nav` o en `subnav`, ese
+manda. Una página es española si el subtag primario de su idioma es `es` (`es`, `es-CL`, `ES-cl`, `es-419`), y
+entonces el HTML de las tres piezas es el de v1.4.0. Con cualquier otro idioma, los nombres accesibles del kit salen
+en inglés:
+
+| Pieza | En español | En otro idioma |
+|---|---|---|
+| `NavGlobal`, el `nav` | `Principal` | `Main` |
+| `NavGlobal`, el enlace del logo | `<logo.alt>, inicio` | `<logo.alt>, home` |
+| `NavGlobal`, el botón de menú | `Menú` | `Menu` |
+| `SubNav`, el `nav` | `Secciones` | `Sections` |
+| `FooterGrupo`, la `section` | `Grupo MCCO` | `MCCO Group` |
+
+El texto visible de `FooterGrupo` (la pertenencia al grupo, razón social, RUT, dirección y las bajadas de las marcas)
+son datos del grupo en español y no se traducen: en otro idioma quedan bajo `<div class="mcco-grupo__inner"
+lang="es">`, para que el lector de pantalla los lea con voz española. Los textos visibles de la barra y la
+sub-navegación son props de la web, que los escribe en el idioma de la página. La web no cambia su código: basta el
+`lang` que su layout ya le pasa a `Estandar`, como `Sitio` en el ejemplo. Las tres piezas aceptan además `lang`
+como prop opcional para quien las use sueltas; sin ella siguen en español.
+
+En el contrato HTML sin Astro ([ESTANDAR-HTML.md](ESTANDAR-HTML.md)) el marcado de referencia está en español y no
+cambia. Una página en inglés pone `lang="en"` en `<html>` y escribe ella misma esos cuatro `aria-label` en inglés
+(`Main`, `<nombre del sitio>, home`, `Menu` y `Sections`), junto con sus enlaces. Si copia el bloque Grupo, usa
+`aria-label="MCCO Group"` y `lang="es"` en el contenedor del texto en español. `menu.js` y `subnav.js` no escriben
+textos, así que no hay nada más que ajustar. Siguen en español, fuera de este cambio, los textos que escribe el
+runtime de pausa («Pausar movimiento», «Reanudar movimiento») y los rótulos de origen de las imágenes.
+
 Dentro de `.std`, los tokens de v1.1 que consumen `FooterGrupo` y las piezas de `Revelar` toman los valores del estándar. Se redefinen también sus alias `--mcco-*` en ese ámbito, porque un alias heredado de `:root` ya tiene resuelto su valor. Las páginas fuera de `.std` conservan sus tokens.
 
 | Token de v1.1 | Valor dentro de `.std` |

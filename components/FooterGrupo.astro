@@ -2,6 +2,13 @@
 // Bloque "Grupo MCCO": pertenencia al grupo + enlaces a las marcas hermanas en línea + entidad legal.
 // Va en TODAS las páginas (interlinking del grupo, Estándar v2 §6). El sitio conserva su propio footer.
 import { loadSite, loadEntity, loadActiveSites } from '../lib/site.mjs';
+import { esEspanol } from '../lib/idioma.mjs';
+interface Props {
+  /** Idioma de la página. Fuera del español (subtag primario «es») el aria-label sale en inglés y el texto, que
+   *  son datos del grupo en español (razón social, dirección, bajadas), queda marcado con lang="es". */
+  lang?: string;
+}
+const es = esEspanol(Astro.props.lang);
 const site = loadSite();
 const entity = loadEntity();
 const sites = loadActiveSites();
@@ -10,8 +17,8 @@ const others = sites.filter((s: any) => s.domain !== site.domain && s.role !== '
 // En la casa matriz el pie no dice «MCCO Group es parte de MCCO Group».
 const esCasaMatriz = corporate?.domain === site.domain;
 ---
-<section class="mcco-grupo" aria-label="Grupo MCCO" data-mcco="grupo">
-  <div class="mcco-grupo__inner">
+<section class="mcco-grupo" aria-label={es ? 'Grupo MCCO' : 'MCCO Group'} data-mcco="grupo">
+  <div class="mcco-grupo__inner" lang={es ? undefined : 'es'}>
     <p class="mcco-grupo__lead">
       {esCasaMatriz
         ? <strong>{entity.brandName ?? 'MCCO Group'}</strong>

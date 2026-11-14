@@ -21,7 +21,7 @@ const { footer = true, bodyClass = '', lang = site.lang, ...head } = Astro.props
   </head>
   <body class={bodyClass}>
     <slot />
-    {footer && <FooterGrupo />}
+    {footer && <FooterGrupo lang={lang} />}
     <slot name="body-end" />
   </body>
 </html>

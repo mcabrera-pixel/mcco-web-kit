@@ -3,6 +3,7 @@
 // enlaces de 12 px y la acción principal en píldora chica, siempre visible. En ≤ 833 px quedan el título y la acción;
 // en ≤ 640 px la acción usa su textoCorto si lo tiene. Sobre un bloque negro a todo el ancho pasa a su versión oscura
 // (lib/estandar/subnav.js). Va como hija directa de <body>: el position: sticky se mide contra su contenedor.
+import { esEspanol } from '../../lib/idioma.mjs';
 import '../../styles/estandar.css';
 import '../../styles/estandar-componentes.css';
 
@@ -11,8 +12,10 @@ interface Props {
   titulo: string;
   enlaces: Enlace[];
   accion: Enlace & { textoCorto?: string };
+  /** Idioma de la página. Fuera del español (subtag primario «es») el aria-label sale en inglés. */
+  lang?: string;
 }
-const { titulo, enlaces, accion } = Astro.props;
+const { titulo, enlaces, accion, lang } = Astro.props;
 if (!titulo || !accion?.href || !accion?.texto) throw new Error('SubNav: falta titulo o accion { href, texto }.');
 if (!Array.isArray(enlaces)) throw new Error('SubNav: falta enlaces (una lista, que puede ir vacía).');
 const lleno = (v: unknown) => typeof v === 'string' && v.trim() !== '';
@@ -24,7 +27,7 @@ enlaces.forEach((e, i) => {
 <div class="std-subnav">
   <div class="std-subnav__in">
     <span class="std-subnav__titulo">{titulo}</span>
-    <nav class="std-subnav__nav" aria-label="Secciones">
+    <nav class="std-subnav__nav" aria-label={esEspanol(lang) ? 'Secciones' : 'Sections'}>
       {enlaces.map((e) => <a class="std-subnav__enlace" href={e.href}>{e.texto}</a>)}
       <a class="std-pildora std-pildora--chica std-subnav__accion" href={accion.href}>
         {accion.textoCorto
