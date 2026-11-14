@@ -161,6 +161,31 @@ try {
     await p.ir('/index.html');await p.hasta('document.querySelector("[data-std-nube=hero]").dataset.estado==="fijo"');
     ok('muestreo fallido conserva imagen DOM y contenido',await p.ev(visible('.std-nube__respaldo'))&&await p.ev('document.querySelector(".std-nube__respaldo").naturalWidth>0'));
   });
+  // v1.4.1: con la nube funcionando el respaldo del hero no se pinta y el LCP queda en el texto del hero.
+  const lcp=`new Promise(r=>{const l=[];const o=new PerformanceObserver(x=>l.push(...x.getEntries()));o.observe({type:'largest-contentful-paint',buffered:true});setTimeout(()=>{o.disconnect();r(l.map(e=>({respaldo:!!e.element?.matches('.std-nube__respaldo'),texto:!!e.element?.matches('h1,.std-hero__bajada'),url:e.url,size:e.size})))},50)})`;
+  for(const ruta of ['index','nube-sola']) for(const [w,h] of [[1366,650],[390,844]]) await caso(`LCP ${ruta} ${w}x${h}`,'',async p=>{
+    await medidas(p,w,h);await p.ir(`/${ruta}.html`);await p.hasta('window.__mccoNube?.state.frames>2',30000);
+    const entradas=await p.ev(lcp);
+    ok(`LCP ${ruta} ${w}x${h}: respaldo sin pintar con la nube`,entradas.length>0&&entradas.every(e=>!e.respaldo),entradas);
+    ok(`LCP ${ruta} ${w}x${h}: el texto del hero es el LCP`,entradas.at(-1)?.texto===true,entradas);
+  });
+  // Sin la API de WebGL2 la nube no puede arrancar: el respaldo se ve desde el primer pintado, sin pasar por la espera.
+  await caso('sin API WebGL2',`delete window.WebGL2RenderingContext;const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(t,...a){return t==='webgl2'?null:get.call(this,t,...a)};
+    window.__estados=[];new MutationObserver(m=>m.forEach(x=>x.target.matches("[data-std-nube=hero]")&&__estados.push(x.target.getAttribute("data-estado")))).observe(document,{subtree:true,attributes:true,attributeFilter:['data-estado']});`,async p=>{
+    await p.ir('/index.html');await p.hasta('document.querySelector("[data-std-nube=hero]").dataset.estado==="fijo"');
+    ok('sin API WebGL2: respaldo sin espera',await p.ev('!__estados.includes("espera")')&&await p.ev(visible('.std-nube__respaldo')),await p.ev('__estados'));
+    ok('sin API WebGL2: respaldo pintado como LCP',(await p.ev(lcp)).some(e=>e.respaldo));
+  });
+  // Si la nube no llega a «nube» ni a «fijo» (aquí, una carga que no termina: el logo queda pausado y la nube espera el
+  // evento load), la espera vence y el respaldo vuelve a verse.
+  await caso('carga detenida','',async p=>{
+    await p.send('Fetch.enable',{patterns:[{urlPattern:'*/media/logo.svg'}]});
+    await p.send('Page.navigate',{url:browser.base+'/index.html'});
+    await p.hasta('document.readyState==="interactive"');
+    try { await p.hasta(`${visible('.std-nube__respaldo')} && document.querySelector("[data-std-nube=hero]").dataset.estado!=="espera"`,15000); ok('carga detenida: el respaldo vuelve a verse',true); }
+    catch { ok('carga detenida: el respaldo vuelve a verse',false,await p.ev('({estado:document.querySelector("[data-std-nube=hero]").dataset.estado,listo:document.readyState})')); }
+    await p.send('Fetch.disable');
+  });
   await caso('activo de historia caído','',async p=>{
     await p.ir('/historia-activo-caido.html');await listo(p);
     await p.hasta('document.querySelector("img[src*=forma-ausente]").complete && document.querySelector("img[src*=forma-ausente]").naturalWidth===0');
