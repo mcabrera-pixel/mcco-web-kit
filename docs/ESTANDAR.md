@@ -214,7 +214,7 @@ No entraron en v1.4.2 porque cada camino toca algo que esta versión no cambia:
   cada uso, y un idioma compartido en el render (`Astro.locals` fijado por `Base`) es un contrato interno nuevo que
   depende del orden en que Astro evalúa el layout y el slot, y hay que probarlo con un render real.
 - `pausa.js` y `video.js` reescriben el texto del botón en el cliente: aunque el HTML saliera en inglés, el primer
-  clic lo devolvería al español. `pausa.js` cuenta en el presupuesto del campo, que quedó con 11 B de margen.
+  clic lo devolvería al español. `pausa.js` cuenta en el presupuesto del campo, que quedó con 11 B de margen (6 B en v1.4.3).
 - `mcco-check` (R11) acepta un `figcaption` sin `data-rotulo` solo si dice «ilustraci»: traducir los rótulos obliga
   a cambiar esa regla del grupo.
 - `Post` y `Cta` mezclan textos del kit con datos de `site.yaml` (autor, SLA, «Inicio» del BreadcrumbList).
@@ -444,6 +444,8 @@ La nube usa un solo lienzo fijo. Después del primer pintado, los puntos suben d
 
 La nube arranca después de la carga, en tiempo ocioso y con un ancla cerca de la vista, y se detiene con la pestaña oculta o fuera de pantalla. Las formas se muestrean en un Worker con OffscreenCanvas. Si falta esa API o falla el Worker, el hilo principal procesa una forma por vez, con lotes de hasta 256 elementos y un presupuesto de 8 ms entre pausas. La ordenación estable conserva el resultado de rc.1 para cada semilla. El cierre cancela los pedidos pendientes y el respaldo activo entre lotes; el Worker se cierra cuando llega la última forma. `window.__mccoNube.state` deja ver el estado para verificar.
 
+Desde v1.4.3 el campo y la nube crean su contexto WebGL2 en una tarea aparte. El callback de su `IntersectionObserver` no lo crea: lo agenda con `setTimeout(alArrancar, 400, arrancar)`, con 400 ms de espera y después tiempo ocioso. El primer `getContext('webgl2')` de la página bloquea el hilo principal mientras el proceso de GPU termina de iniciar. Creado en el callback, que corre en el primer cuadro después de la carga, era una tarea larga: de 65 a 177 ms en la portada de condron.cl, con TBT de 194 y 677 ms en Lighthouse móvil. Con la espera de 300 ms o más el mismo `getContext` tarda 4 ms. Mientras tanto se ve la imagen fija de la nube y el hero sin campo, como antes del arranque. `test/estandar-arranque.test.mjs` lo comprueba con dobles.
+
 El campo va en una capa bajo el contenido de su contenedor, sin recuadros blancos, también cuando falla la primera forma y se muestra el respaldo de la nube. El texto queda despejado: en la caja que ocupa todo el texto visible del hero no se dibuja ningún guion, y el campo se desvanece de forma suave hacia afuera, de 8 a 56 px del borde de esa caja. Fuera de ella el campo sigue igual, también sobre la nube. Sin texto en el contenedor, el campo lo ocupa todo. Usa los valores de la prueba aprobada: en computador, anillos cada 28 px y un guion cada 30, del radio 46 al 1180 (5184 guiones). En celular son 24 y 26 px, hasta el radio 760 (2841 guiones).
 
 Desde v1.4.2 la caja cubre todo el texto del hero, no solo el H1, la bajada y las acciones (lo que medía v1.4.1). `campo.js` la deduce del DOM, sin marcado ni clases nuevas, como la unión de:
@@ -529,9 +531,9 @@ node node_modules/@mcco/web-kit/scripts/estandar-copiar.mjs public/estandar --co
 ```
 
 Contrato HTML, marcado completo de cada pieza y variantes independientes: [ESTANDAR-HTML.md](ESTANDAR-HTML.md).
-El modo completo cumple los límites conservadores (medición de v1.4.2): nube **9022 B gzip / 12 000 B**, campo
-**4989 B / 5000 B** (11 B de margen, sin subir el límite), con pausa pública y comunes en cada presupuesto aislado.
-Total JS de página **14 041 B**, contando cada recurso una vez. `npm run check:estandar` reconstruye el grafo (también imports dinámicos y URL del Worker), comprime cada
+El modo completo cumple los límites conservadores (medición de v1.4.3): nube **9028 B gzip / 12 000 B**, campo
+**4994 B / 5000 B** (6 B de margen, sin subir el límite), con pausa pública y comunes en cada presupuesto aislado.
+Total JS de página **14 052 B**, contando cada recurso una vez. `npm run check:estandar` reconstruye el grafo (también imports dinámicos y URL del Worker), comprime cada
 respuesta con `gzipSync` nivel 9 y falla si hay corrupción o se excede un límite. Menú **457 B**, subnav **341 B**,
 video **1351 B** con su común. La medición vigente completa está en `dist/estandar/manifest.json` y en la salida
 del verificador; estos valores no reemplazan la medición de la página del sitio con sus adaptadores.
@@ -539,7 +541,8 @@ del verificador; estos valores no reemplazan la medición de la página del siti
 Para subir de versión, una web sin Astro fija la tag y el SHA nuevos del kit, acepta la versión nueva del manifiesto
 si su build la comprueba (as-built lo hace en `build-estandar` y `check-estandar`) y vuelve a copiar con
 `--completo`. De v1.4.1 a v1.4.2 se mantienen archivos, entradas y formato del manifiesto; cambian `campo.js` (el
-texto despejado) y `estandar.css` (la regla `.std-saltar`), y el HTML del sitio no cambia.
+texto despejado) y `estandar.css` (la regla `.std-saltar`), y el HTML del sitio no cambia. De v1.4.2 a v1.4.3 tampoco
+cambian archivos, entradas ni formato; cambian `campo.js` y `nube.js` (el contexto WebGL en una tarea diferida).
 
 El empaquetado usa esbuild **0.28.2**, división de módulos comunes y entradas estables. Compacta el GLSL (sin
 comentarios ni espacios que no separen dos palabras o dos operadores) sin cambiar sus tokens. `pausa.js` reexporta

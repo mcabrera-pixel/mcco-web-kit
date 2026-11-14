@@ -1,13 +1,13 @@
 {
   "formato": 1,
-  "version": "1.4.2",
+  "version": "1.4.3",
   "generador": "esbuild@0.28.2",
   "compresion": "gzip nivel 9; bytes por respuesta",
   "archivos": {
     "lib/estandar/campo.js": {
-      "bytes": 7147,
-      "gzip": 3690,
-      "sha256": "0fff8b7339666245fefa5f5b7bd4cfe69620d684d2fb88bf12998a59f2094d96",
+      "bytes": 7127,
+      "gzip": 3695,
+      "sha256": "ba87b09178aa132f7edbdd026e41400f2171e2435344a4f9f192c84c79af557d",
       "dependencias": [
         "lib/estandar/chunks/chunk-HUFLIRKM.js",
         "lib/estandar/chunks/chunk-YKE6NFK2.js"
@@ -38,9 +38,9 @@
       "dependencias": []
     },
     "lib/estandar/nube.js": {
-      "bytes": 13331,
-      "gzip": 6012,
-      "sha256": "eceb0ad88ed8814c804cf5f234b1b993578d39461c4d7a3278ddaf271ce60fce",
+      "bytes": 13349,
+      "gzip": 6018,
+      "sha256": "579d4894bbd0e6674c982451182c2d357c72b3a42028939203127c02fb223152",
       "dependencias": [
         "lib/estandar/chunks/chunk-HUFLIRKM.js",
         "lib/estandar/chunks/chunk-YKE6NFK2.js",

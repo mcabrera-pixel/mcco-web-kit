@@ -1,4 +1,4 @@
-# Contrato HTML del estándar (desde v1.3, al día con v1.4.2)
+# Contrato HTML del estándar (desde v1.3, al día con v1.4.3)
 
 `mcco-estandar-copiar public/estandar --completo` copia el artefacto ya construido. El destino solo necesita Node
 para copiar y un servidor estático para servirlo. No hay runtime de Astro ni dependencia de esbuild en la web.
