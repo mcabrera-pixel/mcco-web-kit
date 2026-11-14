@@ -165,7 +165,9 @@ try {
     await p.ir('/index.html');await p.hasta('document.querySelector("[data-std-nube=hero]").dataset.estado==="fijo"');
     ok('muestreo fallido conserva imagen DOM y contenido',await p.ev(visible('.std-nube__respaldo'))&&await p.ev('document.querySelector(".std-nube__respaldo").naturalWidth>0'));
   });
-  // v1.4.1: con la nube funcionando el respaldo del hero no se pinta y el LCP queda en el texto del hero.
+  // v1.4.1: con la nube funcionando el respaldo del hero no se pinta y el LCP queda en el texto del hero. Depende de que
+  // nube.js (diferido) se evalúe antes de que el respaldo se pinte; en una máquina muy cargada podría perder la carrera
+  // sin que haya regresión (el respaldo queda visible y es el LCP, como en v1.4.0): repetir antes de concluir.
   const lcp=`new Promise(r=>{const l=[];const o=new PerformanceObserver(x=>l.push(...x.getEntries()));o.observe({type:'largest-contentful-paint',buffered:true});setTimeout(()=>{o.disconnect();r(l.map(e=>({respaldo:!!e.element?.matches('.std-nube__respaldo'),texto:!!e.element?.matches('h1,.std-hero__bajada'),url:e.url,size:e.size})))},50)})`;
   for(const ruta of ['index','nube-sola']) for(const [w,h] of [[1366,650],[390,844]]) await caso(`LCP ${ruta} ${w}x${h}`,'',async p=>{
     await medidas(p,w,h);await p.ir(`/${ruta}.html`);await p.hasta('window.__mccoNube?.state.frames>2',30000);
