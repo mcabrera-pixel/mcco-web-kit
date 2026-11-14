@@ -188,7 +188,7 @@ try {
     await p.send('Fetch.enable',{patterns:[{urlPattern:'*/media/logo.svg'}]});
     await p.send('Page.navigate',{url:browser.base+'/index.html'});
     // readyState pasa a interactive antes de que corran los módulos: se espera a que nube.js ponga la espera.
-    await p.hasta('document.querySelector("[data-std-nube=hero]").dataset.estado==="espera"');
+    await p.hasta('document.querySelector("[data-std-nube=hero]")?.dataset.estado==="espera"');
     try { await p.hasta(`${visible('.std-nube__respaldo')} && document.querySelector("[data-std-nube=hero]").dataset.estado!=="espera"`,15000); ok('carga detenida: el respaldo vuelve a verse',true); }
     catch { ok('carga detenida: el respaldo vuelve a verse',false,await p.ev('({estado:document.querySelector("[data-std-nube=hero]").dataset.estado,listo:document.readyState})')); }
     await p.send('Fetch.disable');
@@ -224,7 +224,7 @@ try {
   await caso('reducido durante la espera','',async p=>{
     await p.send('Fetch.enable',{patterns:[{urlPattern:'*/media/logo.svg'}]});
     await p.send('Page.navigate',{url:browser.base+'/index.html'});
-    await p.hasta('document.querySelector("[data-std-nube=hero]").dataset.estado==="espera"');await reducir(p);
+    await p.hasta('document.querySelector("[data-std-nube=hero]")?.dataset.estado==="espera"');await reducir(p);
     try { await p.hasta(visible('.std-nube__respaldo'),1500); ok('reducido durante la espera: respaldo visible',true); }
     catch { ok('reducido durante la espera: respaldo visible',false,await p.ev('document.querySelector("[data-std-nube=hero]").dataset.estado')); }
     await p.send('Fetch.disable');
