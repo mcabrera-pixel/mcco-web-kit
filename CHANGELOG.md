@@ -3,6 +3,9 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## Sin publicar
+- `mcco-check` R8-csp ya no confunde `'wasm-unsafe-eval'` con `'unsafe-eval'` (mismo arreglo publicado en v1.4.4 para los sitios en la línea 1.4). Prueba en `test/check-csp.test.mjs`.
+
 ## v1.5.0 · 2026-11-17
 - Nuevo `components/ArticuloBlog.astro`: el cuerpo del artículo (ruta, título, autor y fecha, cápsula, contenido, fuentes, FAQ, relacionados y Cta) con su BlogPosting y BreadcrumbList, para ponerlo dentro del layout del sitio con su nav, subnav, pie, favicon y enlace de salto. `lib/articulo.mjs` exporta `cabeceraArticulo(post, Astro.url)`, con las props de `<head>` del artículo (título, descripción, `type: 'article'`, imagen y fechas), y `datosArticulo`, `diaArticulo` y `fechaArticulo`. `claseTitulo` pone la clase del sitio en el H1 (por ejemplo `std-h1`).
 - `Post` usa `ArticuloBlog` y deja su JSON-LD en el `<head>` como antes. Suma el slot `head` (favicon) y las props `footer` y `bodyClass` de `Base`: con `footer={false}` y el slot `footer`, el pie del sitio reemplaza al bloque Grupo. Su `<head>` es el de v1.4.3; en el cuerpo cambian las clases de alcance, la hoja propia y `data-mcco="post"`, que pasa del `<main>` al `<article>`.
