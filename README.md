@@ -10,9 +10,10 @@ Kit compartido de las webs de MCCO Group. Implementa en código el **Estándar W
 | `lib/site.mjs` | `loadSite()` lee y valida `site.yaml`; `loadEntity()`, `loadSites()`, `loadBots()`, `loadBlacklist()` leen los datos del grupo. |
 | `lib/routes.mjs` | Regla de URL canónica (la que sirve Cloudflare Pages: sin `.html`, carpetas con `/`). |
 | `layouts/Base.astro` | `<head>` estándar + analítica declarada + bloque Grupo MCCO. |
-| `layouts/Post.astro` | Artículo: cápsula GEO, FAQ, fuentes, relacionados, CTA, JSON-LD BlogPosting + Breadcrumb + FAQPage. |
+| `layouts/Post.astro` | Artículo: cápsula GEO, FAQ, fuentes, relacionados, CTA, JSON-LD BlogPosting + Breadcrumb + FAQPage. Slots `head`, `nav` y `footer`, y `footer={false}` para el pie del sitio. |
+| `components/ArticuloBlog.astro` | El mismo artículo para ponerlo dentro del layout del sitio: `<Sitio {...cabeceraArticulo(post, Astro.url)}><ArticuloBlog post={post}><Content /></ArticuloBlog></Sitio>` (`lib/articulo.mjs`). |
 | `layouts/Estandar.astro` | Layout del estándar visual: `Base` con `<body class="std">`, barra global, sub-navegación y slots `head` y `pie`. |
-| `components/*` | `Head`, `SchemaOrg`, `Analytics`, `FooterGrupo`, `AiCapsule`, `Faq`, `Cta`, `PostCard`. |
+| `components/*` | `Head`, `SchemaOrg`, `Analytics`, `FooterGrupo`, `AiCapsule`, `Faq`, `Cta`, `PostCard`, `ArticuloBlog`. |
 | `components/estandar/*` | Estándar visual Apple + antigravity: `NavGlobal`, `SubNav`, `Bloque`, `HeroEstandar`, `Acciones`, `NubeAncla`, `CampoAntigravity`, `HistoriaNube`, `GrillaProductos`, `Producto`, `Galeria`, `Cifras`, `TarjetasMarca` (JS en `lib/estandar/`). |
 | `styles/estandar.css` | Hoja del estándar: tokens `--std-*`, color de acción por sitio, tipografía, píldoras y rótulo de origen. Inter autoalojada en `styles/fuentes/`, con su licencia OFL. |
 | `components/visual/*` | Sistema visual v1.1: `HeroParticulas`, `VideoBanda`, `ProcesoScroll`, `Figura`, `Revelar`, `FranjaClientes`, `PrecioDesde` (JS en `lib/visual/`). |
