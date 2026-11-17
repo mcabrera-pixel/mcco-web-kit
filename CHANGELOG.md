@@ -3,6 +3,9 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.4.4 · 2026-11-17
+- `mcco-check` R8-csp ya no confunde `'wasm-unsafe-eval'` con `'unsafe-eval'`: busca la palabra entre comillas. 3d-ultra.cl declara `'wasm-unsafe-eval'` para el decodificador meshopt de su visor y recibía un aviso falso. Prueba en `test/check-csp.test.mjs`.
+
 ## v1.4.3 · 2026-11-14
 - El campo y la nube crean su contexto WebGL2 en una tarea aparte. Antes lo creaban en el callback del `IntersectionObserver`, que corre en el primer cuadro después de la carga. El primer `getContext('webgl2')` de la página bloquea el hilo principal mientras el proceso de GPU termina de iniciar. En la portada de condron.cl, pegado al primer pintado, eso era una tarea larga de 65 a 177 ms (TBT 194 ms en `/` y 677 ms en `/en/` en Lighthouse móvil). Ahora el callback lo agenda con `setTimeout(alArrancar, 400, arrancar)`: espera 400 ms y después tiempo ocioso. Con 300 ms de espera ese `getContext` ya baja de 96-239 ms a 4 ms (GPU real, Chrome con las banderas de Lighthouse).
 - Mientras tanto se ve lo mismo que antes del arranque: la imagen fija de la nube y el hero sin campo. La nube arma su primer activo y el campo aparece unos 400 ms más tarde. La pausa, el movimiento reducido, sin JS, sin WebGL2 y la pérdida de contexto no cambian. Interfaces, props y marcado tampoco: para subir, ninguna web cambia su código. Entre v1.4.2 y v1.4.3 la distribución mantiene archivos, entradas y formato del manifiesto; cambian `campo.js` y `nube.js`.

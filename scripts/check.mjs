@@ -225,7 +225,8 @@ if (exists('_headers')) {
       if (!frameOk(m[1])) err('R8-csp', p.file, `iframe ${m[1]} no permitido por frame-src de _headers`);
     }
   }
-  if (/unsafe-eval/.test(csp) && !site.csp.unsafe_eval) warn('R8-csp', '_headers', "CSP con 'unsafe-eval' sin justificar (site.yaml csp.unsafe_eval)");
+  // Solo la palabra 'unsafe-eval' entre comillas: 'wasm-unsafe-eval' (WebAssembly) es otra directiva y no la pide.
+  if (/'unsafe-eval'/.test(csp) && !site.csp.unsafe_eval) warn('R8-csp', '_headers', "CSP con 'unsafe-eval' sin justificar (site.yaml csp.unsafe_eval)");
 }
 
 // ── R9 peso de assets ────────────────────────────────────────────────────────────────────
