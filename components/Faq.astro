@@ -1,5 +1,6 @@
 ---
 // FAQ visible + JSON-LD FAQPage (respuestas de 40-80 palabras, citables sueltas).
+import { serializarJsonLd } from '../lib/jsonld.mjs';
 interface Props { items: { q: string; a: string }[]; title?: string }
 const { items, title = 'Preguntas frecuentes' } = Astro.props;
 const jsonld = {
@@ -17,7 +18,7 @@ const jsonld = {
     </details>
   ))}
 </section>
-<script is:inline type="application/ld+json" set:html={JSON.stringify(jsonld)} />
+<script is:inline type="application/ld+json" set:html={serializarJsonLd(jsonld)} />
 <style>
   .mcco-faq__item { border-bottom: 1px solid var(--mcco-color-border); padding: 0.5rem 0; }
   .mcco-faq__item summary { cursor: pointer; list-style: none; }

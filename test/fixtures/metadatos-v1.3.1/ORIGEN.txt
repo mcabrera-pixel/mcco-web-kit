@@ -1,0 +1,16 @@
+HTML completo generado desde cfaf658e1f09ced2bff7cbc5a449c7c482114c67 (v1.3.1).
+Astro 7.4.1, build.inlineStylesheets = 'never', formato directory por defecto.
+Zona horaria de captura: UTC. El build de prueba fija TZ=UTC para conservar
+la fecha renderizada de Post aunque el proceso padre use otra zona horaria.
+Entradas: variantes «default» de test/metadatos-html.test.mjs, sin props nuevas.
+Las carpetas components, layouts, lib, styles y data del commit original se copian
+bajo kit/ dentro de la raíz Astro de prueba, para que los IDs de estilos no dependan
+de la ruta del checkout. No se normaliza ni recorta el HTML de salida.
+
+Base.html: dist/base-default/index.html
+Estandar.html: dist/estandar-default/index.html
+Post.html: dist/post-default/index.html
+
+La captura independiente y su log se conservan en el encargo K-140:
+ref-v1.3.1/test/capturar-metadatos.test.mjs y logs/captura-v1.3.1.log.
+No actualizar estas referencias con la implementación nueva para hacer pasar pruebas.

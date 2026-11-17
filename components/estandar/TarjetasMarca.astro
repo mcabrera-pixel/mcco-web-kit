@@ -1,0 +1,50 @@
+---
+// Tarjetas de marca del estándar: oscuras (#1d1d1f) y de 18 px de radio, con el logo de la marca pintado en un solo
+// tono claro (máscara CSS sobre el archivo), una frase y, al pie, el dominio con «›» o un aviso sin enlace («Sitio en
+// preparación» por defecto). Con `href` la tarjeta entera es el enlace. Tres por fila, dos en ≤ 900 px y una en
+// ≤ 640 px, como en la maqueta. Cada tarjeta lleva data-std-oscuro, así que se ve igual en un bloque claro o negro.
+import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
+
+interface Marca {
+  /** Nombre de la marca: es el texto alternativo del logo. */
+  nombre: string;
+  /** Logo en SVG o PNG con transparencia (solo cuenta su forma). alto en px, 48 por defecto. */
+  logo: { src: string; alto?: number };
+  frase: string;
+  /** Sitio de la marca. Si no hay, la tarjeta no enlaza y muestra `pronto`. */
+  href?: string;
+  /** Aviso cuando no hay `href`. */
+  pronto?: string;
+}
+interface Props {
+  marcas: Marca[];
+}
+const { marcas = [] } = Astro.props;
+for (const m of marcas) {
+  const faltan = [!m?.nombre && 'nombre', !m?.logo?.src && 'logo.src', !m?.frase && 'frase',
+    m?.logo?.alto !== undefined && !(m.logo.alto > 0) && 'logo.alto (px, mayor que 0)'].filter(Boolean);
+  if (faltan.length) throw new Error(`TarjetasMarca ${m?.nombre ?? ''}: falta ${faltan.join(', ')}.`);
+}
+// Lo que se lee al pie del enlace: el dominio sin www. Un enlace interno dice «Más información».
+const dominio = (href: string) => (/^https?:\/\//i.test(href) ? new URL(href).hostname.replace(/^www\./, '') : 'Más información');
+const estiloLogo = ({ src, alto = 48 }: Marca['logo']) => `--logo: url(${JSON.stringify(src)}); height: ${alto}px`;
+---
+{marcas.length > 0 && (
+  <ul class="std-marcas" role="list">
+    {marcas.map((m) => {
+      const Tarjeta = m.href ? 'a' : 'div';
+      return (
+        <li>
+          <Tarjeta class="std-marca" href={m.href} data-std-oscuro="">
+            <span class="std-marca__logo" role="img" aria-label={m.nombre} style={estiloLogo(m.logo)}></span>
+            <p class="std-marca__frase">{m.frase}</p>
+            {m.href
+              ? <span class="std-mas std-marca__pie">{dominio(m.href)}</span>
+              : <span class="std-marca__pie std-marca__pronto">{m.pronto ?? 'Sitio en preparación'}</span>}
+          </Tarjeta>
+        </li>
+      );
+    })}
+  </ul>
+)}

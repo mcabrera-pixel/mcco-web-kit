@@ -1,5 +1,9 @@
 node_modules/
 dist/
+!/dist/
+/dist/*
+!/dist/estandar/
 .astro/
 .DS_Store
 *.log
+.tmp-prueba-*/

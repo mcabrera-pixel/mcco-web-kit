@@ -1,5 +1,6 @@
 ---
 // Llamado a la acción estándar: WhatsApp + correo del sitio (site.yaml), con compromiso de respuesta.
+// v1.5.0: va entre <!--email_off--> y <!--/email_off-->. Así Cloudflare no ofusca el mailto ni inyecta email-decode.min.js.
 import { loadSite } from '../lib/site.mjs';
 interface Props { title?: string; text?: string; ref?: string }
 const site = loadSite();
@@ -8,7 +9,7 @@ const wa = site.contact.whatsapp?.replace(/\D/g, '');
 const host = site.domain.replace('https://', '');
 const msg = encodeURIComponent(`Hola, vengo de ${host}${ref ? ` (${ref})` : ''} y quiero cotizar.`);
 ---
-<section class="mcco-cta" data-mcco="cta">
+<Fragment set:html="<!--email_off-->" /><section class="mcco-cta" data-mcco="cta">
   <h2>{title}</h2>
   {text && <p>{text}</p>}
   <div class="mcco-cta__actions">
@@ -16,7 +17,7 @@ const msg = encodeURIComponent(`Hola, vengo de ${host}${ref ? ` (${ref})` : ''} 
     {site.contact.email && <a class="mcco-cta__btn mcco-cta__btn--alt" href={`mailto:${site.contact.email}`} data-conv="email">Escríbenos</a>}
   </div>
   <p class="mcco-cta__sla">{site.contact.response_sla ?? 'Respondemos en menos de 24 horas hábiles.'}</p>
-</section>
+</section><Fragment set:html="<!--/email_off-->" />
 <style>
   .mcco-cta { background: var(--mcco-color-bg-alt); border-radius: var(--mcco-radius); padding: calc(var(--mcco-space) * 1.5); margin: calc(var(--mcco-space) * 2) 0; text-align: center; }
   .mcco-cta__actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin: var(--mcco-space) 0; }

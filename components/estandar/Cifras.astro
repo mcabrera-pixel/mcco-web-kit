@@ -1,0 +1,33 @@
+---
+// Cifras grandes del estándar: cada valor en 56 px y en el color de acción (48 px en ≤ 640 px), con su etiqueta
+// debajo, entre líneas finas, y una nota opcional en letra fina al final. Un número se escribe como en Chile (1.500,
+// 2,5) y un texto va tal cual ('±2 mm'). Toma la alineación de su contenedor: en la maqueta va a la izquierda, en
+// una columna junto al mapa. Dentro de un bloque negro el valor usa el color de acción claro.
+import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
+
+interface Props {
+  items: { valor: string | number; etiqueta: string }[];
+  nota?: string;
+}
+const { items = [], nota } = Astro.props;
+for (const it of items) {
+  const valorOk = typeof it?.valor === 'number' ? Number.isFinite(it.valor) : typeof it?.valor === 'string' && it.valor.trim() !== '';
+  if (!valorOk || !it?.etiqueta) throw new Error(`Cifras: cada cifra necesita { valor, etiqueta } (llegó ${JSON.stringify(it)}).`);
+}
+const numero = new Intl.NumberFormat('es-CL', { useGrouping: 'always', maximumFractionDigits: 2 });
+const valor = (v: string | number) => (typeof v === 'number' ? numero.format(v) : v);
+---
+{items.length > 0 && (
+  <div class="std-cifras">
+    <dl class="std-cifras__lista">
+      {items.map((it) => (
+        <div class="std-cifras__item">
+          <dt class="std-cifras__valor">{valor(it.valor)}</dt>
+          <dd class="std-cifras__etiqueta">{it.etiqueta}</dd>
+        </div>
+      ))}
+    </dl>
+    {nota && <p class="std-fina std-cifras__nota">{nota}</p>}
+  </div>
+)}

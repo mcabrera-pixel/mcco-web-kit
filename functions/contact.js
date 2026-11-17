@@ -1,6 +1,6 @@
 // Pages Function estándar de contacto (Estándar Web MCCO v2 §10). Generalizada desde as-built.cl (en producción desde 2026-08).
 // POST /api/contact → honeypot → Turnstile (si hay secret) → Worker formularios-mcco → acuse Resend opcional → 302 /gracias.
-// Errores → 302 /contacto-error?reason= spam (honeypot) · config (faltan variables) · correo (falló el Worker) · exception.
+// Errores → 302 /contacto-error?reason= spam (honeypot) · config (faltan variables) · turnstile · correo (falló el Worker) · demora (venció el plazo del Worker) · tamano (cuerpo o campos excesivos) · exception.
 // Uso en el sitio: functions/api/contact.js →  export { onRequestPost } from '@mcco/web-kit/functions/contact.js';
 // Variables (Cloudflare Pages → Settings → Environment variables; NUNCA en el repo):
 //   FORMULARIOS_URL (URL del Worker formularios-mcco) · FORMULARIOS_CLAVE (clave compartida con el Worker, como secreto)
@@ -10,6 +10,39 @@
 
 // Campos que no viajan al Worker: clave de Web3Forms de formularios antiguos, token de Turnstile y trampas para bots.
 const NO_VIAJAN = new Set(["access_key", "cf-turnstile-response", "website_url", "botcheck"]);
+
+const MAX_CUERPO = 32 * 1024;
+const MAX_CAMPOS = 40;
+const MAX_VALOR = 5000;
+
+// Acota los bytes antes del parser, también sin Content-Length o con una cabecera falsa.
+// null indica exceso; los errores de lectura o de formato conservan reason=exception.
+async function leerFormulario(request) {
+  if (Number(request.headers.get("content-length")) > MAX_CUERPO) return null;
+  const lector = request.body?.getReader();
+  const partes = [];
+  let bytes = 0;
+  if (lector) {
+    try {
+      while (true) {
+        const { done, value } = await lector.read();
+        if (done) break;
+        bytes += value.byteLength;
+        if (bytes > MAX_CUERPO) {
+          await lector.cancel();
+          return null;
+        }
+        partes.push(value);
+      }
+    } finally {
+      lector.releaseLock();
+    }
+  }
+  const cuerpo = new Uint8Array(bytes);
+  let offset = 0;
+  for (const parte of partes) { cuerpo.set(parte, offset); offset += parte.byteLength; }
+  return new Response(cuerpo, { headers: { "content-type": request.headers.get("content-type") || "" } }).formData();
+}
 
 async function enviarAcuse(env, origin, email, nombre) {
   if (!env.RESEND_API_KEY || !email) return;
@@ -39,23 +72,26 @@ async function enviarAcuse(env, origin, email, nombre) {
   }
 }
 
-// Envía el lead al Worker formularios-mcco. true solo si responde 2xx con { ok: true }. Los fallos (rechazo, JSON
-// inválido, timeout o red) quedan en el log sin datos personales.
+// Envía el lead al Worker: null si responde 2xx con { ok: true }, o el reason del fallo.
+// Los fallos quedan en el log sin datos personales; vencer el plazo no confirma que el lead se haya perdido.
 async function enviarAlWorker(env, lead) {
+  const signal = AbortSignal.timeout(25000);
   try {
     const r = await fetch(env.FORMULARIOS_URL, {
       method: "POST",
       headers: { "content-type": "application/json", "x-formularios-clave": env.FORMULARIOS_CLAVE },
       body: JSON.stringify(lead),
-      signal: AbortSignal.timeout(15000),
+      signal,
     });
-    const data = await r.json().catch(() => null);
-    if (r.ok && data?.ok === true) return true;
+    const data = await r.json();
+    if (r.ok && data?.ok === true) return null;
     console.error("[contact] el Worker formularios-mcco no aceptó el lead:", r.status);
   } catch (e) {
     console.error("[contact] el Worker formularios-mcco no respondió:", e.name);
+    // La lectura del cuerpo puede rechazar con AbortError aunque la causa sea TimeoutError.
+    if (e.name === "TimeoutError" || (signal.aborted && signal.reason?.name === "TimeoutError")) return "demora";
   }
-  return false;
+  return "correo";
 }
 
 export async function onRequestPost(context) {
@@ -64,7 +100,10 @@ export async function onRequestPost(context) {
   const errorBase = `${origin}/contacto-error`;
 
   try {
-    const formData = await request.formData();
+    const formData = await leerFormulario(request);
+    if (!formData || [...formData].length > MAX_CAMPOS) {
+      return Response.redirect(`${errorBase}?reason=tamano`, 302);
+    }
 
     // Honeypot: campo oculto que solo llenan los bots.
     const honeypot = formData.get("website_url");
@@ -80,31 +119,41 @@ export async function onRequestPost(context) {
       return Response.redirect(`${errorBase}?reason=config`, 302);
     }
 
-    // Turnstile: si hay token y secret, se valida. Sin token se sigue con honeypot (el widget puede fallar con TrustedTypes).
+    // Con secreto configurado, solo un token verificado permite llegar al Worker y al acuse.
     const token = formData.get("cf-turnstile-response");
-    if (token && env.TURNSTILE_SECRET) {
-      const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret: env.TURNSTILE_SECRET, response: token, remoteip: request.headers.get("CF-Connecting-IP") }),
-      });
-      const data = await res.json();
-      if (!data.success) console.warn("[contact] Turnstile inválido; se continúa solo con honeypot");
+    if (env.TURNSTILE_SECRET) {
+      if (!token) return Response.redirect(`${errorBase}?reason=turnstile`, 302);
+      let data;
+      const signal = AbortSignal.timeout(10000);
+      try {
+        const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ secret: env.TURNSTILE_SECRET, response: token, remoteip: request.headers.get("CF-Connecting-IP") }),
+          signal,
+        });
+        data = await res.json();
+      } catch (e) {
+        if (!signal.aborted) throw e;
+        return Response.redirect(`${errorBase}?reason=turnstile`, 302);
+      }
+      if (data?.success !== true) return Response.redirect(`${errorBase}?reason=turnstile`, 302);
     }
 
     // Lead al Worker: los campos de texto del formulario salvo NO_VIAJAN. Un campo repetido (casillas con el mismo
-    // nombre) junta sus valores en vez de perderlos.
+    // nombre) junta sus valores en vez de perderlos, con el mismo máximo de 5000 caracteres al juntar.
     const campos = new Map();
     for (const [clave, valor] of formData.entries()) {
       if (typeof valor !== "string" || NO_VIAJAN.has(clave)) continue;
-      campos.set(clave, campos.has(clave) ? `${campos.get(clave)}, ${valor}` : valor);
+      campos.set(clave, (campos.has(clave) ? `${campos.get(clave)}, ${valor}` : valor).slice(0, MAX_VALOR));
     }
     const origen = request.headers.get("Referer") || "/contacto/";
-    if (await enviarAlWorker(env, { marca: env.MARCA, origen, campos: Object.fromEntries(campos) })) {
+    const reason = await enviarAlWorker(env, { marca: env.MARCA, origen, campos: Object.fromEntries(campos) });
+    if (reason === null) {
       context.waitUntil(enviarAcuse(env, origin, formData.get("email"), formData.get("nombre") || formData.get("name")));
       return Response.redirect(`${origin}/gracias`, 302);
     }
-    return Response.redirect(`${errorBase}?reason=correo`, 302);
+    return Response.redirect(`${errorBase}?reason=${reason}`, 302);
   } catch (e) {
     console.error("[contact] excepción:", e.message);
     return Response.redirect(`${errorBase}?reason=exception`, 302);

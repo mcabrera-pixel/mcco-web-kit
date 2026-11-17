@@ -1,0 +1,74 @@
+---
+// Cuerpo de un artículo del blog (v1.5.0), para ponerlo dentro del layout del sitio con su nav, pie y favicon:
+//   <Sitio {...cabeceraArticulo(post, Astro.url)}><ArticuloBlog post={post}><Content /></ArticuloBlog></Sitio>
+// Ruta, título, autor y fecha, cápsula GEO, contenido (slot), fuentes, FAQ (con su FAQPage), relacionados y Cta (con su
+// mailto dentro de email_off). Emite el BlogPosting y el BreadcrumbList, salvo con jsonld={false}: así lo usa Post, que
+// los pone en el <head>. La fecha es la del día del artículo (lib/articulo.mjs).
+import AiCapsule from './AiCapsule.astro';
+import Faq from './Faq.astro';
+import Cta from './Cta.astro';
+import { datosArticulo } from '../lib/articulo.mjs';
+import { serializarJsonLd } from '../lib/jsonld.mjs';
+
+interface Props {
+  post: any;
+  section?: string;
+  sectionTitle?: string;
+  wordCount?: number;
+  lang?: string;
+  /** Zona horaria del día de una fecha con hora. Por defecto America/Santiago. */
+  zona?: string;
+  /** false cuando el layout ya pone el BlogPosting y el BreadcrumbList en el <head>. */
+  jsonld?: boolean;
+  /** Clase del H1 del sitio (por ejemplo std-h1); sin ella, el H1 lleva el estilo del kit. */
+  claseTitulo?: string;
+}
+const { post, section = 'blog', sectionTitle = 'Blog', wordCount, lang, zona, jsonld = true, claseTitulo } = Astro.props;
+const d = post.data;
+const a = datosArticulo(post, { pathname: Astro.url.pathname, lang, section, sectionTitle, wordCount, zona });
+---
+<article class="mcco-articulo" data-mcco="post">
+  <header class="mcco-post__header">
+    <nav aria-label="Ruta" class="mcco-post__crumbs">
+      <a href="/">Inicio</a> › <a href={`/${section}/`}>{sectionTitle}</a> › <span>{d.category}</span>
+    </nav>
+    <h1 class={claseTitulo ?? 'mcco-post__titulo'}>{d.title}</h1>
+    <p class="mcco-post__meta">
+      Por <strong>{a.author.name}</strong>{a.author.role && <span>, {a.author.role}</span>}
+      · <time datetime={a.published}>{a.fecha}</time>{a.minutes && <span> · {a.minutes} min de lectura</span>}
+    </p>
+    {d.hero && <img class="mcco-post__hero" src={d.hero.src} alt={d.hero.alt} width="1200" height="675" fetchpriority="high" />}
+  </header>
+  <AiCapsule text={d.capsule} />
+  <div class="mcco-post__content"><slot /></div>
+  {d.sources?.length > 0 && (
+    <section class="mcco-post__sources">
+      <h2>Fuentes</h2>
+      <ul>{d.sources.map((s: any) => <li><a href={s.url} rel="noopener nofollow">{s.title}</a></li>)}</ul>
+    </section>
+  )}
+  <Faq items={d.faq} />
+  <section class="mcco-post__related">
+    <h2>Servicios relacionados</h2>
+    <ul>
+      {d.related.map((r: any) => <li><a href={r.url}>{r.anchor}</a></li>)}
+      {d.sister && <li><a href={d.sister.url} rel="noopener">{d.sister.anchor}</a> <small>({d.sister.site})</small></li>}
+    </ul>
+  </section>
+  <Cta ref={d.title} />
+</article>
+{jsonld && [a.blogPosting, a.breadcrumb].map((o) => <script is:inline type="application/ld+json" set:html={serializarJsonLd(o)} />)}
+<style>
+  .mcco-articulo { max-width: 760px; margin: 0 auto; text-align: left; }
+  .mcco-post__crumbs { font-size: 0.8125rem; color: var(--std-texto-2, var(--mcco-color-muted)); margin-bottom: 0.75rem; }
+  .mcco-post__crumbs a { color: inherit; }
+  .mcco-post__titulo { font-family: var(--mcco-font-display); font-size: clamp(1.75rem, 4vw, 2.5rem); line-height: 1.15; margin: 0 0 0.5rem; }
+  .mcco-post__meta { color: var(--std-texto-2, var(--mcco-color-muted)); font-size: 0.9375rem; margin: 0 0 var(--mcco-space); }
+  .mcco-post__hero { width: 100%; height: auto; border-radius: var(--mcco-radius); margin: var(--mcco-space) 0; }
+  .mcco-post__content :global(h2) { margin-top: calc(var(--mcco-space) * 2); }
+  .mcco-post__content :global(p), .mcco-post__content :global(li) { line-height: 1.6; }
+  .mcco-post__content :global(table) { width: 100%; border-collapse: collapse; margin: var(--mcco-space) 0; font-size: 0.9375rem; }
+  .mcco-post__content :global(th), .mcco-post__content :global(td) { border: 1px solid var(--mcco-color-border); padding: 0.5rem 0.625rem; text-align: left; vertical-align: top; }
+  .mcco-post__content :global(img) { max-width: 100%; height: auto; }
+  .mcco-post__sources ul, .mcco-post__related ul { padding-left: 1.25rem; }
+</style>

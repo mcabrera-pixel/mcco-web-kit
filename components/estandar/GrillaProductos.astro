@@ -1,0 +1,14 @@
+---
+// Grilla de productos del estándar, como la de apple.com: tarjetas Producto en dos columnas iguales sobre blanco, con
+// 12 px entre ellas y en el borde. Una tarjeta `ancho` ocupa la fila entera. En ≤ 833 px queda una columna. Acepta
+// cualquier atributo de <section> (id para el ancla, aria-label si la grilla no tiene título visible).
+import type { HTMLAttributes } from 'astro/types';
+import '../../styles/estandar.css';
+import '../../styles/estandar-componentes.css';
+
+type Props = HTMLAttributes<'section'>;
+const { class: clase, ...atributos } = Astro.props;
+---
+<section class:list={['std-grilla', clase]} {...atributos}>
+  <slot />
+</section>
