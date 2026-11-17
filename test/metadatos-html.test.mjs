@@ -86,9 +86,16 @@ const referenciaV131 = (layout) => {
   return SALTO[layout] ? hashHoja(texto, SALTO[layout].hoja) : texto;
 };
 
+// v1.5.0: el cuerpo de Post pasa a ArticuloBlog (otras clases de alcance, hojas y el Cta dentro de email_off; lo prueba
+// test/articulo-blog.test.mjs). De Post se compara literal con v1.3.1 el <head> sin las hojas: metas y JSON-LD.
+const cabezaSinHojas = (texto) => texto.slice(0, texto.indexOf('</head>')).replace(/<link rel="stylesheet" href="[^"]+">/g, '');
+const igualV131 = (layout) => layout === 'Post'
+  ? assert.equal(cabezaSinHojas(html.get(clave(layout, 'default'))), cabezaSinHojas(referenciaV131(layout)))
+  : assert.equal(sinSalto(html.get(clave(layout, 'default')), layout), referenciaV131(layout));
+
 for (const layout of layouts) {
-  test(`${layout}: sin props nuevas conserva el HTML completo de v1.3.1 (salvo el enlace de salto de v1.4.2)`, () => {
-    assert.equal(sinSalto(html.get(clave(layout, 'default')), layout), referenciaV131(layout));
+  test(`${layout}: sin props nuevas conserva el HTML de v1.3.1 (salvo el enlace de salto de v1.4.2; de Post, el <head>)`, () => {
+    igualV131(layout);
     const d = dom(layout, 'default');
     assert.equal(d.querySelector('html').getAttribute('lang'), 'es-CL');
     assert.equal(meta(d, 'og:locale'), 'es_CL');
