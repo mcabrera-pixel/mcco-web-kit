@@ -3,6 +3,10 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.5.3 · 2026-11-22
+- `ArticuloBlog` acepta `tituloCta` y `tituloRelacionados`: el título del llamado a la acción y el de la lista de relacionados del sitio. Sin ellas quedan los del kit («¿Necesitas cotizar este servicio?» y «Servicios relacionados»). Crusher y Cupla tienen títulos propios en su página de artículo, y sin estas props no podían pasar a `ArticuloBlog` sin perderlos. Pruebas en `test/articulo-blog.test.mjs`.
+- Para subir, ninguna web cambia su código.
+
 ## v1.5.2 · 2026-11-22
 - La línea de autor del artículo (`ArticuloBlog`, y `Post` que lo usa) deja un espacio antes del punto medio de la fecha: «Mario Cabrera, CEO de MCCO Group · 16 de noviembre de 2026». Desde v1.4.3 la fecha salía pegada al cargo o al nombre («MCCO Group· 16 de noviembre»), porque el salto de línea de la plantilla se perdía al compilar. Pruebas en `test/articulo-blog.test.mjs`, con cargo y sin cargo.
 - Para subir, ninguna web cambia su código.
