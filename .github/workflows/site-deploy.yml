@@ -1,5 +1,5 @@
 # Workflow reutilizable (Estándar Web MCCO v2 §7): push a main = build + mcco-check + deploy producción + smoke.
-# El proyecto sale de site.yaml. El smoke (scripts/smoke.sh) prueba <proyecto>.pages.dev y, si el dominio ya está
+# El proyecto sale de site.yaml. El smoke (scripts/smoke.sh) prueba el subdominio pages.dev del proyecto y, si el dominio ya está
 # conectado al proyecto, también el dominio. Uso en el sitio (.github/workflows/deploy.yml):
 #   on: { push: { branches: [main] }, workflow_dispatch: {} }
 #   jobs: { deploy: { uses: mcabrera-pixel/mcco-web-kit/.github/workflows/site-deploy.yml@v1.1.3, secrets: inherit } }
