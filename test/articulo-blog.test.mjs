@@ -68,7 +68,7 @@ before(() => {
   }
   fs.symlinkSync(path.join(kit, 'node_modules'), path.join(dir, 'node_modules'), 'junction');
   fs.writeFileSync(path.join(dir, 'package.json'), '{"type":"module"}');
-  fs.writeFileSync(path.join(dir, 'site.yaml'), 'key: prueba\nname: Prueba\ndomain: https://prueba.invalid\ndescription: Sitio de pruebas\nrole: corporativa\nlang: es-CL\ncontact:\n  email: hola@prueba.invalid\n  whatsapp: "+56 9 1234 5678"\ncloudflare:\n  project: prueba\n');
+  fs.writeFileSync(path.join(dir, 'site.yaml'), 'key: prueba\nname: Prueba\ndomain: https://prueba.invalid\ndescription: Sitio de pruebas\nrole: corporativa\nlang: es-CL\ncontact:\n  email: hola@prueba.invalid\n  whatsapp: "+56 9 1234 5678"\nanalytics:\n  ga4: G-PRUEBA1234\ncloudflare:\n  project: prueba\n');
   fs.writeFileSync(path.join(dir, 'astro.config.mjs'), 'export default {};\n');
   fs.writeFileSync(path.join(dir, 'src/Sitio.astro'), sitio);
   for (const [nombre, fuente] of Object.entries(paginas)) fs.writeFileSync(path.join(dir, 'src/pages', `${nombre}.astro`), fuente);
@@ -119,6 +119,14 @@ for (const nombre of Object.keys(paginas)) {
     assert.equal(d.querySelector('meta[property="og:type"]').getAttribute('content'), 'article');
   });
 }
+
+// v1.5.4: la página no trae la etiqueta de gtag.js en su HTML; la pide el script en línea, en diferido.
+test('con GA4 declarado, la página no descarga gtag.js al cargar', () => {
+  const texto = html.get('sitio-mediodia');
+  assert.doesNotMatch(texto, /<script[^>]+src="https:\/\/www\.googletagmanager\.com/);
+  assert.match(texto, /gtag\('config','G-PRUEBA1234'\);/);
+  assert.match(texto, /s\.src='https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-PRUEBA1234'/);
+});
 
 // La línea de autor se lee con un espacio a cada lado del punto medio. En v1.5.1 la fecha salía pegada al cargo
 // («Ingeniera de pruebas· 16 de noviembre»): el salto de línea de la plantilla se perdía al compilar.
