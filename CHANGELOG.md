@@ -3,6 +3,9 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## Sin publicar
+- `data/sites.json` registra Crusher Dynamics (`crusher`, `https://crusherdynamics.cl`, estado `pendiente`). Faltaba desde que la web entró a `webs.json` y por eso el comando `webs` se caía. Una marca pendiente no se enlaza desde ningún sitio: el pie, `llms.txt` y los datos estructurados usan solo las activas.
+
 ## v1.5.4 · 2026-11-22
 - `Analytics` carga `gtag.js` en diferido: con la primera interacción (puntero, teclado, toque o desplazamiento) o a los 4 s, lo que ocurra primero y una sola vez. Antes la etiqueta iba en el `<head>` de cada página. Mientras se espera, la configuración y los eventos quedan en `dataLayer` y `gtag.js` los envía al cargar. Es el patrón que as-built.cl usa desde octubre.
 - Motivo, medido el 22-nov en la portada de condron.cl con Lighthouse móvil (mediana de 3 corridas, mismas condiciones en pages.dev): sin GA4, LCP 1,39 s y TBT 231 ms; con GA4 en el `<head>` (activado el 17-nov), LCP 4,35 s y TBT 638 ms. El rendimiento bajó de cerca de 93 a cerca de 66. Lo mismo en mcco.cl, 3d-ultra.cl y mariocabrera.cl, que activaron GA4 ese día.
