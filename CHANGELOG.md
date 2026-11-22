@@ -3,7 +3,10 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
-## Sin publicar
+## v1.5.1 · 2026-11-22
+- `scripts/smoke.sh` prueba el subdominio pages.dev real del proyecto, que le pregunta a la API de Cloudflare (`result.subdomain`). Antes armaba `<proyecto>.pages.dev` con el nombre del proyecto. Cuando ese nombre ya estaba tomado, Cloudflare le suma un sufijo: `monitor-ia` publica en `monitor-ia-7c6.pages.dev`, y `monitor-ia.pages.dev` es de otra cuenta. El smoke de MonitorIA revisaba ese sitio ajeno y dejaba en rojo cada deploy, aunque la publicación había salido bien. Sin credenciales, o si la API no responde `success: true`, se prueba `<proyecto>.pages.dev` como antes.
+- Pruebas en `test/smoke.test.mjs`, con un doble de `curl`: subdominio distinto del nombre, sin credenciales, API con error, dominio conectado, canonical ajena y ruta que no responde 200.
+- Para subir, ninguna web cambia su código: cambian la tag del paquete y la de los workflows.
 - `mcco-check` R8-csp ya no confunde `'wasm-unsafe-eval'` con `'unsafe-eval'` (mismo arreglo publicado en v1.4.4 para los sitios en la línea 1.4). Prueba en `test/check-csp.test.mjs`.
 
 ## v1.5.0 · 2026-11-17

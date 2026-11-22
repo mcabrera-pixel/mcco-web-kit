@@ -26,7 +26,7 @@ Kit compartido de las webs de MCCO Group. Implementa en código el **Estándar W
 | `scripts/headers.mjs` | **`mcco-headers`**: genera `public/_headers` (CSP) y `public/_redirects` desde `site.yaml`. |
 | `scripts/sitio-ci.mjs` | **`mcco-sitio`**: proyecto Cloudflare y dominio desde `site.yaml` para los workflows. |
 | `scripts/estandar-copiar.mjs` | **`mcco-estandar-copiar`**: `--completo` copia CSS, fuentes y ESM minificado con manifiesto verificado; sin opción conserva el modo base v1.2. |
-| `scripts/smoke.sh` | Smoke del deploy sobre `<proyecto>.pages.dev` y, si está conectado, el dominio. |
+| `scripts/smoke.sh` | Smoke del deploy sobre el subdominio pages.dev del proyecto (se lo pregunta a Cloudflare) y, si está conectado, el dominio. |
 | `.github/workflows/site-ci.yml` | Reutilizable: PR → build + check + preview. |
 | `.github/workflows/site-deploy.yml` | Reutilizable: main → build + check + deploy + smoke. |
 
