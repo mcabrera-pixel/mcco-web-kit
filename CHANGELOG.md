@@ -3,6 +3,13 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.5.4 · 2026-11-22
+- `Analytics` carga `gtag.js` en diferido: con la primera interacción (puntero, teclado, toque o desplazamiento) o a los 4 s, lo que ocurra primero y una sola vez. Antes la etiqueta iba en el `<head>` de cada página. Mientras se espera, la configuración y los eventos quedan en `dataLayer` y `gtag.js` los envía al cargar. Es el patrón que as-built.cl usa desde octubre.
+- Motivo, medido el 22-nov en la portada de condron.cl con Lighthouse móvil (mediana de 3 corridas, mismas condiciones en pages.dev): sin GA4, LCP 1,39 s y TBT 231 ms; con GA4 en el `<head>` (activado el 17-nov), LCP 4,35 s y TBT 638 ms. El rendimiento bajó de cerca de 93 a cerca de 66. Lo mismo en mcco.cl, 3d-ultra.cl y mariocabrera.cl, que activaron GA4 ese día.
+- Consecuencia: una visita que se va antes de los 4 s sin tocar la página no queda medida.
+- El script sale de `lib/analitica.mjs` (`gtagDiferido`). Pruebas en `test/analitica.test.mjs`, con dobles de `window`, `document` y los temporizadores, y una comprobación sobre una página construida en `test/articulo-blog.test.mjs`.
+- Para subir, ninguna web cambia su código.
+
 ## v1.5.3 · 2026-11-22
 - `ArticuloBlog` acepta `tituloCta` y `tituloRelacionados`: el título del llamado a la acción y el de la lista de relacionados del sitio. Sin ellas quedan los del kit («¿Necesitas cotizar este servicio?» y «Servicios relacionados»). Crusher y Cupla tienen títulos propios en su página de artículo, y sin estas props no podían pasar a `ArticuloBlog` sin perderlos. Pruebas en `test/articulo-blog.test.mjs`.
 - Para subir, ninguna web cambia su código.
