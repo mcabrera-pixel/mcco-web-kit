@@ -33,20 +33,21 @@ const props = Astro.props;
   <footer class="pie-sitio"><a href="/privacidad/">Privacidad</a></footer>
 </Base>`;
 
-const conSitio = (fecha, extra) => `---
+const conSitio = (fecha, extra, props = '') => `---
 import Sitio from '../Sitio.astro';
 import ArticuloBlog from '${kitDir}/components/ArticuloBlog.astro';
 import { cabeceraArticulo } from '${kitDir}/lib/articulo.mjs';
 const post = ${post(fecha, extra)};
 ---
 <Sitio {...cabeceraArticulo(post, Astro.url)}>
-  <ArticuloBlog post={post} claseTitulo="std-h1"><p>Contenido del artículo.</p></ArticuloBlog>
+  <ArticuloBlog post={post} claseTitulo="std-h1" ${props}><p>Contenido del artículo.</p></ArticuloBlog>
 </Sitio>`;
 
 const paginas = {
   'sitio-mediodia': conSitio('2026-11-16T12:00:00-03:00'),
   'sitio-noche': conSitio('2026-11-16T22:30:00-03:00', AUTORA),
   'sitio-solo-dia': conSitio('2026-11-16'),
+  'sitio-titulos': conSitio('2026-11-16', '', 'tituloCta="¿Quieres evaluar una aplicación?" tituloRelacionados="Soluciones relacionadas"'),
   'post-sitio': `---
 import Post from '${kitDir}/layouts/Post.astro';
 const post = ${post('2026-11-16T12:00:00-03:00')};
@@ -129,6 +130,20 @@ test('línea de autor con cargo: un espacio separa el cargo de la fecha', () => 
 
 test('línea de autor sin cargo: un espacio separa el nombre de la fecha', () => {
   assert.match(lineaDeAutor('sitio-mediodia'), /^Por MCCO Group · 16 de noviembre de 2026( · \d+ min de lectura)?$/);
+});
+
+// El sitio puede poner su propio título en el llamado a la acción y en la lista de relacionados (Crusher y Cupla).
+const titulos = (nombre) => {
+  const d = parse(html.get(nombre));
+  return [d.querySelector('[data-mcco="cta"] h2').text, d.querySelector('.mcco-post__related h2').text];
+};
+
+test('ArticuloBlog con tituloCta y tituloRelacionados: salen los títulos del sitio', () => {
+  assert.deepEqual(titulos('sitio-titulos'), ['¿Quieres evaluar una aplicación?', 'Soluciones relacionadas']);
+});
+
+test('ArticuloBlog sin esas props: quedan los títulos del kit', () => {
+  assert.deepEqual(titulos('sitio-mediodia'), ['¿Necesitas cotizar este servicio?', 'Servicios relacionados']);
 });
 
 test('ArticuloBlog dentro del sitio: título con la clase del sitio y JSON-LD con la URL canónica', () => {

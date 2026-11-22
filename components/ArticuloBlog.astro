@@ -22,8 +22,12 @@ interface Props {
   jsonld?: boolean;
   /** Clase del H1 del sitio (por ejemplo std-h1); sin ella, el H1 lleva el estilo del kit. */
   claseTitulo?: string;
+  /** Título del llamado a la acción del sitio; sin él, el del Cta del kit. */
+  tituloCta?: string;
+  /** Título de la lista de relacionados del sitio (por ejemplo «Soluciones relacionadas»). */
+  tituloRelacionados?: string;
 }
-const { post, section = 'blog', sectionTitle = 'Blog', wordCount, lang, zona, jsonld = true, claseTitulo } = Astro.props;
+const { post, section = 'blog', sectionTitle = 'Blog', wordCount, lang, zona, jsonld = true, claseTitulo, tituloCta, tituloRelacionados = 'Servicios relacionados' } = Astro.props;
 const d = post.data;
 const a = datosArticulo(post, { pathname: Astro.url.pathname, lang, section, sectionTitle, wordCount, zona });
 ---
@@ -48,13 +52,13 @@ const a = datosArticulo(post, { pathname: Astro.url.pathname, lang, section, sec
   )}
   <Faq items={d.faq} />
   <section class="mcco-post__related">
-    <h2>Servicios relacionados</h2>
+    <h2>{tituloRelacionados}</h2>
     <ul>
       {d.related.map((r: any) => <li><a href={r.url}>{r.anchor}</a></li>)}
       {d.sister && <li><a href={d.sister.url} rel="noopener">{d.sister.anchor}</a> <small>({d.sister.site})</small></li>}
     </ul>
   </section>
-  <Cta ref={d.title} />
+  <Cta ref={d.title} title={tituloCta} />
 </article>
 {jsonld && [a.blogPosting, a.breadcrumb].map((o) => <script is:inline type="application/ld+json" set:html={serializarJsonLd(o)} />)}
 <style>
