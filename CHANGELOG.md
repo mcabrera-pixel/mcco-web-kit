@@ -3,6 +3,10 @@
 Cada versión se fija por tag (`github:mcabrera-pixel/mcco-web-kit#vX.Y.Z`). Los sitios la adoptan con
 `node bin/webs.mjs subir-kit vX.Y.Z` desde `Paginas WEB MCCO`.
 
+## v1.5.2 · 2026-11-22
+- La línea de autor del artículo (`ArticuloBlog`, y `Post` que lo usa) deja un espacio antes del punto medio de la fecha: «Mario Cabrera, CEO de MCCO Group · 16 de noviembre de 2026». Desde v1.4.3 la fecha salía pegada al cargo o al nombre («MCCO Group· 16 de noviembre»), porque el salto de línea de la plantilla se perdía al compilar. Pruebas en `test/articulo-blog.test.mjs`, con cargo y sin cargo.
+- Para subir, ninguna web cambia su código.
+
 ## v1.5.1 · 2026-11-22
 - `scripts/smoke.sh` prueba el subdominio pages.dev real del proyecto, que le pregunta a la API de Cloudflare (`result.subdomain`). Antes armaba `<proyecto>.pages.dev` con el nombre del proyecto. Cuando ese nombre ya estaba tomado, Cloudflare le suma un sufijo: `monitor-ia` publica en `monitor-ia-7c6.pages.dev`, y `monitor-ia.pages.dev` es de otra cuenta. El smoke de MonitorIA revisaba ese sitio ajeno y dejaba en rojo cada deploy, aunque la publicación había salido bien. Sin credenciales, o si la API no responde `success: true`, se prueba `<proyecto>.pages.dev` como antes.
 - Pruebas en `test/smoke.test.mjs`, con un doble de `curl`: subdominio distinto del nombre, sin credenciales, API con error, dominio conectado, canonical ajena y ruta que no responde 200.
